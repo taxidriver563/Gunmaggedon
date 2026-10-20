@@ -107,3 +107,11 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Gunmaggedon local builds and rollback archives
+/GunmageddonAudio/build/
+/ModBuild/
+/UnitySetupBackup/
+/Publish/
+/Assets/Blueprinter/_donotship/
+/BlueprinterCache/
