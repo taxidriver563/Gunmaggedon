@@ -19,9 +19,23 @@ if (-not $LocalArchive) {
     if ($uri.Host -eq 'api.github.com' -and $uri.AbsolutePath -match '^/repos/[^/]+/[^/]+/contents/') {
         $headers.Accept = 'application/vnd.github.raw+json'
     }
-    if ($env:GUNMAGGEDON_REFERENCES_TOKEN) { $headers.Authorization = 'Bearer ' + $env:GUNMAGGEDON_REFERENCES_TOKEN }
+    if ($env:GUNMAGGEDON_REFERENCES_TOKEN) { $headers.Authorization = 'Bearer ' + $env:GUNMAGGEDON_REFERENCES_TOKEN.Trim() }
     try { Invoke-WebRequest -Uri $uri -Headers $headers -OutFile $LocalArchive -UseBasicParsing | Out-Null }
-    catch { throw 'Private reference download failed. Check the configured URL and access token.' }
+    catch {
+        # Never print the response body, URL, headers or original exception: these
+        # may contain credentials. An HTTP status is enough to diagnose access.
+        $status = 0
+        if ($_.Exception.Response) { $status = [int]$_.Exception.Response.StatusCode }
+        if (Test-Path -LiteralPath $LocalArchive) { Remove-Item -LiteralPath $LocalArchive }
+        $detail = switch ($status) {
+            401 { 'HTTP 401: the token was not accepted.' }
+            403 { 'HTTP 403: check Contents read permission, token approval/expiry and API limits.' }
+            404 { 'HTTP 404: check token access to the private reference repository and pinned file.' }
+            0 { 'No HTTP response: check runner network connectivity.' }
+            default { "HTTP $status." }
+        }
+        throw "Private reference download failed. $detail"
+    }
 }
 try {
     if ((Get-FileHash -LiteralPath $LocalArchive).Hash.ToLowerInvariant() -ne $expected.ToLowerInvariant()) {
