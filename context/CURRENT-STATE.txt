@@ -1,0 +1,20 @@
+Current release: helper 1.8.1 + asset pack 0.0.16
+Public alpha label: v0.0.1
+
+203 mm coastal guns: moderate artillery arcs, colored ranging trails/splashes,
+low-light illumination flares, and ordinary HE/AP ammunition.
+SPECIAL coastal gun: cluster, smoke, chaff and parachute top-attack ammunition.
+L40 AA trailer: delayed optical correction, animated cranks, recoil, firing
+audio and mild spent-casing ejection.
+Searchlight trailer: low-light activation, gradual acquisition, radar cues
+within 300 metres, coordinated aircraft claims, cone beam and directional glare.
+
+Known limitations:
+- Custom mission hitch/unhitch is disabled pending vehicle-integration repair.
+- Remote searchlight clients use local sweeps rather than replicated tracking.
+- Actual CIWS interception, mission balance and multiplayer effects need testing.
+- No representative mission FPS benchmark has been completed.
+- Dazzler occlusion uses opaque depth; transparent glass does not block it.
+
+Privacy cleanup changes source metadata and documentation only. Packaged helper
+and asset-pack binaries retain their published checksums.

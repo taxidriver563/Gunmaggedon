@@ -32,7 +32,7 @@ For ordinary coastal guns, `[Coastal ammunition] Mode` accepts `Auto`, `HE`, or 
 
 All nine standalone suites passed. Connected Unity fixtures passed for searchlight activation/acquisition, radar support, coordinated tokens, and rendered cone/dazzler behavior. The latest installed helper/pack hashes match the staged files, and Nuclear Option startup passed with pack 0.0.16 loaded.
 
-These checks do not certify full mission balance, actual CIWS interception, multiplayer behavior, or frame rates. Dazzler occlusion requires the camera's opaque depth texture; transparent glass does not block it. Detailed results and remaining limits are in [`context`](context).
+These checks do not certify full mission balance, actual CIWS interception, multiplayer behavior, or frame rates. Dazzler occlusion requires the camera's opaque depth texture; transparent glass does not block it. Release features and validation boundaries are documented in [`context`](context).
 
 ## Repository layout
 
@@ -60,6 +60,10 @@ Scripts use local defaults for Unity 2022.3.62f2 and the Steam Nuclear Option in
 
 Import the mod asset folder into the matching Blueprinter Editor project to rebuild the `.nobp`. This repository contains mod source, not a standalone replacement for that editor project. Native `_donotship` placeholders, game assemblies, BepInEx, and Blueprinter must come from your own installation.
 
-Unity fixtures retain version-pinned DLL and local project paths. Review those before running them. Historical helper DLLs and rollback archives are not included; standalone tests do not require those baselines. Render fixtures run through the connected Unity scripting tool; run `RenderSearchlightVisual` before the cone/dazzler pixel checks.
+Set `GUNMAGGEDON_ROOT` in the Unity Editor process to this repository's absolute folder before running editor fixtures or setup tools. Fixtures retain version-pinned DLL baselines. Historical helper DLLs and rollback archives are not included; standalone tests do not require those baselines. Render fixtures run through the connected Unity scripting tool; run `RenderSearchlightVisual` before the cone/dazzler pixel checks.
 
-Start with [`context/README.txt`](context/README.txt). Searchlight details: [behavior](context/SEARCHLIGHT-BEHAVIOR.txt), [tokens](context/SEARCHLIGHT-TOKENS.txt), [cone](context/SEARCHLIGHT-CONE.txt), and [dazzler](context/SEARCHLIGHT-DAZZLER.txt).
+Start with [`context/README.txt`](context/README.txt) for public release and build documentation.
+
+## Asset metadata privacy
+
+FBX source and texture paths are reduced to filenames; model data and Unity GUIDs are retained. Check new exports with `python tools/sanitize-fbx.py --check Assets/Blueprinter/Mods/Gunmageddon`; use `--write` to sanitize them before publication. Original exports are saved as ignored `*.private-backup` files. Reimport sanitized models in Unity and verify materials before rebuilding a pack.

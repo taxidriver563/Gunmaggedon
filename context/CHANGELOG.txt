@@ -1,0 +1,15 @@
+Gunmaggedon Alpha v0.0.1 - first public release
+
+- Added standard and SPECIAL 203 mm coastal guns with artillery trajectories.
+- Added HE/AP, cluster, smoke, chaff and parachute top-attack ammunition.
+- Added colored ranging trails and splashes plus low-light illumination flares.
+- Added the L40 AA trailer with optical aim correction, recoil, moving cranks,
+  firing audio and casing ejection.
+- Added radar-assisted searchlight trailers with coordinated target coverage,
+  two-sided cone beams and directional lens glare.
+
+Early alpha: custom mission towing is disabled. Balance, multiplayer visuals
+and performance still need wider testing.
+
+Release preparation: removed workstation paths, sanitized FBX source metadata,
+and replaced internal session records with public documentation.

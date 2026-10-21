@@ -1,0 +1,38 @@
+Build and validation
+
+From the repository root on Windows:
+  powershell -NoProfile -ExecutionPolicy Bypass -File GunmageddonAudio/build.ps1
+  powershell -NoProfile -ExecutionPolicy Bypass -File GunmageddonAudio/tests/run-unit-tests.ps1
+
+Build prerequisites: Unity 2022.3.62f2 Mono/Roslyn, installed Nuclear Option
+managed assemblies, BepInEx and Harmony. Edit the standard installation defaults
+in the scripts when necessary. Dependencies are not redistributed here.
+Only src/**/*.cs enters the runtime helper. Output is local and ignored by Git.
+A helper build does not install the mod or rebuild the Blueprinter asset pack.
+
+Editor fixtures/tools:
+Set GUNMAGGEDON_ROOT in the Editor process to the repository folder. Run each
+fixture's static Run method through the connected Unity scripting tool. Some
+fixtures load version-pinned historical DLLs not supplied in this repository.
+Execute sequentially because fixtures temporarily alter native/physics state.
+Run RenderSearchlightVisual before cone/dazzler image checks.
+
+Prior release validation: all nine standalone suites passed; connected Unity
+searchlight coordination, shader/render fixtures and game startup passed.
+Those checks do not establish mission balance, CIWS interception, multiplayer
+correctness or representative GPU/FPS performance.
+
+Before publishing new FBX exports:
+  python tools/sanitize-fbx.py --check Assets/Blueprinter/Mods/Gunmageddon
+  python tools/sanitize-fbx.py --write Assets/Blueprinter/Mods/Gunmageddon
+
+The write command keeps ignored *.private-backup originals. It replaces only
+absolute-path string properties with filenames, updates binary node offsets,
+and preserves geometry/animation properties and Unity .meta GUIDs. Reimport in
+Unity after sanitizing; confirm textures still resolve before building a pack.
+
+Privacy-cleanup validation: all five original/sanitized FBX pairs imported in
+Unity with identical geometry, transforms and material slots. Runtime source
+and editor fixtures compiled; all nine standalone suites passed. Existing
+fixture compiler warnings concern obsolete Physics.autoSimulation and reference
+comparisons. Both published release checksum manifests remain valid.

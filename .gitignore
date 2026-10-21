@@ -115,3 +115,14 @@ InitTestScene*.unity*
 /Publish/
 /Assets/Blueprinter/_donotship/
 /BlueprinterCache/
+
+# Private local configuration and unsanitized asset backups
+.env
+.env.*
+!.env.example
+*.private-backup
+*.pem
+*.pfx
+*.p12
+id_rsa
+id_ed25519

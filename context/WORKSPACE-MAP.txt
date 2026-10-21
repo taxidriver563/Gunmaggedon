@@ -1,0 +1,20 @@
+Repository layout
+
+GunmageddonAudio/src/     Runtime C# grouped by gameplay feature.
+GunmageddonAudio/tests/   Standalone and Unity integration/regression fixtures.
+GunmageddonAudio/tools/   Unity setup, render and inspection utilities.
+Assets/                  Custom mod assets and editor-only preview scripts.
+UnityVisuals/            Searchlight shader and preview source copies.
+context/                 Public feature, build and release documentation.
+dist/1.8.1/              Current helper and Blueprinter pack with checksums.
+dist/1.6.0/              Historical packaged release.
+tools/sanitize-fbx.py    Strip absolute source/texture paths from FBX exports.
+
+Set GUNMAGGEDON_ROOT to this repository's absolute folder in the Unity Editor
+process before running editor fixtures/tools. These scripts resolve local
+builds, previews and backups from that variable. Historical DLL baselines are
+not bundled; retain the intended fixture versions when testing regressions.
+
+The Blueprinter Editor project and installed game are external dependencies.
+No personal project location is required. Build scripts contain standard Unity
+and Steam install defaults; adjust them to match your installation.
