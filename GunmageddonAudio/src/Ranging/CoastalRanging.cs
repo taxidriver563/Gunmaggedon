@@ -308,6 +308,16 @@ namespace GunmageddonAudio
             return __exception;
         }
 
+        internal static bool TryGetSpottingTint(BulletSim.Bullet bullet, Unit owner, WeaponInfo info, out Color color)
+        {
+            Shot shot;
+            if (!Shots.TryGetValue(bullet, out shot))
+                shot = pending != null && pending.Owner == owner && pending.Info == info ? pending.Shot : null;
+            if (shot != null && shot.Spotting && !shot.Illumination && shot.Payload == null && !shot.APInfo)
+            { color = shot.Color; return true; }
+            color = Color.white; return false;
+        }
+
         private static void BeforeTrace(BulletSim.Bullet __instance, ref WeaponInfo info, Unit owner, ref bool visualOnly,
             ref ParticleEffectManager.PrefabEffect[] impactEffects)
         {

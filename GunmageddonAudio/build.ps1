@@ -3,7 +3,7 @@ param([string]$OutputDirectory)
 $ErrorActionPreference = 'Stop'
 $gameDir = 'C:/Program Files (x86)/Steam/steamapps/common/Nuclear Option'
 $unityData = 'C:/Program Files/Unity/Hub/Editor/2022.3.62f2/Editor/Data'
-$buildDir = Join-Path $PSScriptRoot 'build/1.6.0'
+$buildDir = Join-Path $PSScriptRoot 'build/1.8.1'
 if ($OutputDirectory) { $buildDir = [IO.Path]::GetFullPath($OutputDirectory) }
 New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
 $compilerArgs = @('-nologo', '-noconfig', '-nostdlib+', '-target:library', "-out:$buildDir/GunmageddonAudio.dll")

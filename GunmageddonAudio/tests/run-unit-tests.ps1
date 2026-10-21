@@ -12,6 +12,9 @@ $cases = [ordered]@{
     SpecialShellPolicyTests = 'SpecialShells/SpecialShellPolicy.cs'
     QueryOptimizationTests = @('SpecialShells/QueryGeometry.cs', 'SpecialShells/ClusterDamageQuery.cs')
     ArmorPiercingPolicyTests = 'Ammunition/ArmorPiercingPolicy.cs'
+    OpticalRangingTests = 'AA/OpticalRangingSolution.cs'
+    SearchlightSolutionTests = 'Searchlight/SearchlightSolution.cs'
+    SearchlightClaimsTests = 'Searchlight/SearchlightClaims.cs'
 }
 foreach ($name in $cases.Keys) {
     $exe = Join-Path $output "$name.exe"

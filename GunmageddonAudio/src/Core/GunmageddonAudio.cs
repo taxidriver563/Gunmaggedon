@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace GunmageddonAudio
 {
-    [BepInPlugin("gunmageddon.203mm.audio", "Gunmageddon Coastal Artillery", "1.6.0")]
+    [BepInPlugin("gunmageddon.203mm.audio", "Gunmageddon Coastal Artillery", "1.8.1")]
     public sealed class Plugin : BaseUnityPlugin
     {
         internal static Plugin Instance;
@@ -43,6 +43,8 @@ namespace GunmageddonAudio
                 CoastalArtillery.Install(harmony, Config);
                 SpecialShells.Install(harmony, Config, Logger);
                 CoastalRanging.Install(harmony, Config, Logger);
+                L40Runtime.Install(Logger);
+                SearchlightRuntime.Install(Logger);
                 Logger.LogInfo("203mm firing and impact audio: travel delay and distance variants enabled.");
             }
             catch (Exception e) { harmony.UnpatchSelf(); Logger.LogError(e); }
@@ -50,6 +52,8 @@ namespace GunmageddonAudio
 
         private void OnDestroy()
         {
+            SearchlightRuntime.Shutdown();
+            L40Runtime.Shutdown();
             harmony?.UnpatchSelf();
             CoastalRanging.Shutdown();
             SpecialShells.Shutdown();

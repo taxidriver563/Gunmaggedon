@@ -10,7 +10,7 @@ public static class TopAttackEffectsRegression
     const BindingFlags Static = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
     public static object Run()
     {
-        var a = Assembly.Load(System.IO.File.ReadAllBytes(System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT") ?? throw new System.InvalidOperationException("Set GUNMAGGEDON_ROOT to the repository folder before running editor tools or fixtures."), "GunmageddonAudio/build/1.5.4/GunmageddonAudio.dll")));
+        var a = Assembly.Load(System.IO.File.ReadAllBytes(System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT") ?? throw new System.InvalidOperationException("Set GUNMAGGEDON_ROOT to the repository folder before running editor tools or fixtures."), "GunmageddonAudio/build/1.6.2/GunmageddonAudio.dll")));
         var feature = a.GetType("GunmageddonAudio.TopAttackEffects");
         var root = new GameObject("Top attack effect test origin");
         var origin = typeof(Datum).GetField("<origin>k__BackingField", Static);
@@ -39,8 +39,27 @@ public static class TopAttackEffectsRegression
                     if (Quaternion.Angle(effect.transform.rotation, ((GameObject)entry.Key).transform.rotation) > .01f) throw new Exception("Native particle orientation lost");
                 }
             }
-            return "Passed: four distinct spatial placeholder discharge clips; armor, dirt and water native effects; 60 repeated impacts restart correctly; bounded pools and no duplicated audio; native particle orientation retained.";
+            for (int surface=0;surface<2;surface++)
+            {
+                for(int i=0;i<20;i++) feature.GetMethod("CanisterImpact",Static).Invoke(null,new object[]{new Vector3(i*10,0,surface*100),Vector3.up,surface==0});
+                var pool=(IList)feature.GetField(surface==0?"CanisterWater":"CanisterLand",Static).GetValue(null);
+                if(pool.Count!=8) throw new Exception("Canister effect pool exceeded its budget");
+                foreach(Component effect in pool)
+                {
+                    var ps=effect.GetComponent<ParticleSystem>(); ps.Simulate(.1f,false,false,false);
+                    if(ps.particleCount<=0 || ps.particleCount>12 || ps.main.startSize.constantMax>.4f || ps.main.startLifetime.constantMax>.8f)
+                        throw new Exception("Canister particle scale/count incorrect");
+                    if(effect.GetComponentsInChildren<AudioSource>().Length!=0 || effect.GetComponentsInChildren<Light>().Length!=0)
+                        throw new Exception("Inert canister added explosive audio or lighting");
+                }
+            }
+            return "Passed: four distinct spatial placeholder discharge clips; armor, dirt and water native effects; 60 repeated impacts restart correctly; bounded pools and no duplicated audio; native particle orientation retained. Passed 40 small canister impacts, emitted particles, sub-metre particle sizes, eight-instance pools per surface and no blast lights/audio.";
         }
-        finally { feature.GetMethod("Shutdown", Static).Invoke(null, null); origin.SetValue(null, old); UnityEngine.Object.DestroyImmediate(root); }
+        finally
+        {
+            feature.GetMethod("Shutdown", Static).Invoke(null, null);
+            a.GetType("GunmageddonAudio.SpecialShells").GetMethod("Shutdown",Static).Invoke(null,null);
+            origin.SetValue(null, old); UnityEngine.Object.DestroyImmediate(root);
+        }
     }
 }

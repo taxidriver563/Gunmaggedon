@@ -1,0 +1,2 @@
+bba2add8232c46ad645b8d26efffcd904aa353cb847b48e7ffb1f6a81cd1deaf  BepInEx/plugins/GunmageddonAudio/GunmageddonAudio.dll
+42933252203e976195df690bebf284b2ed3a4ddd75c98d1708a610f34a66393e  BepInEx/plugins/Gunmageddon_0.0.16.nobp

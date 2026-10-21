@@ -146,7 +146,10 @@ namespace GunmageddonAudio
         private float age, phase, nextDiscovery, spentAt = -1;
         private int discovery;
         private bool ownsSlot;
+        private bool retired;
         private Missile bomb;
+        private TopAttackParachute parachuteVisual;
+        private static RaycastHit[] LandingHits = new RaycastHit[32];
         private Transform model;
         private LineRenderer beam;
 
@@ -156,7 +159,7 @@ namespace GunmageddonAudio
             ownsSlot = !ReferenceEquals(source, null); bomb = GetComponent<Missile>();
             transform.position = location.ToLocalPosition(); previousOrigin = location;
             model = transform.Find("SubmunitionBody");
-            gameObject.AddComponent<TopAttackParachute>().Initialize(parachute);
+            parachuteVisual = gameObject.AddComponent<TopAttackParachute>(); parachuteVisual.Initialize(parachute);
             beam = gameObject.AddComponent<LineRenderer>(); beam.useWorldSpace = false; beam.positionCount = 2;
             beam.sharedMaterial = SpecialShells.SparkMaterial; beam.startWidth = .12f; beam.endWidth = .35f;
             beam.startColor = new Color(1.5f, .2f, .05f, .7f); beam.endColor = new Color(1f, .1f, .03f, .15f);
@@ -216,8 +219,9 @@ namespace GunmageddonAudio
 
         private void FixedUpdate()
         {
+            if (retired) return;
             float dt = Time.fixedDeltaTime; age += dt;
-            if (bomb && bomb.disabled) { beam.enabled = false; if (bomb.LocalSim) NativeTopAttackBomb.Expire(bomb); return; }
+            if (bomb && bomb.disabled) { retired = true; beam.enabled = false; if (bomb.LocalSim) NativeTopAttackBomb.Expire(bomb); return; }
             if (bomb && !bomb.LocalSim)
             {
                 phase += dt * Mathf.PI * 2f * .65f;
@@ -226,8 +230,10 @@ namespace GunmageddonAudio
                 if (model) model.localRotation = Quaternion.Euler(8f, phase * Mathf.Rad2Deg, 10f) * Quaternion.Euler(270f, 0f, 0f);
                 return;
             }
-            if (age >= 70f || transform.position.y <= Datum.LocalSeaY + 12f || (spentAt >= 0 && age - spentAt > 1.5f))
-            { if (bomb) NativeTopAttackBomb.Expire(bomb); else if (Application.isPlaying) Destroy(gameObject); else gameObject.SetActive(false); return; }
+            if ((spentAt < 0f && (age >= 70f || transform.position.y <= Datum.LocalSeaY + 12f)) ||
+                (spentAt >= 0f && age - spentAt >= 25f))
+            { retired = true; if (bomb) NativeTopAttackBomb.Expire(bomb); else if (Application.isPlaying) Destroy(gameObject); else gameObject.SetActive(false); return; }
+            if (spentAt >= 0f) { FallSpent(dt); return; }
             Vector3 wind = LevelInfo.i ? LevelInfo.i.NetworkwindVelocity * .35f : Vector3.zero;
             Vector3 movement = ParachuteMotion.Advance(ref velocity, wind + Vector3.down * 8f, age - dt, dt);
             center = (center.ToLocalPosition() + movement).ToGlobalPosition();
@@ -268,10 +274,69 @@ namespace GunmageddonAudio
                     Vector3 aim = TopAttackScan.Intercept(launch, aimPoint, targetVelocity, TopAttackMunitions.SlugSpeed);
                     TopAttackMunitions.Fire(owner, launch, aim);
                     TopAttackEffects.MuzzleFlash(muzzle ? muzzle : transform, (aim - launch).normalized);
-                    spentAt = age; beam.enabled = false; break;
+                    ReleaseParachute(dt); break;
                 }
             }
             previousOrigin = origin.ToGlobalPosition(); previousDirection = direction;
+        }
+
+        private void ReleaseParachute(float dt)
+        {
+            if (spentAt >= 0f) return;
+            spentAt = age; beam.enabled = false;
+            // Retain the actual sway/drift velocity rather than the slow descent alone.
+            velocity = (transform.position - previousOrigin.ToLocalPosition()) / Mathf.Max(.001f, dt);
+            center = transform.position.ToGlobalPosition();
+            if (parachuteVisual) parachuteVisual.Detach(velocity);
+            candidates.Clear(); nearby.Clear(); remove.Clear();
+        }
+
+        private void FallSpent(float dt)
+        {
+            Vector3 from = center.ToLocalPosition();
+            Vector3 movement = velocity * dt + Vector3.down * (4.905f * dt * dt);
+            velocity += Vector3.down * (9.81f * dt);
+            float distance = movement.magnitude;
+            Vector3 to = from + movement, normal = Vector3.up;
+            float nearest = distance + 1f; bool landed = false, water = false;
+            if (distance > .0001f)
+            {
+                int count;
+                while (true)
+                {
+                    count = Physics.SphereCastNonAlloc(from, .1f, movement / distance, LandingHits,
+                        distance, ~PhysicsLayers.ExclusionZonesMask, QueryTriggerInteraction.Ignore);
+                    if (count < LandingHits.Length || LandingHits.Length >= 256) break;
+                    System.Array.Resize(ref LandingHits, LandingHits.Length * 2);
+                }
+                var hits = count == LandingHits.Length ? Physics.SphereCastAll(from, .1f, movement / distance,
+                    distance, ~PhysicsLayers.ExclusionZonesMask, QueryTriggerInteraction.Ignore) : LandingHits;
+                if (!ReferenceEquals(hits, LandingHits)) count = hits.Length;
+                for (int i = 0; i < count; i++)
+                {
+                    var hit = hits[i];
+                    if (!hit.collider || hit.collider.transform.IsChildOf(transform) || hit.distance >= nearest) continue;
+                    nearest = hit.distance; to = hit.point; normal = hit.normal; landed = true;
+                    water = hit.point.y <= Datum.LocalSeaY + .15f;
+                }
+                System.Array.Clear(LandingHits, 0, LandingHits.Length);
+                // Ocean may have no collider. Prefer it to geometry below the sea surface.
+                float sea = Datum.LocalSeaY + .05f;
+                if (movement.y < 0f && from.y >= sea && from.y + movement.y <= sea)
+                {
+                    float fraction = (sea - from.y) / movement.y;
+                    if (distance * fraction < nearest)
+                    { to = from + movement * fraction; normal = Vector3.up; landed = water = true; }
+                }
+            }
+            center = to.ToGlobalPosition(); transform.position = to;
+            if (bomb) { bomb.rb.position = to; bomb.speed = velocity.magnitude; }
+            if (model) model.Rotate(new Vector3(85f, 25f, 35f) * dt, Space.Self);
+            if (!landed) return;
+            retired = true;
+            TopAttackEffects.CanisterImpact(to, normal, water);
+            if (bomb) NativeTopAttackBomb.Expire(bomb);
+            else if (Application.isPlaying) Destroy(gameObject); else gameObject.SetActive(false);
         }
 
         private void OnDestroy() { if (ownsSlot) { ownsSlot = false; TopAttackMunitions.Return(gun, 1); } }
@@ -280,6 +345,7 @@ namespace GunmageddonAudio
     public sealed class TopAttackParachute : MonoBehaviour
     {
         private Transform canopy, lines;
+        private Transform assemblyRoot;
         private Material material;
         private AnimationCurve horizontal, vertical, wrinkles;
         private float age;
@@ -290,6 +356,8 @@ namespace GunmageddonAudio
             var nativeCanopy = (GameObject)AccessTools.Field(typeof(Parachute), "canopy").GetValue(source);
             var nativeLines = (GameObject)AccessTools.Field(typeof(Parachute), "lines").GetValue(source);
             material = new Material(nativeCanopy.GetComponent<Renderer>().sharedMaterial);
+            var root = new GameObject("Top attack parachute assembly"); root.transform.SetParent(transform, false);
+            assemblyRoot = root.transform;
             horizontal = (AnimationCurve)AccessTools.Field(typeof(Parachute), "chuteScaleHorizontal").GetValue(source);
             vertical = (AnimationCurve)AccessTools.Field(typeof(Parachute), "chuteScaleVertical").GetValue(source);
             wrinkles = (AnimationCurve)AccessTools.Field(typeof(Parachute), "wrinkleStrength").GetValue(source);
@@ -304,7 +372,7 @@ namespace GunmageddonAudio
 
         private Transform Mesh(string label, GameObject source)
         {
-            var go = new GameObject(label); go.transform.SetParent(transform, false);
+            var go = new GameObject(label); go.transform.SetParent(assemblyRoot, false);
             go.AddComponent<MeshFilter>().sharedMesh = source.GetComponent<MeshFilter>().sharedMesh;
             var renderer = go.AddComponent<MeshRenderer>(); renderer.sharedMaterial = material;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
@@ -320,6 +388,16 @@ namespace GunmageddonAudio
         }
 
         private void Update() { age += Time.deltaTime; if (age <= 3f) Animate(age); }
+        internal void Detach(Vector3 velocity)
+        {
+            if (!assemblyRoot || !material) return;
+            assemblyRoot.SetParent(Datum.origin, true);
+            assemblyRoot.name = "Discarded top attack parachute";
+            var discarded = assemblyRoot.gameObject.AddComponent<DiscardedTopAttackParachute>();
+            discarded.Initialize(canopy, lines, material, velocity);
+            TopAttackMunitions.Track(assemblyRoot.gameObject);
+            material = null; assemblyRoot = null; enabled = false;
+        }
         private void OnDestroy() { if (material) { if (Application.isPlaying) Destroy(material); else DestroyImmediate(material); } }
     }
 

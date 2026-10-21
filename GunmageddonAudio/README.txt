@@ -1,6 +1,6 @@
 Gunmageddon Coastal Artillery
 
-Current helper: 1.6.0. Compatible installed asset pack: 0.0.7.
+Current helper: 1.8.1. Compatible installed asset pack: 0.0.16.
 Workspace documentation: ../context/README.txt
 History: ../context/CHANGELOG.txt
 
@@ -12,7 +12,7 @@ From this workspace's root:
   powershell -NoProfile -ExecutionPolicy Bypass -File GunmageddonAudio/tests/run-unit-tests.ps1
 
 build.ps1 compiles only src/**/*.cs, including nested feature folders.
-It writes build/1.6.0/GunmageddonAudio.dll; it does not install the DLL.
+It writes build/1.8.1/GunmageddonAudio.dll; it does not install the DLL.
 Use -OutputDirectory <path> for a separate validation build.
 
 Unity integration fixtures: tests/integration/

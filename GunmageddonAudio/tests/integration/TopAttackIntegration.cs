@@ -49,7 +49,7 @@ public static class TopAttackIntegration
     static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
     public static object Run()
     {
-        var assembly = Assembly.Load(System.IO.File.ReadAllBytes(System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT") ?? throw new System.InvalidOperationException("Set GUNMAGGEDON_ROOT to the repository folder before running editor tools or fixtures."), "GunmageddonAudio/build/1.5.4/GunmageddonAudio.dll")));
+        var assembly = Assembly.Load(System.IO.File.ReadAllBytes(System.IO.Path.Combine(System.Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT") ?? throw new System.InvalidOperationException("Set GUNMAGGEDON_ROOT to the repository folder before running editor tools or fixtures."), "GunmageddonAudio/build/1.6.2/GunmageddonAudio.dll")));
         featureAssembly = assembly;
         var top = assembly.GetType("GunmageddonAudio.TopAttackMunitions");
         var special = assembly.GetType("GunmageddonAudio.SpecialShells");
@@ -188,17 +188,27 @@ public static class TopAttackIntegration
             boat.transform.position = new Vector3(footprint.x, 0, footprint.z); rb.velocity = Vector3.right * 40;
             scanned = boat;
             component.GetType().GetMethod("FixedUpdate", Fields).Invoke(component, null);
-            Check(objects.Count == 3 && (float)component.GetType().GetField("spentAt", Fields).GetValue(component) >= 0, "Swept scan did not fire a projectile.");
+            Check(objects.Count == 4 && (float)component.GetType().GetField("spentAt", Fields).GetValue(component) >= 0, "Swept scan did not fire a projectile and detach the parachute.");
+            var discarded = (GameObject)objects[3];
+            Check(discarded.GetComponent(assembly.GetType("GunmageddonAudio.DiscardedTopAttackParachute")) && discarded.transform.parent == root.transform,
+                "Discarded parachute did not become independent under the world origin.");
+            Check(!first.GetComponentsInChildren<MeshFilter>(true).Any(m=>m.sharedMesh.name == "parachute1_canopy"), "Parachute remains attached to spent body.");
             var slugMuzzle = first.transform.Find("ProjectileMuzzle");
             var flash = slugMuzzle.Find("Top attack slug muzzle flash");
             Check(flash && flash.localPosition.sqrMagnitude < .00001f && flash.GetComponent<ParticleSystem>().main.maxParticles == 10,
                 "Discharge flash missing or not positioned at the projectile muzzle.");
             Check(Vector3.Dot(flash.forward, (((GameObject)objects[2]).transform.up)) > .999f, "Flash does not point along the launched slug.");
             component.GetType().GetMethod("FixedUpdate", Fields).Invoke(component, null);
-            Check(objects.Count == 3, "Submunition fired more than once.");
+            Check(objects.Count == 4, "Submunition fired more than once.");
             Check(slugMuzzle.childCount == 1, "Repeated scan duplicated the muzzle flash.");
             Check(!(bool)top.GetMethod("Claim", Static).Invoke(null, new object[] { boat, 1f }), "Target reservation allowed an immediate duplicate shot.");
             reports.Add("Passed: actual physics-tick spiral scan acquires a 40m/s boat, launches one projectile and reserves that target.");
+            float initialDownward = ((Vector3)component.GetType().GetField("velocity", Fields).GetValue(component)).y;
+            for (int i=0;i<100;i++) component.GetType().GetMethod("FixedUpdate", Fields).Invoke(component, null);
+            Check(first && first.transform.position.y > Datum.LocalSeaY + 100f && ((Vector3)component.GetType().GetField("velocity", Fields).GetValue(component)).y < initialDownward - 15f,
+                "Spent canister disappeared after 1.5 seconds or did not accelerate under gravity.");
+            Check(discarded && discarded.GetComponentInChildren<MeshFilter>(true), "Detached canopy vanished with the body.");
+            reports.Add("Passed: canopy disconnects on discharge and remains separate; inert spent canister retains momentum and accelerates rather than despawning after 1.5 seconds.");
 
             sinkObject = new GameObject("Physical projectile target collider");
             sinkObject.transform.position = new Vector3(50100, 10, 50000);
@@ -219,6 +229,41 @@ public static class TopAttackIntegration
             for (int i = 0; i < 2; i++) friendlySlug.GetType().GetMethod("FixedUpdate", Fields).Invoke(friendlySlug, null);
             Check(sink.Calls == 0, "Friendly hull took top-attack damage.");
             reports.Add("Passed: modeled Rigidbody/collider projectile, real flight before impact, native IDamageable penetration on collision and friendly-hit exclusion.");
+            var effectType = assembly.GetType("GunmageddonAudio.TopAttackEffects");
+            var canisterLand = (IList)effectType.GetField("CanisterLand", Static).GetValue(null);
+            var canisterWater = (IList)effectType.GetField("CanisterWater", Static).GetValue(null);
+            Action<Vector3,Vector3> placeSpent = (at,vel) =>
+            {
+                first.transform.position=at;
+                component.GetType().GetField("center",Fields).SetValue(component,at.ToGlobalPosition());
+                component.GetType().GetField("velocity",Fields).SetValue(component,vel);
+                component.GetType().GetField("retired",Fields).SetValue(component,false);
+            };
+            placeSpent(new Vector3(50100,12,50000),Vector3.down*100f);
+            component.GetType().GetMethod("FixedUpdate",Fields).Invoke(component,null);
+            Check(canisterLand.Count==1 && canisterWater.Count==0 && sink.Calls==0,"Canister hull landing failed or applied damage");
+            Check((bool)component.GetType().GetField("retired",Fields).GetValue(component),"Landed canister did not retire");
+            component.GetType().GetMethod("FixedUpdate",Fields).Invoke(component,null);
+            Check(canisterLand.Count==1,"Landing repeated after retirement");
+            placeSpent(new Vector3(50500,1,50000),Vector3.down*100f);
+            component.GetType().GetMethod("FixedUpdate",Fields).Invoke(component,null);
+            Check(canisterWater.Count==1 && Mathf.Abs(first.transform.position.y-(Datum.LocalSeaY+.05f))<.001f,"Ocean crossing did not create a small water impact at the surface");
+            foreach(var pool in new[]{canisterLand,canisterWater}) foreach(Component effect in pool)
+            {
+                var ps=effect.GetComponent<ParticleSystem>();
+                Check(ps.main.maxParticles==16 && ps.main.startSize.constantMax<=.4f && effect.GetComponentsInChildren<Light>().Length==0 && effect.GetComponentsInChildren<AudioSource>().Length==0,
+                    "Spent casing effect is oversized or contains explosive light/audio");
+            }
+            reports.Add("Passed: spent casing lands on a hull or ocean plane, emits only a small puff/splash, retires once and inflicts no extra damage.");
+            var chuteType=assembly.GetType("GunmageddonAudio.DiscardedTopAttackParachute");
+            var ownedMaterial=chuteType.GetField("material",Fields).GetValue(discarded.GetComponent(chuteType)) as Material;
+            UnityEngine.Object.DestroyImmediate(first);
+            Check(discarded && ownedMaterial,"Destroying spent body also destroyed detached canopy/material");
+            // Inactive edit-mode native fixtures do not get runtime lifecycle callbacks.
+            chuteType.GetMethod("OnDestroy",Fields).Invoke(discarded.GetComponent(chuteType),null);
+            UnityEngine.Object.DestroyImmediate(discarded);
+            Check(!ownedMaterial,"Detached canopy leaked its owned material");
+            reports.Add("Passed: body retirement preserves detached canopy; canopy cleanup releases its material.");
             return string.Join("\n", reports);
         }
         finally

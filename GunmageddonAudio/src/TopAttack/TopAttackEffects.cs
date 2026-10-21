@@ -9,6 +9,8 @@ namespace GunmageddonAudio
     {
         private static GameObject discharge, armor, ground, water, parking;
         private static readonly Dictionary<GameObject, List<CoastalSplashInstance>> Pools = new Dictionary<GameObject, List<CoastalSplashInstance>>();
+        private static readonly List<CoastalSplashInstance> CanisterWater = new List<CoastalSplashInstance>();
+        private static readonly List<CoastalSplashInstance> CanisterLand = new List<CoastalSplashInstance>();
 
         internal static void Configure(Transform reference)
         {
@@ -87,10 +89,54 @@ namespace GunmageddonAudio
             effect.Begin(position, Quaternion.FromToRotation(Vector3.up, normal) * source.transform.rotation);
         }
 
+        internal static void CanisterImpact(Vector3 position, Vector3 normal, bool waterImpact)
+        {
+            SpecialShells.EnsureMaterials();
+            var pool = waterImpact ? CanisterWater : CanisterLand;
+            pool.RemoveAll(p => !p);
+            CoastalSplashInstance effect = null, oldest = null;
+            foreach (var entry in pool)
+            {
+                if (!entry.gameObject.activeSelf) effect = entry;
+                if (!oldest || entry.RetireAt < oldest.RetireAt) oldest = entry;
+            }
+            if (!effect && pool.Count >= 8) effect = oldest;
+            if (!effect)
+            {
+                if (!parking) { parking = new GameObject("Top attack impact parking"); parking.transform.SetParent(Datum.origin, false); parking.SetActive(false); }
+                var go = new GameObject(waterImpact ? "Spent canister small water splash" : "Spent canister small dust puff");
+                go.transform.SetParent(parking.transform, false); go.SetActive(false);
+                var ps = go.AddComponent<ParticleSystem>(); ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                var main = ps.main; main.loop = false; main.playOnAwake = false; main.duration = .15f; main.maxParticles = 16;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(.35f, waterImpact ? .7f : .8f);
+                main.startSpeed = waterImpact ? new ParticleSystem.MinMaxCurve(1.5f, 4f) : new ParticleSystem.MinMaxCurve(.3f, 1.2f);
+                main.startSize = waterImpact ? new ParticleSystem.MinMaxCurve(.08f, .2f) : new ParticleSystem.MinMaxCurve(.15f, .4f);
+                main.startColor = waterImpact ? new Color(.8f, .9f, 1f, .8f) : new Color(.55f, .5f, .42f, .45f);
+                main.gravityModifier = waterImpact ? 1f : 0f;
+                var emission = ps.emission; emission.rateOverTime = 0f;
+                emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)(waterImpact ? 12 : 8)) });
+                var shape = ps.shape; shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = 30f; shape.radius = .08f;
+                var fade = ps.colorOverLifetime; fade.enabled = true;
+                var gradient = new Gradient();
+                gradient.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                    new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+                fade.color = gradient;
+                var renderer = ps.GetComponent<ParticleSystemRenderer>(); renderer.sharedMaterial = SpecialShells.SmokeMaterial;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; renderer.receiveShadows = false;
+                go.transform.SetParent(Datum.origin, false);
+                effect = go.AddComponent<CoastalSplashInstance>(); effect.Initialize(); pool.Add(effect);
+            }
+            // Inert casing only: no damage, explosion, light or artillery impact audio.
+            effect.Begin(position, Quaternion.LookRotation(normal.sqrMagnitude > .01f ? normal : Vector3.up));
+        }
+
         internal static void Shutdown()
         {
             foreach (var pool in Pools.Values) foreach (var effect in pool) if (effect) Dispose(effect.gameObject);
             Pools.Clear(); if (parking) Dispose(parking);
+            foreach (var effect in CanisterWater) if (effect) Dispose(effect.gameObject);
+            foreach (var effect in CanisterLand) if (effect) Dispose(effect.gameObject);
+            CanisterWater.Clear(); CanisterLand.Clear();
             discharge = armor = ground = water = parking = null;
         }
 
