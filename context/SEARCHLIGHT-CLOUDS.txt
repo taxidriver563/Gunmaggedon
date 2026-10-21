@@ -1,0 +1,39 @@
+Superseded visually by pack 0.0.18: see SEARCHLIGHT-CLOUD-CUTOFF.txt.
+The following records the original soft-fade implementation.
+
+Searchlight cloud fade - helper 1.8.3 + asset pack 0.0.17
+
+Beam scattering now attenuates as light travels through the native cloud layer.
+The runtime borrows CloudLayer.currentWeatherSet.particleSampler and uses its
+native densityMapScale, windDisplacement, coverage and layerThickness together
+with the mission cloud height. No cloud textures or particles are copied.
+
+The beam shader intersects the source-to-scattering-point segment with the
+cloud layer, samples the native map within that interval, and accumulates
+exponential extinction through the cloud. Entry is eased over an optical-depth
+transition so there is no abrupt clipping plane. Light stays attenuated after
+leaving the cloud; gaps in the density map retain the beam.
+
+Mapping is anchored to the lamp's global position. Floating-origin shifts and
+camera changes do not move the cloud fade. Missing layers, missing textures,
+clear weather and inactive cloud rendering leave the original beam unchanged.
+Per-lamp property blocks update on the existing beam-sample cadence; the shader
+adds one cloud-map sample, without a raymarch loop or particle enumeration.
+
+This is a density-map/layer approximation, not exact intersection with every
+individual cloud puff. Native cloud-sheet illumination, lens glare, native
+spotlight intensity and gameplay detection/illumination gates are unchanged.
+
+Validation:
+- 30 runtime sources compile successfully.
+- Updated shader compiles without warnings/errors in the connected editor.
+- SearchlightCloudRenderRegression passed GPU comparisons: below-cloud beam
+  intensity ratio 1.0, dense-cloud outgoing ratio 0.0 at the sampled band,
+  empty-map pixels identical to the clear control (maximum difference 0).
+- Native weather binding passed texture/height/thickness/scale/wind checks,
+  floating-origin invariance and clear/missing-layer fallbacks.
+- Dense-cloud preview visually inspected; fade is gradual near cloud entry.
+
+Limitations: a cloud-density/layer approximation; individual particle puffs,
+native cloud-sheet illumination and lens glare are not altered. Mission FPS,
+multiplayer and actual weather-scene appearance still need gameplay testing.

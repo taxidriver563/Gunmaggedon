@@ -1,8 +1,8 @@
 Repository layout
 
-GunmageddonAudio/src/     Runtime C# grouped by gameplay feature.
-GunmageddonAudio/tests/   Standalone and Unity integration/regression fixtures.
-GunmageddonAudio/tools/   Unity setup, render and inspection utilities.
+GunmaggedonRuntime/src/     Runtime C# grouped by gameplay feature.
+GunmaggedonRuntime/tests/   Standalone and Unity integration/regression fixtures.
+GunmaggedonRuntime/tools/   Unity setup, render and inspection utilities.
 Assets/                  Custom mod assets and editor-only preview scripts.
 UnityVisuals/            Searchlight shader and preview source copies.
 context/                 Public feature, build and release documentation.

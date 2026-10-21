@@ -1,0 +1,64 @@
+name: Release runtime
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+permissions:
+  contents: read
+concurrency:
+  group: runtime-release-${{ github.event.release.tag_name || github.ref }}
+  cancel-in-progress: false
+jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+  build:
+    needs: tests
+    runs-on: windows-2025
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Fetch private compile references
+        shell: pwsh
+        env:
+          GUNMAGGEDON_REFERENCES_URL: https://api.github.com/repos/taxidriver563/Gunmaggedon-Build-References/contents/ci-references.zip?ref=9545297b519017f04d92258bf146ca902a7812a1
+          GUNMAGGEDON_REFERENCES_TOKEN: ${{ secrets.GUNMAGGEDON_REFERENCES_TOKEN }}
+          GUNMAGGEDON_REFERENCES_SHA256: 36b76495040c165cf2f2e173e61fee77680d1ad073349b762a6a5bb83ad67282
+        run: ./ci/fetch-references.ps1 -Destination "$env:RUNNER_TEMP/gunmaggedon-references"
+      - name: Compile only the tagged source and package the runtime
+        shell: pwsh
+        env:
+          GUNMAGGEDON_REFERENCES_SHA256: 36b76495040c165cf2f2e173e61fee77680d1ad073349b762a6a5bb83ad67282
+        run: ./ci/build-runtime.ps1 -ReferencesDirectory "$env:RUNNER_TEMP/gunmaggedon-references" -SourceRevision $env:GITHUB_SHA
+      - name: Attest the built DLL and runtime install ZIP
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          create-storage-record: false
+          subject-path: |
+            artifacts/release/Gunmaggedon.Runtime.dll
+            artifacts/release/Gunmaggedon.Runtime.zip
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Gunmaggedon.Runtime
+          if-no-files-found: error
+          path: |
+            artifacts/release/Gunmaggedon.Runtime.dll
+            artifacts/release/Gunmaggedon.Runtime.zip
+      - name: Attach CI-built files to the published release
+        if: github.event_name == 'release'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release upload "$env:RELEASE_TAG" artifacts/release/Gunmaggedon.Runtime.dll artifacts/release/Gunmaggedon.Runtime.zip --repo "$env:GITHUB_REPOSITORY" --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed.' }

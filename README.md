@@ -2,6 +2,16 @@
 
 A gun-based warfare expansion for Nuclear Option, covering coastal artillery, primitive anti-aircraft guns, searchlights, and experimental ammunition.
 
+## Development changes
+
+Gunmaggedon Runtime 1.8.4 includes coastal searchlight support, optional area-flare fallback, brighter four-second ranging trails, and a hard cloud cutoff for searchlight beams. It uses asset pack 0.0.18. See [coastal support](context/SEARCHLIGHT-COASTAL.txt) and [cloud cutoff](context/SEARCHLIGHT-CLOUD-CUTOFF.txt). The packaged release below remains 1.8.1 until the next publication.
+
+Development helper DLL: `Gunmaggedon.Runtime.dll`; source: `GunmaggedonRuntime/`. When upgrading, remove the old `GunmageddonAudio.dll` from the plugins folder. Existing BepInEx settings are preserved.
+
+## Release builds
+
+[Release CI](context/RELEASE-CI.txt) builds and attests the runtime from each published release's tagged source. Standalone tests also run on pushes and pull requests. The private-reference Actions secret must be configured once; the Unity asset pack is built separately. Manual workflow runs create artifacts without publishing a release.
+
 ## Current build
 
 **Runtime helper 1.8.1 + Blueprinter asset pack 0.0.16. Both are required.**

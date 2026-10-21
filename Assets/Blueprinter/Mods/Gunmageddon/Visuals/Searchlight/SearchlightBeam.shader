@@ -12,6 +12,9 @@ Shader "Gunmaggedon/Searchlight Beam"
   _Slope("Radius growth",Float)=.0192
   _DistanceFade("Observer fade distance (m)",Float)=20000
   [ToggleUI] _UseSceneDepth("Clip scattering at opaque geometry",Float)=1
+  [HideInInspector] _CloudMap("Native cloud density",2D)="black"{}
+  [HideInInspector] _CloudData("Cloud height, half thickness, extinction, enabled",Vector)=(0,0,0,0)
+  [HideInInspector] _CloudUV("Cloud UV origin and scale",Vector)=(0,0,0,0)
  }
  SubShader
  {
@@ -33,8 +36,10 @@ Shader "Gunmaggedon/Searchlight Beam"
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
    CBUFFER_START(UnityPerMaterial)
     float4 _BeamColor;
+    float4 _CloudData,_CloudUV;
     float _Intensity,_Opacity,_Length,_BeamRange,_VisibleLength,_DistanceFade,_StartRadius,_Slope,_UseSceneDepth;
    CBUFFER_END
+   TEXTURE2D(_CloudMap);SAMPLER(sampler_CloudMap);
    struct Attributes {float4 positionOS:POSITION;UNITY_VERTEX_INPUT_INSTANCE_ID};
    struct Varyings {float4 positionCS:SV_POSITION;float3 positionOS:TEXCOORD0;UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO};
    Varyings Vert(Attributes v)
@@ -70,6 +75,24 @@ Shader "Gunmaggedon/Searchlight Beam"
     }
     return leave>enter;
    }
+   float CloudTransmission(float3 source,float3 samplePosition)
+   {
+    if(_CloudData.w<.5)return 1;
+    float3 ray=samplePosition-source;
+    float lower=_CloudData.x-_CloudData.y,upper=_CloudData.x+_CloudData.y;
+    float start=0,end=1;
+    if(abs(ray.y)<.001) {if(lower>0||upper<0)return 1;}
+    else {
+     float a=lower/ray.y,b=upper/ray.y;
+     start=max(0,min(a,b));end=min(1,max(a,b));
+    }
+    if(end<=start)return 1;
+    // Sample the first cloud intersection. Keep that obstruction for every
+    // point beyond it instead of revealing a faint tail above the layer.
+    float2 entryOffset=ray.xz*start;
+    float density=SAMPLE_TEXTURE2D(_CloudMap,sampler_CloudMap,frac(_CloudUV.xy+entryOffset*_CloudUV.zw)).r;
+    return density>.15?0:1;
+   }
    half4 Frag(Varyings i,half facing:VFACE):SV_Target
    {
     UNITY_SETUP_INSTANCE_ID(i);UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
@@ -103,6 +126,8 @@ Shader "Gunmaggedon/Searchlight Beam"
     float alpha=_Opacity*(1-exp(-min(chord,8)))*longitudinal;
     if(inside)alpha*=.25;
     float3 source=TransformObjectToWorld(float3(0,0,0));
+    float3 middleWS=TransformObjectToWorld(cameraOS+direction*((enter+leave)*.5));
+    clip(CloudTransmission(source,middleWS)-.5);
     alpha*=1-smoothstep(_DistanceFade*.7,_DistanceFade,distance(GetCameraPositionWS(),source));
     return half4(_BeamColor.rgb*_Intensity,alpha);
    }

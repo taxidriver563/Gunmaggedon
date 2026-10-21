@@ -109,6 +109,7 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ss]ceneDependencyCache*
 
 # Gunmaggedon local builds and rollback archives
+/GunmaggedonRuntime/build/
 /GunmageddonAudio/build/
 /ModBuild/
 /UnitySetupBackup/
@@ -126,3 +127,6 @@ InitTestScene*.unity*
 *.p12
 id_rsa
 id_ed25519
+
+# Generated CI packages
+/artifacts/

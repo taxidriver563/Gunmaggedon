@@ -13,3 +13,11 @@ and performance still need wider testing.
 
 Release preparation: removed workstation paths, sanitized FBX source metadata,
 and replaced internal session records with public documentation.
+
+Development helper 1.8.2: coordinated ship illumination for searchlights, optional predictive area-flare fallback, and brighter four-second ranging trails. Asset pack unchanged at 0.0.16.
+
+Development helper 1.8.3 + pack 0.0.17: native weather-map cloud attenuation with soft entry, wind/floating-origin stability and clear-gap preservation. Render and native binding checks passed.
+
+2026-10-21 pack 0.0.18: hard cutoff at the first cloud intersection removes faint beam continuation, including thin clouds. Helper remains 1.8.3. Render regression passed.
+
+2026-10-21 runtime 1.8.4: renamed helper assembly/DLL to Gunmaggedon.Runtime and source folder to GunmaggedonRuntime. Plugin ID/settings and asset pack 0.0.18 preserved. Build, nine suites and 32 Unity checks passed.

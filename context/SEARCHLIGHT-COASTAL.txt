@@ -1,0 +1,33 @@
+Coastal illumination support - helper 1.8.2 (development)
+Compatible Blueprinter asset pack: 0.0.16
+
+Idle friendly searchlights accept coastal-battery requests based on faction-known
+ship positions and inferred motion. Shared per-faction claims assign one lamp
+per ship. Lamps already tracking aircraft keep their air-defense task.
+
+Ship assignments can aim down to -5 degrees. Lamps traverse physically and need
+sustained, unobstructed beam contact before coastal guns begin ranging or combat
+fire. A request or claim alone never counts as actual illumination. Effective
+coverage uses the 10 km beam range; the 13 km visual tail adds no targeting range.
+The existing low-light activation gate remains in force.
+
+Guns defer area flares for at most 12 seconds while an assigned lamp acquires.
+Reliable coverage conserves flares; predicted range/line-of-sight/tracking loss
+allows coordinated area-flare replacement. With no usable lamp, existing shared
+flare tokens provide area illumination. In [Illumination], FlareShellsEnabled
+can be set false without disabling the actual illumination requirement.
+
+Ranging trails now default to four seconds. Old 12-second defaults migrate;
+other custom values remain configurable. A per-renderer HDR tint brightens only
+ranging trails. Clusterlets, slugs and floating-origin refresh retain their
+existing behavior.
+
+Validation: runtime and nine standalone suites passed; 32 coastal integration
+checks, existing aircraft-claim and flare-coordination fixtures passed in Unity.
+A GPU render comparison confirmed increased trail brightness; expiry checks
+confirmed four-second segment lifetime. No full mission balance/FPS or
+multiplayer validation has been performed. Remote lamp presentation still
+uses local sweeps instead of replicated tracking.
+
+Fixtures use GUNMAGGEDON_ROOT; optional GUNMAGGEDON_TEST_HELPER selects an
+isolated validation assembly if Unity has cached a previously loaded helper.

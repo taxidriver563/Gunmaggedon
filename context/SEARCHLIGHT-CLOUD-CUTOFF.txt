@@ -1,0 +1,16 @@
+Searchlight hard cloud cutoff - asset pack 0.0.18, helper unchanged at 1.8.3
+
+Replaces the soft extinction tail introduced in pack 0.0.17. Once the beam
+enters a cloud with native sampler density greater than 0.15, its scattering
+pixels are discarded completely. The first layer intersection is sampled so
+points farther along do not reappear because of a gap at a later sample point.
+Clear cloud-map gaps and the beam below the layer are preserved.
+
+Runtime weather binding, wind movement, floating-origin anchoring, native
+spotlight and lens glare remain unchanged. Targeting and coastal illumination
+rules are unchanged. This is a shader/pack update; helper 1.8.3 remains valid.
+
+Validation: shader compiled without messages. GPU regression passed with
+below-cloud intensity ratio 1.0, dense-cloud continuation ratio 0.0, thin-cloud
+continuation ratio 0.0 and maximum clear-gap/control pixel difference 0.0.
+No mission or FPS test was performed for this visual adjustment.

@@ -1,0 +1,33 @@
+Runtime helper rename - 1.8.4
+
+User-facing name: Gunmaggedon Runtime
+Assembly/DLL: Gunmaggedon.Runtime.dll
+Source folder: GunmaggedonRuntime/
+Plugin entry point: GunmaggedonRuntime/src/Core/Plugin.cs
+Install path: BepInEx/plugins/Gunmaggedon/Gunmaggedon.Runtime.dll
+Compatible asset pack: 0.0.18 (unchanged)
+
+The helper now covers artillery, special ammunition, AA, illumination and
+searchlights, so its former audio-only name no longer described its purpose.
+
+Compatibility:
+The BepInEx plugin ID remains gunmageddon.203mm.audio and retains the existing
+gunmageddon.203mm.audio.cfg file and settings. The internal GunmageddonAudio
+namespace remains for compatibility. Historical baseline DLLs and published
+older distributions retain their original filenames. Current fixture/source
+paths follow the renamed folder; current coastal/flare fixtures target 1.8.4.
+
+When upgrading, close the game and move every old GunmageddonAudio.dll outside
+BepInEx/plugins before starting with the new helper. Do not load both helpers.
+Older official dist folders are historical releases; do not rename their
+contents/checksum manifests in place.
+
+Validation:
+- All 30 runtime sources compile into assembly identity Gunmaggedon.Runtime.
+- BepInEx metadata verified: original plugin ID, Gunmaggedon Runtime, 1.8.4.
+- All nine standalone suites passed from the renamed source folder.
+- 32 coastal/searchlight/trail Unity integration checks passed against the
+  actual renamed assembly, without an alternate assembly-name test build.
+- Installed helper hash verified and config checksum unchanged. Old helper
+  copies are absent from all active plugin subfolders.
+- No startup/mission test performed for this naming change.

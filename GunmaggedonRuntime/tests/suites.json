@@ -1,0 +1,11 @@
+{
+  "ArtilleryBallisticsTests": ["Artillery/ArtilleryBallistics.cs"],
+  "FlareBallisticsTests": ["Illumination/FlareBallistics.cs"],
+  "RangingSolutionTests": ["Ranging/RangingSolution.cs"],
+  "SpecialShellPolicyTests": ["SpecialShells/SpecialShellPolicy.cs"],
+  "QueryOptimizationTests": ["SpecialShells/QueryGeometry.cs", "SpecialShells/ClusterDamageQuery.cs"],
+  "ArmorPiercingPolicyTests": ["Ammunition/ArmorPiercingPolicy.cs"],
+  "OpticalRangingTests": ["AA/OpticalRangingSolution.cs"],
+  "SearchlightSolutionTests": ["Searchlight/SearchlightSolution.cs"],
+  "SearchlightClaimsTests": ["Searchlight/SearchlightClaims.cs"]
+}

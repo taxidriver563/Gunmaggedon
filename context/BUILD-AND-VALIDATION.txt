@@ -1,8 +1,8 @@
 Build and validation
 
 From the repository root on Windows:
-  powershell -NoProfile -ExecutionPolicy Bypass -File GunmageddonAudio/build.ps1
-  powershell -NoProfile -ExecutionPolicy Bypass -File GunmageddonAudio/tests/run-unit-tests.ps1
+  powershell -NoProfile -ExecutionPolicy Bypass -File GunmaggedonRuntime/build.ps1
+  powershell -NoProfile -ExecutionPolicy Bypass -File GunmaggedonRuntime/tests/run-unit-tests.ps1
 
 Build prerequisites: Unity 2022.3.62f2 Mono/Roslyn, installed Nuclear Option
 managed assemblies, BepInEx and Harmony. Edit the standard installation defaults
@@ -36,3 +36,6 @@ Unity with identical geometry, transforms and material slots. Runtime source
 and editor fixtures compiled; all nine standalone suites passed. Existing
 fixture compiler warnings concern obsolete Physics.autoSimulation and reference
 comparisons. Both published release checksum manifests remain valid.
+
+Current helper output: GunmaggedonRuntime/build/1.8.4/Gunmaggedon.Runtime.dll.
+Migration and retained legacy configuration identity: RUNTIME-RENAME.txt.

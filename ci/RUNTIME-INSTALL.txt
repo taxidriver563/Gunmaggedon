@@ -1,0 +1,16 @@
+Gunmaggedon Runtime
+
+This package contains only the runtime helper. Install the compatible
+Gunmageddon_0.0.18.nobp asset pack separately; it is not rebuilt by this job.
+
+Close Nuclear Option. Move old GunmageddonAudio.dll copies outside the game's
+BepInEx/plugins folder, then copy this ZIP's BepInEx folder into the game folder.
+Keep only the intended current .nobp pack active. Existing configuration stays
+in BepInEx/config/gunmageddon.203mm.audio.cfg.
+
+Official release DLLs and ZIPs have GitHub build-provenance attestations:
+  gh attestation verify Gunmaggedon.Runtime.dll --repo taxidriver563/Gunmaggedon
+  gh attestation verify Gunmaggedon.Runtime.zip --repo taxidriver563/Gunmaggedon
+
+build-info.json records the source commit, compiler and private dependency
+bundle digest. Dependencies themselves are never included in this package.
