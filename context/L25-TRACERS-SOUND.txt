@@ -1,0 +1,42 @@
+L25 tracer cadence and custom firing sound - Runtime 1.9.6 / pack 0.0.25
+
+Final user preference: one tracer every THREE actual shots across the mount.
+The intermediate one-in-five request was changed before installation.
+
+Native Gun.Awake randomizes a tracer seed separately for each feed. L25 now
+uses one successful-shot phase on the mount, preparing the selected gun's
+native seed immediately before SpawnBullet. Native code increments the seed
+then checks seed > tracerRatio, so phase two prepares seed three and the
+other phases prepare zero. All six rig/operational feed assets use ratio three.
+Successful shots advance the phase; skipped or failed spawns do not. Reloads
+and temporarily unavailable feeds do not reset the phase. Tracer emission is
+strictly on total shots 3, 6, 9, etc., not one counter per barrel. During a
+perfect left/middle/right cycle, this means the right barrel emits the tracers;
+skipping a feed can change which physical barrel fires the next tracer.
+Each remote instance follows its received shot events; no new late-join phase
+synchronization protocol is introduced.
+
+All three guns on both prefabs now use 25mm_Autocannon_Fire.mp3 as their native
+one-shot firing sound. The clip decodes non-silent audio, duration 3.048s.
+One AudioSource per feed and no looping rotary start/sustain/end layers.
+Base pitch is one with small 0.025 pitch variation; the old stock rotary 0.8
+pitch setting is removed. Original audio file is retained without trimming.
+
+Validation: all 745 combined Unity checks passed. The L25 fixture captures
+actual native AddBullet tracer flags across 58 successful shots with mixed
+feed order, reloads and interrupted/suppressed spawns, checking every flag
+against the exact one-in-three sequence. Native Gun.ShotSound was exercised
+for all three feeds and its PlayOneShot clip captured as the supplied custom
+25mm sound. Clip audio data decodes non-silent. Existing native trailer,
+coastal and F88 checks still pass. Live mission audiovisual confirmation is
+still needed. Unchanged standalone math tests were not rerun for this change.
+
+Migration helper: tools/SetupL25SoundTracers.cs, after rig/feed/combat setup.
+Backups: UnitySetupBackup/L25/BeforeSoundTracers.
+Configured asset snapshots: UnitySetupBackup/L25/Configured.
+
+Final pack loaded and checked: all three operational feed ratios are three,
+with one fireSounds entry resolving to the bundled custom 25mm clip. Installed
+with the game closed; previous runtime/pack backed up and copy hashes match.
+DLL SHA256: 6BD006AC21840A9A658D2FACABCC5498EAD8AA4D0889ACAF037503ACAD6D2451
+Pack SHA256: 79E7B701EF665280809FFA112ACF4D74DB265FE632FD36C1E91165C876E1C4CD

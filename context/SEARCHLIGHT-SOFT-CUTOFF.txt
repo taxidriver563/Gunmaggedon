@@ -1,0 +1,29 @@
+Searchlight finite soft cloud cutoff — asset pack 0.0.19
+
+Replaces the hard plane cutoff from pack 0.0.18. Each beam sightline samples
+its first cloud-layer intersection. When native cloud density exceeds 0.15,
+a smoothstep fade runs from approximately 80 metres before that boundary to
+120 metres inside the cloud. Thin layers shorten the inside fade to at most
+35% of their ray thickness. At the endpoint transmission is exactly zero and
+remains zero beyond the layer; there is no exponential residual or faint tail.
+
+_CloudFeather defaults to 200 metres and controls the transition width. Empty
+cloud-map gaps retain the clear beam. Runtime weather binding, native cloud
+illumination and lens glare use the existing implementation. No runtime DLL
+change is needed; Runtime 1.8.5 remains installed.
+
+GPU validation with the actual prefab/shader:
+- Shader compiled without messages.
+- Beam below the cloud retained intensity ratio 1.0.
+- Cloud-boundary intensity ratio 0.53293: a partial soft transition.
+- Intensity 500 metres past entry was 0.0.
+- Dense and thin cloud continuation ratios were both 0.0.
+- Maximum clear-gap/control difference was 0.0.
+
+Fixture: GunmaggedonRuntime/tests/regression/SearchlightCloudRenderRegression.cs.
+Preview images: UnitySetupBackup/Searchlight/CloudFadePreview.
+Prior shader: UnitySetupBackup/Searchlight/BeforeSoftCutoff-0.0.19.
+Actual weather/exposure appearance and frame rates need an in-game check.
+
+Pack 0.0.19 built and installed with hash verification. Only 0.0.19 is active;
+0.0.18 is preserved in the rollback folder. No mission test has been run.

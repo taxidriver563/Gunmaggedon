@@ -1,0 +1,59 @@
+L25 operational trailer integration - Runtime 1.9.5 / pack 0.0.24
+
+Spawnable mission-editor unit: L25 Triple AA Trailer
+Definition key: Gunmaggedon_L25_AA
+Assets: L25_AA_Trailer.prefab and L25_AA_Definition.asset, alongside the
+existing L25_AA_Weapon.asset in Assets/Blueprinter/Mods/Gunmageddon.
+The scene's staged L25_Turret_Rig remains available for mechanical previews.
+
+Operational configuration:
+- 3.5km native optics and maximum engagement range.
+- Existing near-range optical tracking/dispersion profile retained.
+- Three independent native guns and native weapon stations, with distinct IDs.
+- Each gun starts with 15 rounds loaded and 19 reserve clips: 300 rounds per
+  gun, 900 total, including the 45 initially loaded rounds.
+- 200rpm per barrel / 600rpm aggregate, staggered at least 0.1s between shots.
+- Native independent clip reloads; nominal two seconds at normal crew skill.
+- Native 25mm sounds, impact effects and server-authoritative projectile damage.
+- Operational prefab has no mechanical demonstration Animation component.
+
+Native integration correction:
+Turret.FixedUpdate fires only currentWeaponStation. L25 now selects the next
+eligible station before that native tick, rather than leaving the turret on
+one gun. Native targeting, alignment, faction, obstruction and lock-time guards
+remain in place. Empty/reloading guns are skipped while other feeds operate.
+The existing Gun.Fire/FixedUpdate guards still enforce tracking, range, per-gun
+cadence and aggregate staggering without consuming ammunition on skipped guns.
+
+Vehicle setup derives from an independent L40 prefab clone; the L40 asset was
+not edited. New geometry, owners, optics, UnitPart and weapon references are
+rewired to L25. Root mass is 2000kg, spawn height 0.92m, native suspension
+preload balances weight, and four wheel contacts use the existing chassis
+locations and 0.8m radius. Collision shapes cover chassis, mount, cradle and
+individual barrels. Classified as a ground AA trailer with native network
+identity and L25-specific definition. Mobile driving is disabled, as on the
+other deployed trailers; the quarantined custom hitch/job hooks remain disabled.
+No new hitch/unhitch capability is introduced in this integration.
+
+Validation: all 688 current-build Unity checks passed. New operational checks
+exercise real Gun.Awake and Turret_OnInitialize: three separately registered
+stations, unique network station numbers, 15/300 loaded/full ammo per feed,
+correct ownership, range, suspension balance, and station selection including
+one/two guns reloading. Source L40 prefab hash is unchanged:
+8F5F30FD8500637DC69C1114DDAB94330103EA2F0A5EDA957B0A3EB834D33418
+Existing 108 L25 rig/clip/tracking checks and 273 coastal/F88/review checks
+still pass. The unchanged 12 standalone math suites were not rerun here.
+Actual mission spawning, combat balance and two-peer multiplayer still need
+in-game confirmation; editor checks do not claim those have been exercised.
+
+Creation helper: GunmaggedonRuntime/tools/SetupL25Combat.cs.
+Pre-integration rig/weapon/metadata backup: UnitySetupBackup/L25/BeforeCombat.
+New regression fixture: tests/integration/L25TrailerIntegration.cs.
+No GitHub push requested or made.
+
+Final built pack was loaded as an AssetBundle and checked for its L25
+definition, linked prefab, three guns/stations and generated nonzero network
+prefab identity. Installed with Nuclear Option closed; previous DLL/pack were
+backed up. Source and installed file hashes match.
+DLL SHA256: 07714E9F614B9EAB2364401476CA131161E45E0591494709B52E002C8C5141CF
+Pack SHA256: BFEB9B033EF63329E2823C6B0488542E0F434D41F7B93C58DA7AC7042BCFFAC8

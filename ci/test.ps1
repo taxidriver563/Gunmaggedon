@@ -1,4 +1,4 @@
-param([string]$DotnetPath = 'dotnet')
+param([string]$DotnetPath = 'dotnet', [string[]]$Suites)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = Join-Path $repoRoot 'GunmaggedonRuntime'
@@ -19,6 +19,7 @@ try {
     $references = @(Get-ChildItem (Join-Path $packs[0].FullName 'ref/net10.0') -Filter '*.dll' -File | Sort-Object Name)
     foreach ($case in $cases.PSObject.Properties) {
         $name = $case.Name
+        if ($Suites -and $name -notin $Suites) { continue }
         $directory = Join-Path $output $name
         New-Item -ItemType Directory -Path $directory -Force | Out-Null
         $dll = Join-Path $directory "$name.dll"
@@ -36,5 +37,7 @@ try {
         & $DotnetPath $dll
         if ($LASTEXITCODE -ne 0) { throw "$name failed." }
     }
-    Write-Output "All $(@($cases.PSObject.Properties).Count) SDK test suites passed."
+    $executedCount = @($cases.PSObject.Properties | Where-Object { !$Suites -or $_.Name -in $Suites }).Count
+    if ($executedCount -eq 0) { throw 'No matching test suites.' }
+    Write-Output "All $executedCount selected SDK test suites passed."
 } finally { Pop-Location }

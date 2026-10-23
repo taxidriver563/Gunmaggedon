@@ -1,0 +1,18 @@
+Full searchlight range - Runtime 1.8.9
+
+User confirmed the failing naval targets were approximately 8-13km away.
+Pack 0.0.19 contains a 13km cone mesh, but its material had limited runtime
+tracking and rendered reach to 10km. Ships beyond 10km were therefore rejected.
+
+Runtime now uses the full 13,000m reach for coastal/air target eligibility,
+candidate search, physical clipping, per-instance shader length and native spot
+light range. The existing asset pack 0.0.19 is sufficient; no pack rebuild is
+needed. Cloud and terrain occlusion still shorten the visible beam. Battery-to-
+lamp support distance remains 2km and aircraft retain priority.
+
+Validation: 118 current-build Unity checks passed, including exactly 13km,
+rejection beyond 13km, matching shader/light range, inclined trailer aiming and
+request persistence. The nine standalone suites passed immediately before this
+range-only follow-up; their policy sources were unchanged. No live mission test
+was run. 8-10km failures are not explained by the old range limit alone; the
+1.8.8 persistence/incline fixes and detailed status logs remain included.

@@ -9,7 +9,7 @@ using UnityEngine;
 namespace GunmageddonAudio
 {
     // Keep the original plugin ID so BepInEx retains existing configuration.
-    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.8.4")]
+    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.10.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         internal static Plugin Instance;
@@ -28,6 +28,7 @@ namespace GunmageddonAudio
         private float nextBankCleanup;
         private static Transform listenerTransform;
         private static int listenerFrame = -1;
+        internal void ResetAudioBanks(){markedBanks.Clear();placeholderBanks.Clear();expiredBanks.Clear();lastClips.Clear();listenerTransform=null;listenerFrame=-1;nextBankCleanup=0;}
 
         private void Awake()
         {
@@ -43,8 +44,11 @@ namespace GunmageddonAudio
                 NativeTopAttackBomb.Install(harmony);
                 CoastalArtillery.Install(harmony, Config);
                 SpecialShells.Install(harmony, Config, Logger);
+                SpecialPayloadNetwork.Install();
                 CoastalRanging.Install(harmony, Config, Logger);
                 L40Runtime.Install(Logger);
+                L25Runtime.Install(Logger);
+                F88Runtime.Install(Logger);
                 SearchlightRuntime.Install(Logger);
                 Logger.LogInfo("203mm firing and impact audio: travel delay and distance variants enabled.");
             }
@@ -53,7 +57,11 @@ namespace GunmageddonAudio
 
         private void OnDestroy()
         {
+            OptimizationRuntime.Clear();
+            SpecialPayloadNetwork.Shutdown();
             SearchlightRuntime.Shutdown();
+            F88Runtime.Shutdown();
+            L25Runtime.Shutdown();
             L40Runtime.Shutdown();
             harmony?.UnpatchSelf();
             CoastalRanging.Shutdown();
@@ -64,6 +72,9 @@ namespace GunmageddonAudio
             listenerTransform = null; listenerFrame = -1;
             if (Instance == this) Instance = null;
         }
+
+        private void Update() { OptimizationRuntime.Tick(); SpecialPayloadNetwork.Tick(); F88FlakNetwork.Tick(); }
+        private void LateUpdate() { TrailService.Tick(); }
 
         private static bool GunSound(Component __instance)
         {
@@ -111,27 +122,27 @@ namespace GunmageddonAudio
 
         private void Queue(Transform origin, AudioBank templates, string key)
         {
+            OptimizationRuntime.EnsureMission();
             // A separate emitter survives effect pooling, movement and deactivation.
-            var emitter = new GameObject("203mm travelling audio");
-            // Follow the game's floating world origin without following a pooled
-            // effect or moving/recoiling gun.
-            var worldOrigin = Datum.origin;
-            if (worldOrigin) emitter.transform.SetParent(worldOrigin, false);
-            emitter.transform.position = origin.position;
-            StartCoroutine(Travel(emitter, templates, key));
+            var voice=TravellingAudio.Rent(origin.position,templates.Limit);
+            CopyVoice(voice.Near,Choose(templates.Near,key+"/near"));
+            CopyVoice(voice.Far,Choose(templates.Far,key+"/far"));
+            TravellingAudio.Commit(voice);
         }
 
         internal static void PlaceholderSound(Vector3 position, GameObject source, string key)
         {
             if (!Instance || !source) return;
+            OptimizationRuntime.EnsureMission();
             var templates = Instance.Bank(source, false);
             if (templates.Empty) return;
-            var emitter = new GameObject("Top attack travelling audio");
-            emitter.transform.SetParent(Datum.origin, false); emitter.transform.position = position;
-            Instance.StartCoroutine(Instance.Travel(emitter, templates, key));
+            var voice=TravellingAudio.Rent(position,templates.Limit);
+            CopyVoice(voice.Near,Instance.Choose(templates.Near,key+"/near"));
+            CopyVoice(voice.Far,Instance.Choose(templates.Far,key+"/far"));
+            TravellingAudio.Commit(voice);
         }
 
-        private static Vector3 ListenerPosition()
+        internal static Vector3 ListenerPosition()
         {
             if (listenerFrame != Time.frameCount)
             {
@@ -151,28 +162,6 @@ namespace GunmageddonAudio
         public static float TravelSeconds(float distance) { return Mathf.Max(0f, distance) / 343f; }
         public static float DistantMix(float distance) { return Mathf.InverseLerp(400f, 1500f, distance); }
 
-        private IEnumerator Travel(GameObject emitter, AudioBank templates, string key)
-        {
-            float elapsed = 0f;
-            float limit = templates.Limit;
-            // Snapshot clip/settings now; the pooled effect may move before arrival.
-            var nearVoice = CopyVoice(emitter, Choose(templates.Near, key + "/near"));
-            var farVoice = CopyVoice(emitter, Choose(templates.Far, key + "/far"));
-            while (emitter && elapsed * 343f < Vector3.Distance(emitter.transform.position, ListenerPosition()))
-            {
-                if (elapsed > TravelSeconds(limit) + 1f) { Destroy(emitter); yield break; }
-                yield return null;
-                elapsed += Time.deltaTime;
-            }
-            if (!emitter) yield break;
-            float distance = Vector3.Distance(emitter.transform.position, ListenerPosition());
-            float mix = DistantMix(distance);
-            float lifetime = 0f;
-            if (nearVoice) { nearVoice.volume *= Mathf.Sqrt(1f - mix); nearVoice.Play(); lifetime = nearVoice.clip.length / nearVoice.pitch; }
-            if (farVoice) { farVoice.volume *= Mathf.Sqrt(mix); farVoice.Play(); lifetime = Mathf.Max(lifetime, farVoice.clip.length / farVoice.pitch); }
-            Destroy(emitter, lifetime + 1f);
-        }
-
         private AudioSource Choose(AudioSource[] options, string key)
         {
             if (options.Length == 0) return null;
@@ -191,10 +180,9 @@ namespace GunmageddonAudio
             return chosen;
         }
 
-        private static AudioSource CopyVoice(GameObject emitter, AudioSource template)
+        internal static AudioSource CopyVoice(AudioSource voice, AudioSource template)
         {
             if (!template) return null;
-            var voice = emitter.AddComponent<AudioSource>();
             voice.playOnAwake = false;
             voice.loop = false;
             voice.clip = template.clip;

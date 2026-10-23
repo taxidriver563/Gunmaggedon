@@ -1,0 +1,99 @@
+F88 predicted-area flak - Runtime 1.9.0 / pack 0.0.20
+Current balance supersedes the initial values below where noted:
+F88-FRAGMENTATION-BUFF.txt (runtime 1.9.9 / existing pack 0.0.26).
+Implemented 2026-10-21
+
+Mission unit: F88 Heavy Flak Trailer (Gunmaggedon_F88_AA).
+New assets under Assets/Blueprinter/Mods/Gunmageddon/:
+  F88_AA_Trailer.prefab
+  F88_AA_Definition.asset
+  F88_AA_Weapon.asset
+The separate F88_Turret_Rig prefab and existing scene preview are retained.
+The L40 prefab is unchanged; its before/after SHA256 remains
+8F5F30FD8500637DC69C1114DDAB94330103EA2F0A5EDA957B0A3EB834D33418.
+
+Behavior
+- Candidate identities come from faction-known enemy aircraft contacts.
+- Optical observations require clear sight within 8km, including mod smoke.
+  In low light, a friendly searchlight must actually illuminate the aircraft.
+- Friendly operational, activated, unjammed radar within 300m can supply its
+  detected aircraft contacts. The distance check is inclusive and revalidated.
+- Optical samples arrive every 1.5s; radar samples every 0.35s. Position error
+  and velocity estimation improve with radar knowledge. Neither aircraft rigid
+  body velocity nor acceleration is read as perfect fire-control information.
+- Velocity estimates require an observation baseline. Contact loss permits at
+  most six seconds of extrapolation before firing stops.
+- A barrage commits an observed position/movement estimate for three shots or
+  twelve seconds. New observations do not rewrite that committed estimate.
+  The predicted region advances along its committed velocity; current target
+  maneuvers are not followed until the next barrage.
+- Guns supporting the same contact within 1.5km share a committed estimate and
+  cover overlapping sectors. Each shell samples a substantial horizontal and
+  vertical volume rather than a point on the aircraft.
+- Shell dispersion is fixed at 0.65 degrees and fuze error at +/-0.18s. Separate
+  random streams keep mechanical fuze errors independent of radar observations.
+- Gravity/drag ballistics solve to the selected region. Aim/fuze preparation
+  converges before firing, runs twice per second, and also throttles failed
+  solves. The mechanical turret still moves at 12 degrees/s yaw, 10 degrees/s
+  elevation. Native firing callbacks run at their normal fixed-step cadence.
+- Timed shells have no target/proximity fuse, homing, acceleration prediction,
+  in-flight corrections or proximity triggers. Outgoing bullet tracers are
+  disabled; muzzle flashes and visible airbursts provide shot presentation.
+
+Damage and presentation
+- Native BulletSim is retained for gravity, drag, collisions and shell expiry.
+  Native timed expiry is visual-only, so a tracked authoritative expiry emits
+  exactly one native DamageEffects.BlastFrag event at the actual shell position.
+- Remote visual bullets and received effect messages cannot cause damage.
+- Lingering smoke has no damage behavior. Independent pooled puffs preserve
+  earlier bursts; at most 128 instances are retained. A 512-flight guard bounds
+  tracked shells. Datum-relative particle simulation preserves origin rebasing.
+- The user's muzzle flash, 88mm firing sound, flak explosion sound, moving
+  handles, recoil and right-sliding breech remain assigned. Airburst sound uses
+  the existing travelling-audio helper. Native one-shot firing audio remains.
+- New Mirage messages replicate gun pose and authoritative burst presentation
+  to compatible peers; serializers are explicit, with a versioned handshake.
+  Late joiners receive subsequent poses/bursts, not a history of old smoke puffs.
+
+Initial balance values (subject to mission testing)
+  820m/s muzzle velocity; drag 0.04; native gravity multiplier 1.
+  1 round per magazine; 4s reload; 120 rounds; no proximity timer.
+  Blast parameter 1.0 using the native fragmentation damage system; pierce 900.
+  Aircraft acquisition envelope 0.8-12km, altitude 350-9000m above sea datum.
+  4500kg GroundVehicle trailer; native suspension preload balances its weight.
+  Custom hitch/unhitch remains disabled, as for the existing trailer integration.
+
+Source
+  src/AA/FlakBarrageSolution.cs: dependency-free observations, committed region
+    patterns, independent fuze errors and native-step ballistics.
+  src/AA/F88FlakRuntime.cs: observations, local radar support, coordination,
+    native weapon station/ammo binding, fire control and timed fragmentation.
+  src/AA/F88FlakEffects.cs: independent bounded puff pool.
+  src/AA/F88FlakNetwork.cs: pose and burst presentation messages.
+  tools/SetupF88Combat.cs: creates new F88 assets from a separate preview clone;
+    does not edit L40 source assets or replace the user's scene object.
+
+Validation
+- All ten SDK suites passed, including 4029 new F88 barrage assertions.
+- Across 200 deterministic straight-flight trials, mean position knowledge
+  error was 35.4m with radar versus 106.3m optical; 5s extrapolation error was
+  103.7m versus 200.0m. Identical fuze-error streams were verified independently.
+- 219 fresh-current-build Unity checks passed: 34 review, 84 coastal/searchlight,
+  37 F88 rig, 30 F88 effects and 34 F88 flak integration checks.
+- Integration exercised the actual native Gun.Fire entry without a direct
+  target and actual Bullet.TrajectoryTrace timed expiry, capturing exactly one
+  fragmentation callback. It checked no proximity detonation, no remote damage,
+  radar distance/faction/state gates, dark optical rejection, committed areas,
+  Mirage serializer round trips, simultaneous puffs and pool reuse.
+- Damage-event tests intercept the native damage callback; this is not a live
+  aircraft HP/balance measurement. No full mission or two-peer test was run.
+  Representative mission FPS and combat effectiveness remain unmeasured.
+- Repeated editor tests need a clean script domain after replacing dynamically
+  loaded MonoBehaviour test assemblies; the final run used a clean domain.
+
+Installed locally with matching hashes:
+Runtime 1.9.0: 83A26C2791BCBF183071722FEF254C52DB2FC1AAF19037AF959AD86A86016DD4
+Gunmaggedon_0.0.20.nobp: B7A3451DA6B871B0235DDAF4FAF6FFA3F0985E70C4B727A58F814E92707BE07D
+Previous Runtime 1.8.9 and pack 0.0.19 are backed up under
+UnitySetupBackup/F88/BeforeInstall. The old installed pack has .disabled appended.
+No GitHub publication was performed for this implementation.

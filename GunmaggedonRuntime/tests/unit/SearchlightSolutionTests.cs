@@ -20,6 +20,10 @@ public static class SearchlightSolutionTests
   Check(!SearchlightSolution.RadarInRange(1,false,true,true),"Enemy excluded");
   Check(!SearchlightSolution.RadarInRange(1,true,false,true),"Destroyed radar excluded");
   Check(!SearchlightSolution.RadarInRange(1,true,true,false),"Nontruck radar excluded");
+  Check(SearchlightSolution.AcousticRange(0)==0&&SearchlightSolution.AcousticRange(.15f)==0,"Stopped/quiet engines do not provide a noise cue");
+  Check(SearchlightSolution.AcousticRange(.2f)==3000&&SearchlightSolution.AcousticRange(1)==5000,"Low and high engine RPM span three to five kilometers");
+  Check(SearchlightSolution.AcousticRange(float.NaN)==0,"Invalid engine state cannot become a contact");
+  for(int seed=0;seed<20;seed++){float error=SearchlightSolution.AcousticBearingError(4000,5000,seed,0);Check(Math.Abs(error)>1.5f,"Sound bearing is coarser than a radar cue");Check(Math.Abs(SearchlightSolution.AcousticBearingError(4000,5000,seed,.1)-error)<.05f,"Bearing error drifts slowly instead of randomizing per frame");}
   Console.WriteLine("SearchlightSolutionTests passed: delayed optical/radar acquisition, occlusion, loss, time-step guard and support boundaries.");
  }
 }

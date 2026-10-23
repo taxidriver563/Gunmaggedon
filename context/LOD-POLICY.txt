@@ -1,0 +1,34 @@
+Mandatory unit LOD policy
+Established: 2026-10-22
+
+LOD setup is required for every new Gunmaggedon unit. Existing units must be
+audited and upgraded when they are modified. The workspace AGENTS.md contains
+the implementation and validation requirements for future work.
+
+A compliant unit has a full-detail near level and a meaningfully cheaper
+distant level, plus appropriate final culling. An empty LODGroup, duplicate
+full-detail meshes at every level, or a single level followed by culling is
+not sufficient. Effects with different visibility needs require separate
+management and a documented reason.
+
+Baseline prefab audit, 2026-10-22:
+- Standard and special CD-203: one LOD level, culling at 0.01 screen height;
+  no progressively simpler model. The special's inactive submunition body
+  is outside that group.
+- L40, L25, F88 and searchlight trailers: no prefab LODGroup.
+- Top-attack bomb: no prefab LODGroup; its mesh is already small.
+
+Retrofit completed in Unity on 2026-10-22: all seven unit prefabs and the F88
+and L25 staged rigs now have three model levels. The SPECIAL's inactive bomb
+template has a separate group. See UNIT-LOD-RETROFIT.txt for geometry budgets,
+cosmetic animation handling, validation and deployment status.
+Ordinary camera culling is separate from mesh LOD.
+
+Completion checks:
+- Valid enabled LODGroups and correct renderer membership on exported units.
+- Actual reduction of distant geometry or small rendered detail.
+- Appropriate bounds, thresholds and culling for the unit's role.
+- Working recoil, traverse, loading visibility and materials at transitions.
+- Separate handling for long-range beams and other effects as appropriate.
+- Gameplay remains active regardless of visual LOD.
+- Document editor/export checks separately from actual mission testing.

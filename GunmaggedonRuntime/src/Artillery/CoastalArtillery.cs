@@ -32,10 +32,13 @@ namespace GunmageddonAudio
             internal Gun Gun;
         }
         private static readonly Dictionary<AimSolver, Binding> Bindings = new Dictionary<AimSolver, Binding>();
-        private static readonly List<AimSolver> ExpiredBindings = new List<AimSolver>();
         private static readonly List<Gun> GunBuffer = new List<Gun>();
-        private static float nextBindingCleanup;
         private static ConfigEntry<float> elevation;
+        internal static void Maintain()
+        {
+            var dead=RemovalBuffer<Gun>.Rent();try{foreach(var pair in Plans)if(!pair.Key)dead.Add(pair.Key);foreach(var gun in dead)Plans.Remove(gun);}finally{RemovalBuffer<Gun>.Return(dead);}
+            var bindings=RemovalBuffer<AimSolver>.Rent();try{foreach(var pair in Bindings)if(pair.Key==null||!pair.Value.Owner||!pair.Value.Gun)bindings.Add(pair.Key);foreach(var key in bindings)Bindings.Remove(key);}finally{RemovalBuffer<AimSolver>.Return(bindings);}
+        }
         internal static float PreferredElevation { get { return elevation == null ? 23f : elevation.Value; } }
 
         internal static void Install(Harmony harmony, ConfigFile config)
@@ -63,14 +66,6 @@ namespace GunmageddonAudio
             if (Bindings.TryGetValue(solver, out cached) && cached.From == from && cached.Owner == owner &&
                 cached.Info == info && cached.Gun && cached.Gun.info == info && cached.Gun.attachedUnit == owner)
                 return cached.Gun;
-            if (Time.time >= nextBindingCleanup)
-            {
-                nextBindingCleanup = Time.time + 5f;
-                ExpiredBindings.Clear();
-                foreach (var pair in Bindings) if (!pair.Value.Owner || !pair.Value.Gun) ExpiredBindings.Add(pair.Key);
-                foreach (var key in ExpiredBindings) Bindings.Remove(key);
-                ExpiredBindings.Clear();
-            }
             var gun = from ? from.GetComponentInParent<Gun>() : null;
             if (!gun && owner)
             {
@@ -133,7 +128,6 @@ namespace GunmageddonAudio
                     ((cached.TargetPosition.ToLocalPosition() - initial).sqrMagnitude < .0025f && (cached.TargetVelocity - targetVelocity).sqrMagnitude < .0025f)) &&
                 cached.Gravity == gravity && cached.Drag == gun.info.dragCoef && cached.MaximumSpeed == gun.info.muzzleVelocity &&
                 cached.Step == step && Vector3.Distance(cached.From.ToLocalPosition(), from) < 2f) return cached;
-            foreach (var old in Plans.Keys.Where(g => !g).ToArray()) Plans.Remove(old);
             var plan = new Plan { Target = target, From = from.ToGlobalPosition(), Created = Time.time,
                 TargetPosition = initial.ToGlobalPosition(), TargetVelocity = targetVelocity,
                 Gravity = gravity, Drag = gun.info.dragCoef, MaximumSpeed = gun.info.muzzleVelocity, Step = step };
@@ -178,6 +172,6 @@ namespace GunmageddonAudio
             return true;
         }
 
-        internal static void Shutdown() { Plans.Clear(); Bindings.Clear(); ExpiredBindings.Clear(); GunBuffer.Clear(); nextBindingCleanup = 0f; }
+        internal static void Shutdown() { Plans.Clear(); Bindings.Clear(); GunBuffer.Clear(); }
     }
 }

@@ -1,5 +1,12 @@
 Build and validation
 
+Runtime 1.10.0 / asset pack 0.0.26: all 14 SDK suites passed locally, along
+with 1,568 checks across ten Unity groups. The staged L25 preview tracer
+mismatch remains a separate known failing group. Full combat benchmarks and
+native allocation measurements remain unverified. See RUNTIME-OPTIMIZATION.txt.
+Run ci/test.ps1 for all 14 portable SDK suites; the older Mono runner is
+historical. build.ps1 -Diagnostics enables development-only profiler scopes.
+
 From the repository root on Windows:
   powershell -NoProfile -ExecutionPolicy Bypass -File GunmaggedonRuntime/build.ps1
   powershell -NoProfile -ExecutionPolicy Bypass -File GunmaggedonRuntime/tests/run-unit-tests.ps1
@@ -37,5 +44,5 @@ and editor fixtures compiled; all nine standalone suites passed. Existing
 fixture compiler warnings concern obsolete Physics.autoSimulation and reference
 comparisons. Both published release checksum manifests remain valid.
 
-Current helper output: GunmaggedonRuntime/build/1.8.4/Gunmaggedon.Runtime.dll.
+Current helper output: GunmaggedonRuntime/build/1.10.0/Gunmaggedon.Runtime.dll.
 Migration and retained legacy configuration identity: RUNTIME-RENAME.txt.

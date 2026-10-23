@@ -2,7 +2,7 @@ Release CI
 
 Runtime tests run on pushes to main and pull requests without private references.
 Publishing a GitHub release (including a prerelease) builds the exact tagged
-commit, runs nine standalone suites, compiles Gunmaggedon.Runtime.dll, creates
+commit, runs 14 standalone suites, compiles Gunmaggedon.Runtime.dll, creates
 an install ZIP, generates GitHub build-provenance attestations and attaches
 both files to that release. Merely pushing a tag does not publish a release.
 
@@ -47,6 +47,6 @@ Verify release provenance using GitHub CLI:
 Provenance links the binary to a source revision and build workflow. It does
 not certify gameplay behavior, prevent modification, or obfuscate public code.
 
-Validation before publication: nine standalone SDK suites, full runtime compile,
+Validation before publication: 14 standalone SDK suites, full runtime compile,
 PowerShell parser checks and actionlint. Hosted download/attestation validation
 requires the owner to add the private-reference token and run the workflow.

@@ -1,0 +1,69 @@
+Static review fixes — Runtime 1.8.5
+
+The tester reviewed commit 468a556 (Runtime 1.8.1). All four reported paths
+were still present in Runtime 1.8.4 and have been addressed in this revision.
+
+1. Special payload replication
+   SpecialPayloadNetwork registers explicit Mirage serializers and authenticated
+   handlers without depending on Unity's networking assembly weaver. Updated
+   clients announce protocol support; the host sends payload kind, global release
+   position, network release time, gravity and the actual dispersal velocities.
+   Client flights are presentation-only: no damage and no local cloud creation.
+   Smoke/chaff clouds arrive as authoritative snapshots, with IDs, global position,
+   age and lifetime. Existing clouds are delivered on join, refreshed once per
+   second, deduplicated and removed when absent. Mission/disconnect cleanup clears
+   remote state. The host retains all damage and authoritative cloud spawning.
+   Both host and participating clients require Runtime 1.8.5. This does not add
+   synchronized searchlight pointing or resolve the disabled hitch/tow feature.
+
+2. Complete slug collision queries
+   RaycastNonAlloc scratch expands from 64 to 512 entries. A saturated 512-entry
+   query repeats with RaycastAll before sorting the complete near-to-far set.
+   Scratch references are cleared afterward. Dense geometry can no longer silently
+   omit a nearer stopping obstacle simply because it filled the fixed buffer.
+
+3. Searchlight smoke occlusion
+   ClearPoint now consults ShellObscurants.SmokeBlocks before collider checks.
+   Aircraft acquisition, continued observation, coastal requests and coverage
+   forecasts share that sightline test. Smoke revokes actual illumination and
+   firing support; sustained illumination can recover when the smoke clears.
+
+4. Failure-safe top-attack reservations
+   Release keeps a count of untransferred slots and returns the remainder in a
+   finally block. A native object takes ownership only after full initialization.
+   NativeSpawn expires partially initialized bombs through the native lifecycle,
+   including a bomb exposed by OnStartNetwork before SpawnMissile returns.
+   A failed first spawn, failed second spawn and null spawn cannot strand budget.
+
+Validation
+   - All nine standalone SDK suites passed.
+   - Fresh runtime and Unity fixture assemblies compiled successfully.
+   - CurrentBuildValidation passed 34 focused review checks plus 36 coastal checks.
+   - Real Unity physics tested 90 and 600 swept colliders, including the fallback.
+   - Injected failures before/between ownership transfers and null-spawn rollback.
+   - Real Mirage pack/unpack round trips, remote flight authority guards, existing
+     smoke/chaff snapshots, optics/radar effects, clock-independent cloud age,
+     deduplication/removal and global-coordinate rebasing.
+   - Smoke blocks searchlight observation/coverage, revokes illumination and permits
+     reacquisition after clearing; existing coastal support/trail checks still pass.
+
+A live two-machine multiplayer session, late join during gameplay, packet delay,
+mission transitions and representative FPS remain unverified. Serializer/state
+fixtures are not equivalent to a multiplayer mission. The mod has not been
+released or attested as 1.8.5 by these local checks.
+
+Current-build entrypoint (distinct from historical regression comparisons)
+   powershell -NoProfile -ExecutionPolicy Bypass -File GunmaggedonRuntime/tests/prepare-current-validation.ps1
+   This rebuilds source into a uniquely named runtime assembly and records exact
+   runtime/fixture paths in ignored build/validation/current/current.json.
+   In Unity, set GUNMAGGEDON_ROOT, load that manifest's fixtures DLL and invoke
+   CurrentBuildValidation.Run(). It sets/restores GUNMAGGEDON_TEST_HELPER itself.
+   Unique assembly names avoid Unity reusing an earlier cached MonoBehaviour type.
+   Historical fixture defaults remain historical; do not use them to certify edits.
+
+The source modinfo.json version is reconciled to asset pack 0.0.18. No asset-pack
+rebuild is required for the runtime-only corrections described above.
+
+Local install: Runtime 1.8.5 verified against its build output. Previous runtime
+backed up under UnitySetupBackup/StaticReview/Before1.8.5. No game startup or
+live multiplayer session was run after this install. Asset pack remains 0.0.18.

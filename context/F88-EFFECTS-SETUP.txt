@@ -1,0 +1,43 @@
+F88 muzzle flash, custom audio and lingering flak - 2026-10-21
+
+Updated live asset: Assets/Blueprinter/Mods/Gunmageddon/F88_Turret_Rig.prefab.
+New effect asset: Assets/Blueprinter/Mods/Gunmageddon/F88_Flak_Airburst.prefab.
+Setup tool: GunmaggedonRuntime/tools/SetupF88Effects.cs (repeatable).
+Checks: GunmaggedonRuntime/tests/regression/F88EffectsRegression.cs.
+
+The recoil-mounted Muzzle now owns F88MuzzleFlash and F88MuzzleSmoke, copied from
+the native-compatible L40 particle setup. Both are registered in Gun.muzzleParticles,
+aligned with local +Z, non-looping and not played on load. Flash size is doubled
+from the L40 starting effect (1.8m maximum), with its brief 0.05-second lifetime.
+The flash and smoke move with barrel recoil and turret elevation/traverse.
+
+Firing: 88mm_Cannon_Fire_Close.mp3, exactly one enabled AudioSource and one
+fireSounds entry. Rotary start/sustained/end layers remain empty. This preserves
+the game's single-shot routing. The native Gun.ShotSound callback was exercised,
+with PlayOneShot intercepted to verify the actual clip selection.
+
+Airburst: a separate copy of the stock airburst_57mm effect, assigned to the gun's
+selfDestructEffect. Its root audio source uses Flak_Explosion.mp3; the native
+PrefabEffect.Play callback was exercised to verify the selected explosion clip.
+Both imported clips decoded non-silent sample data. Sources are spatial,
+non-looping, and not played on load; provisional maximum sound distance is 10km.
+
+Only smoke lifetimes are extended by 25 percent:
+- Initial puff: stock 5-10s becomes 6.25-12.5s.
+- Persistent smoke: stock 10-25s becomes 12.5-31.25s.
+Flash, sparks and fragments retain stock timing. Emission rates and burst density
+are unchanged. The setup derives lifetimes from stock on each run, so repeating
+it does not compound the extension. Other guns' native effects are untouched.
+
+Validation: 30 effects checks plus all 37 F88 mechanical rig checks passed.
+Actual particle simulation confirmed lingering smoke at 11s, no lingering flash,
+and complete particle expiration by 34s. A three-second puff was rendered and
+visually inspected. Saved rig remains free of missing scripts and keeps its
+native combat callbacks disabled, pending the heavy-flak/unit integration work.
+This is prepared in Unity, not installed as a new mission-ready game pack.
+
+Backups: UnitySetupBackup/F88/BeforeEffects.
+Updated prefab, effect and animation snapshots: UnitySetupBackup/F88/Configured.
+Runtime source/build and installed game versions are unchanged by this asset edit.
+
+Follow-up: operational F88_AA_Trailer prefab/definitions and predicted-area flak are now installed in Runtime 1.9.0 / pack 0.0.20. The standalone rig remains a preview asset. See F88-FLAK-BARRAGES.txt.

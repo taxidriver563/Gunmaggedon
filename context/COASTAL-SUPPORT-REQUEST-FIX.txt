@@ -1,0 +1,22 @@
+Coastal request and visible tracking fix - Runtime 1.8.7
+
+Host/single-player coastal batteries now request illumination every 0.5 seconds
+independently of native weapon aiming and firing. A battery needs an operational
+friendly searchlight within 2 km and a faction-known enemy ship contact. This
+avoids a dark-target rejection preventing the request itself. Unknown ships are
+not revealed and gun targets are not assigned by the coordinator.
+
+A lamp can accept a sector cue before confirming a clear sightline, so it visibly
+turns toward the request. Actual illumination still requires sustained acquisition
+and a clear path, including smoke. Coastal elevation can depress to -30 degrees
+for cliff positions. Initial ship-cue wobble now stays inside the acquisition cone.
+Aircraft tracking and radar/optical aircraft cues retain priority.
+
+State-change messages in BepInEx/LogOutput.log identify missing nearby lamps,
+missing faction-known contacts, battery requests and lamp acceptance.
+
+Validation: 34 current-build review checks, 76 coastal/searchlight Unity checks,
+and all nine standalone suites passed. No live mission or multiplayer test was
+performed for this change. Uses existing asset pack 0.0.19.
+
+Installed locally with matching SHA256 CFE573FA942F10383070DD4D42B75365E521BACB9703164FF144AD92274EEBDC. Previous DLL backed up under UnitySetupBackup/CoastalSupport/Before1.8.7.

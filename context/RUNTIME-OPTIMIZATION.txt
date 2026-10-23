@@ -1,0 +1,123 @@
+Gunmaggedon runtime optimization pass
+2026-10-23 | runtime 1.10.0 | unchanged asset pack 0.0.26
+
+Scope
+All six implementation areas are integrated in the combined runtime. No new
+configuration, network messages, prefab components, damage settings or asset
+pack changes. Current LOD groups remain mandatory and unchanged.
+
+Ownership and implementation
+- src/Optimization/RuntimePool.cs: active leases with monotonically changing
+  IDs, stale/double-release rejection, explicit reset, unlimited active growth.
+  Idle retention: audio 128, trails 256, clusterlet heads 512, flights 16,
+  opening/water/land particle templates 128 each. Excess is destroyed only on
+  release. Mission teardown intentionally destroys active effects too.
+- ClusterVisualPools and SpecialPayloadFlight separate head/controller reuse
+  from frozen trailing histories. Returned flights are untracked from network
+  lists before reuse. Particle state is explicitly stopped/cleared.
+- TravellingAudio centralizes delay/expiry processing, with two reusable voices
+  per emitter. Clip/settings snapshots and original random selection order are
+  preserved; 343 m/s travel, moving listener/camera and near/far mixing remain.
+- TrailService owns one camera callback pair. SpottingTrail keeps forwarding
+  methods, uses ring samples and reusable bulk-upload buffers. Sampling cadence,
+  launch anchor, moving head, clipping, camera-facing alignment, colors and
+  four-second ranging lifetime are preserved. Pool registration and release
+  are explicit, including editor fixtures where lifecycle callbacks may not run.
+- SharedWorldQueries caches broad, read-only snapshots by global 250m cells,
+  radius bucket, rendered frame and physics timestamp. Queries are expanded to
+  cover the entire cell. Faction contact queries are separately partitioned.
+  Consumers still apply their exact evidence, faction, range, operational radar,
+  smoke, illumination and visibility gates. Inclusive 300m radar support remains.
+- RemovalBuffer scratch lists replace recurring dictionary cleanup arrays.
+  One-second maintenance handles ordinary stale entries; shot retirement,
+  destroyed-owner checks, reservations, profile ownership and shutdown remain
+  immediate. Nested cleanup leases do not share an in-use scratch list.
+- F88 reload clock advances once per timestamp before the native gun and via
+  LateUpdate fallback. Pose writes happen once per rendered frame, with explicit
+  initialization/secure-state exceptions. The two-second clearance pause and
+  exactly-once casing handoff remain; native muzzle recoil remains active.
+- SharedShipBounds discovers ship colliders every 0.25 seconds and aggregates
+  current enabled/active/non-trigger bounds once per physics timestamp. Centers
+  are stored globally for floating-origin rebases. Per-submunition previous
+  hull centers, swept scans, obstruction/smoke checks and reservations remain
+  independent. No scan ticks are staggered or skipped.
+- OptimizationRuntime clears pools, caches, listener/audio-template references
+  and central trail callbacks on mission-origin replacement or plugin shutdown.
+
+Validation
+All 14 standalone SDK suites passed on final source. The new optimization
+suite contributes 347 assertions against production pool/query/trail/audio
+logic with deterministic Unity transport doubles. It includes randomized cell
+coverage, boundary/live radar checks, global rebasing, stale leases, reset
+failure, pooled trails and propagation behavior. These doubles do not certify
+native audio output or mission presentation.
+
+Unity 2022.3.62f2 editor checks ran sequentially through a temporary editor-only
+filesystem bridge after Assets > Refresh. No scene/prefab was saved by the
+bridge. Current source was compiled into a uniquely named validation helper.
+Results: 10 passing groups, 1,568 checks total:
+  static review 34; searchlight/coastal 101; F88 rig 38; effects 30;
+  barrage 34; reload 53; live L25 trailer 444; LOD 800; fragments 11;
+  optimization 23.
+The new native tests exercise actual LineRenderer bulk counts, slow head and
+anchor, clipping, camera-time rebasing, frozen expiry, reuse, ring growth,
+520 simultaneous heads versus 512 idle retention, stale leases, collider
+bounds, and three active-effect teardown/restart cycles.
+
+Existing unrelated failure remains: L25RigRegression expects the preview rig's
+shared one-in-three tracer phase, while the staged L25_Turret_Rig feeds are set
+to 1. The operational L25 trailer remains at 3 and its 444 checks pass. The
+preview setting was not overwritten. Do not report the entire runner as green.
+
+LOD: static audit of seven unit prefabs confirms three descending thresholds
+per physical model; the SPECIAL's inactive bomb template has its own group.
+The 800 native LOD checks cover renderer membership, cheaper meshes, materials,
+near/far cosmetic gating and reload continuation. Mission transitions and
+remote multiplayer presentation remain unverified.
+
+Performance evidence and limits
+Final native Unity editor microbenchmark: 50 batches of 100 trail lifecycles,
+after 20 warmups, comparing pre-optimization 1.9.9 against candidate source.
+  Before: median 2.7743 ms, p95 3.4466 ms per 100.
+  After:  median 0.9461 ms, p95 1.0942 ms per 100.
+Candidate includes reflection retirement overhead. This is editor object/trail
+churn, not combat CPU or FPS. Unity Mono's thread allocation counter failed an
+allocation probe; native allocation results are NULL/unavailable, not zero.
+
+Final synthetic .NET pool-transport benchmark: 100 batches of 1,000 operations.
+  Before: median 0.0604 ms, p95 0.1466 ms; 28,000,448 managed bytes total.
+  After:  median 0.0440 ms, p95 0.0516 ms; 0 managed bytes after warmup.
+This omits Unity native creation/rendering and cannot establish Unity GC or FPS.
+
+Stage-specific baseline/candidate combat benchmarks were NOT collected. Full
+mission profiling remains outstanding for clustered searchlights/F88s,
+simultaneous cluster salvos, overlapping top-attack scans, and actual mission
+restarts. The implemented stages have combined regression coverage; they do
+not have separately measured mission-performance certifications.
+
+Diagnostics and reproduction
+build.ps1 -Diagnostics emits development-only counters and profiler samples:
+PoolCreates, GridQueries, BoundsBuilds, TrailUploads, ReloadPoseWrites and
+Gunmaggedon GridQuery/ShipBounds/Trails/TravellingAudio scopes. Per-scope
+AllocatedBytes counters are available only if a working GC thread-allocation
+counter passes its startup probe. Otherwise use Unity Profiler GC.Alloc.
+Release builds compile out instrumentation calls. Diagnostic instrumentation
+itself has overhead; do not compare an instrumented candidate to release baseline.
+
+For remaining benchmarks: use the same mission, camera route, unit counts,
+weather/time, duration and machine for both DLLs. Warm up, capture main-thread
+CPU median/p95 and GC.Alloc, count pool creation and broad queries, repeat each
+scenario and verify effects/damage/ammunition before interpreting timings.
+Keep asset pack 0.0.26 fixed. Capture restarts with active delayed audio and
+detached trails; verify counts return to zero and leases cannot survive restart.
+
+Artifacts
+GunmaggedonRuntime/build/optimization/editor-validation.json
+GunmaggedonRuntime/build/optimization/unity-optimization.json
+GunmaggedonRuntime/build/optimization/synthetic-benchmark.json
+GunmaggedonRuntime/build/optimization/static-lod-audit.json
+GunmaggedonRuntime/build/optimization/release-status.json (binary/source hashes)
+Runtime release: GunmaggedonRuntime/build/1.10.0/Gunmaggedon.Runtime.dll.
+Diagnostic build: build/optimization/diagnostics/Gunmaggedon.Runtime.dll.
+Compiled, validated-source and installed status are recorded separately in
+release-status.json and CURRENT-STATE.txt; a build alone never means installed.

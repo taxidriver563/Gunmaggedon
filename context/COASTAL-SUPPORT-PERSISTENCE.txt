@@ -1,0 +1,29 @@
+Coastal support persistence and inclined trailers - Runtime 1.8.8
+
+The supplied 1.8.7 game log showed batteries requesting PatrolBoat1/Frigate1,
+but no lamp acceptance messages. This confirms the request path ran, without
+establishing why individual lamps declined in that mission.
+
+Reproduced and fixed:
+- A lighting request removed during the 0.5-second motion sampling cache could
+  remain missing when Observe returned early. Cached motion now renews requests.
+- Native weapon AI clearing its gun target no longer cancels the independent
+  faction-known contact illumination task. Selecting a different non-null gun
+  target still releases the old task; request expiry and coordinator withdrawal
+  still apply.
+- The coastal elevation limit was relative to the trailer base. An uphill base
+  could reject a world-horizon ship. Coastal depression now permits -85 degrees
+  in that base frame, and a real-prefab test verifies horizon aiming with a
+  40-degree inclined and rotated trailer. Air sweep limits remain unchanged.
+
+Battery status logs now describe the active request state and nearby lamp status:
+air priority, supporting another ship, another claim/retry, outside beam range,
+mechanical elevation limits, ready to traverse, or tracking the requested ship.
+An observation log no longer implies an active request when none exists.
+The asset's beam range remains 10,000m; 2km is battery-to-lamp support distance.
+
+Validation: the new cached-request test failed against 1.8.7 before the fix.
+Fresh 1.8.8 passed 34 review and 79 coastal/searchlight Unity checks, including
+native target clearing and tilted-base physical aiming. All nine SDK suites
+passed. No live mission test was run; the original mission rejection cause is
+not conclusively established by the old log. Uses asset pack 0.0.19.

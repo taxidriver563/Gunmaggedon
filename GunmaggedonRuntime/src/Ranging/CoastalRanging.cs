@@ -452,13 +452,7 @@ namespace GunmageddonAudio
                 if (!shader) { log.LogWarning("No compatible colored-trail shader found."); return null; }
                 trailMaterial = new Material(shader) { name = "Coastal spotting trails" };
             }
-            var go = new GameObject("Coastal ranging shell trail");
-            // Let mission/origin teardown remove the object; line vertices are
-            // explicitly world-space and rebuilt from global history.
-            go.transform.SetParent(Datum.origin, false);
-            var trail = go.AddComponent<SpottingTrail>();
-            trail.Initialize(position.ToGlobalPosition(), color, lifetime, trailMaterial);
-            return trail;
+            return TrailService.Rent(position,color,lifetime,trailMaterial);
         }
 
         private static void BeforeRemove(BulletSim.Bullet __instance)
@@ -469,13 +463,13 @@ namespace GunmageddonAudio
 
         private static void Finish(BulletSim.Bullet bullet, Shot shot)
         {
+            Shots.Remove(bullet);
             ArmorPiercingShells.Release(shot.APInfo);
             SpecialShells.Cancel(shot.Payload);
             if (shot.Illumination) CoastalIllumination.Ended(shot.FlarePlan);
             if (shot.Trail)
             {
                 shot.Trail.Freeze();
-                UnityEngine.Object.Destroy(shot.Trail.gameObject, shot.Trail.Lifetime + .5f);
                 shot.Trail = null;
             }
             Shots.Remove(bullet);
@@ -483,16 +477,16 @@ namespace GunmageddonAudio
 
         private static void CleanupDestroyedGuns()
         {
-            foreach (var pair in Shots.Where(p => !p.Value.Simulation).ToArray()) Finish(pair.Key, pair.Value);
-            foreach (var key in Guns.Keys.Where(g => !g).ToArray())
-            {
-                var state = Guns[key];
-                if (!Shots.Values.Any(s => s.State == state))
-                {
-                    if (state.SpottingInfo) UnityEngine.Object.Destroy(state.SpottingInfo);
-                    Guns.Remove(key);
-                }
-            }
+            var dead=RemovalBuffer<KeyValuePair<BulletSim.Bullet,Shot>>.Rent();try{foreach(var pair in Shots)if(!pair.Value.Simulation)dead.Add(pair);
+                foreach(var pair in dead)if(Shots.ContainsKey(pair.Key)){Shots.Remove(pair.Key);Finish(pair.Key,pair.Value);}
+            }finally{RemovalBuffer<KeyValuePair<BulletSim.Bullet,Shot>>.Return(dead);}
+        }
+        internal static void Maintain()
+        {
+            CleanupDestroyedGuns();var dead=RemovalBuffer<Gun>.Rent();
+            try{foreach(var pair in Guns)if(!pair.Key){bool used=false;foreach(var shot in Shots.Values)if(shot.State==pair.Value){used=true;break;}if(!used)dead.Add(pair.Key);}
+                foreach(var gun in dead){var state=Guns[gun];Guns.Remove(gun);if(state.SpottingInfo)UnityEngine.Object.Destroy(state.SpottingInfo);}
+            }finally{RemovalBuffer<Gun>.Return(dead);}
         }
 
         internal static void Shutdown()
@@ -509,141 +503,4 @@ namespace GunmageddonAudio
         }
     }
 
-    // Store the ballistic history in global coordinates. Never translate a mix
-    // of old world-space vertices and newly rebased vertices by the same delta.
-    public sealed class SpottingTrail : MonoBehaviour
-    {
-        private struct SamplePoint
-        {
-            internal GlobalPosition Position;
-            internal float Born;
-            internal SamplePoint(GlobalPosition position, float born) { Position = position; Born = born; }
-        }
-        private readonly List<SamplePoint> samples = new List<SamplePoint>();
-        private LineRenderer line;
-        private Color color;
-        private bool frozen;
-        private int sampleRevision, renderedRevision = -1;
-        private float lastRefresh = float.NegativeInfinity;
-        private Vector3 lastHeadPosition;
-        private float lastMaximumLength;
-        public float Lifetime { get; private set; }
-        public float MaximumLength { get; set; } = float.PositiveInfinity;
-        public float MinimumSampleDistance { get; set; } = 8f;
-
-        private void Awake()
-        {
-            EnsureRenderer();
-        }
-
-        private void EnsureRenderer()
-        {
-            if (line) return;
-            line = gameObject.AddComponent<LineRenderer>();
-            line.useWorldSpace = true;
-            line.positionCount = 0;
-            line.enabled = false; // Do not render an uninitialized segment at the world origin.
-            line.startWidth = 1.5f;
-            line.endWidth = .25f;
-            line.numCornerVertices = 3;
-            line.numCapVertices = 3;
-            line.shadowCastingMode = ShadowCastingMode.Off;
-            line.receiveShadows = false;
-            line.alignment = LineAlignment.View;
-        }
-
-        public void Initialize(GlobalPosition position, Color tint, float lifetime, Material material)
-        {
-            EnsureRenderer();
-            color = tint;
-            Lifetime = lifetime;
-            line.sharedMaterial = material;
-            Sample(position, Time.time);
-        }
-
-        private void OnEnable()
-        {
-            Camera.onPreCull += BeforeCameraCull;
-            RenderPipelineManager.beginCameraRendering += BeforePipelineCamera;
-        }
-
-        private void OnDisable()
-        {
-            Camera.onPreCull -= BeforeCameraCull;
-            RenderPipelineManager.beginCameraRendering -= BeforePipelineCamera;
-        }
-
-        public void Sample(GlobalPosition position, float now)
-        {
-            if (frozen) return;
-            sampleRevision++;
-            var point = new SamplePoint(position, now);
-            if (samples.Count == 0) { samples.Add(point); return; }
-            float movement = Vector3.Distance(samples[samples.Count - 1].Position.ToLocalPosition(), position.ToLocalPosition());
-            if (movement < .001f)
-                samples[samples.Count - 1] = point;
-            else if (samples.Count == 1)
-                samples.Add(point); // Keep a launch anchor and a moving head even at low speed.
-            else if (Vector3.Distance(samples[samples.Count - 2].Position.ToLocalPosition(), position.ToLocalPosition()) < MinimumSampleDistance)
-                samples[samples.Count - 1] = point; // Measure from the committed anchor, not the moving head.
-            else samples.Add(point);
-        }
-
-        public void Freeze() { frozen = true; }
-
-        // Also refresh immediately before each camera renders. A floating-origin
-        // shift can occur after this component's LateUpdate on the same frame.
-        private void BeforeCameraCull(Camera camera) { Refresh(Time.time); }
-        private void BeforePipelineCamera(ScriptableRenderContext context, Camera camera) { Refresh(Time.time); }
-
-        public void Refresh(float now)
-        {
-            Vector3 headPosition = samples.Count == 0 ? Vector3.zero : samples[samples.Count - 1].Position.ToLocalPosition();
-            // LateUpdate and each camera callback can occur at the same Time.time.
-            // Re-upload only after a sample/time change or a floating-origin shift.
-            if (now == lastRefresh && sampleRevision == renderedRevision && headPosition == lastHeadPosition && MaximumLength == lastMaximumLength) return;
-            lastRefresh = now; renderedRevision = sampleRevision; lastHeadPosition = headPosition;
-            lastMaximumLength = MaximumLength;
-            int expired = 0;
-            while (expired < samples.Count && now - samples[expired].Born >= Lifetime) expired++;
-            if (expired > 0) samples.RemoveRange(0, expired);
-            line.positionCount = samples.Count;
-            // Newest to oldest: thick colored head, tapered transparent tail.
-            int rendered = 0;
-            float remaining = MaximumLength;
-            Vector3 previous = Vector3.zero;
-            for (int i = 0; i < samples.Count; i++)
-            {
-                Vector3 point = samples[samples.Count - 1 - i].Position.ToLocalPosition();
-                if (i > 0)
-                {
-                    float distance = Vector3.Distance(previous, point);
-                    if (distance > remaining)
-                    {
-                        line.SetPosition(rendered++, Vector3.Lerp(previous, point, remaining / distance));
-                        break;
-                    }
-                    remaining -= distance;
-                }
-                line.SetPosition(rendered++, point);
-                previous = point;
-            }
-            line.positionCount = rendered;
-            line.enabled = rendered >= 2;
-            if (samples.Count == 0) return;
-            float fade = Mathf.Clamp01(1f - (now - samples[samples.Count - 1].Born) / Lifetime);
-            Color head = color;
-            head.a = .8f * fade;
-            Color tail = color;
-            tail.a = 0f;
-            line.startColor = head;
-            line.endColor = tail;
-        }
-
-        private void LateUpdate()
-        {
-            Refresh(Time.time);
-            if (frozen && samples.Count == 0) Destroy(gameObject);
-        }
-    }
 }

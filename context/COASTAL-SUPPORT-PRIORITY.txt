@@ -1,0 +1,29 @@
+Local coastal support and air priority — Runtime 1.8.6
+
+A friendly coastal battery may task a searchlight only when the battery's unit
+position is at most 2,000 metres from that trailer. This is the battery-to-lamp
+support radius; ships still use the lamp's existing beam range and line of sight.
+Requests retain estimated target positions, gradual physical traverse, sustained
+optical acquisition, smoke occlusion, low-light restrictions and one lamp token
+per target. Daylight does not activate searchlights for coastal support.
+
+Aircraft have priority:
+- A lamp already assigned to aircraft explicitly declines coastal work.
+- An available friendly radar air cue can interrupt an active ship assignment.
+- An enemy aircraft encountered within the actual beam can interrupt ship work.
+- Idle lamps consider radar and beam aircraft cues before accepting coastal tasks.
+- Taking an air assignment immediately releases ship illumination and its token,
+  allowing another free nearby lamp to take over. Coastal work can resume after
+  the air assignment ends. Existing aircraft claims prevent duplicate assignments.
+
+Ongoing ship assignments also require a valid nearby requesting battery. Moving
+or disabling the battery/trailer can revoke the assignment. Multiple batteries
+requesting the same ship are filtered individually by distance; a newer distant
+request cannot hide an eligible nearby request. An out-of-range lamp does not
+hold up that battery's optional area-flare fallback.
+
+Validation: fresh runtime compilation; 51 connected Unity coastal/searchlight
+checks (including 2km/2,000.5m boundaries, multiple requests, radar and optical air
+preemption, token handoff and resumed coastal work), 34 review regressions and all
+nine standalone suites passed. No new live mission or multiplayer session run.
+Asset pack remains 0.0.19 with the finite soft cloud cutoff.

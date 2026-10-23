@@ -1,0 +1,63 @@
+Current independent-feed and close-defense follow-up: L25-CLOSE-DEFENSE-FEEDS.txt.
+The shared-Gun details below describe the initial 1.9.3 setup.
+
+L25 triple 25mm turret rig - Runtime 1.9.3
+
+Scope confirmed by user: turret rig and staggered firing setup first.
+The original scene root Gunmaggedon L25 AA is now connected to
+Assets/Blueprinter/Mods/Gunmageddon/L25_Turret_Rig.prefab.
+Native Gun/Turret components remain disabled, Safety true, owner null and
+ammo zero; this is not yet a spawnable mission unit. No VehicleDefinition,
+operational trailer integration, hitch behavior or fire-control tuning added.
+Installed operational asset pack remains 0.0.23.
+
+Hierarchy:
+Model owns base, supports and wheels.
+L25YawPivot owns traverse and both crank wrappers.
+PitchPivot owns gun cradle and three zero-rest recoil wrappers:
+BarrelLeft, BarrelMiddle, BarrelRight. Each owns its imported barrel mesh and
+a +Z Muzzle at its actual tip, with one native 25mm smoke/flash pair.
+All ten original mesh matrices and imported textured material references are
+preserved. The imported gun origin is used as the elevation pivot.
+Left handle rotates -12x pitch delta; right handle rotates 6x yaw delta.
+
+Runtime native Turret initialization attaches L25TurretMotion only to this
+rig's named hierarchy. Every actual native Gun.SpawnBullet selects a single
+preallocated muzzle array and that barrel's two particles. Successful rounds
+advance left -> middle -> right -> left. Suppressed or interrupted native
+spawns do not advance. Native ammo consumption and one-shot audio remain one
+per native round; all three barrels are never passed to the native shot loop.
+Independent 12cm recoil returns without changing the cradle or carriage.
+No per-shot muzzle/particle array allocations. Stop/disable restores barrel
+positions; the next-barrel index continues across bursts.
+
+L25_AA_Weapon.asset is a staging copy of stock 25mm Autocannon data with bay
+doors disabled. Provisional aggregate cadence is 600rpm (0.1s between rounds,
+200rpm per barrel). This is setup timing for review, not final balance.
+Three stock 25mmCannonB one-shot variants and one AudioSource are assigned.
+Native 25mm impact effects are retained. No custom ammunition or proximity
+flak logic added. Multiplayer barrel-phase/late-join synchronization remains
+part of future operational integration; current phase is local presentation.
+
+L25_Mechanism_Preview.anim is an eight-second legacy clip, autoplay off.
+It demonstrates yaw/elevation/cranks, then nine sequential recoil kicks from
+3.0 to 3.8 seconds, and returns to exact rest at eight seconds. Scrub it using
+the Animation window on the selected scene rig. Native flash/shot playback is
+wired for runtime initialization; the editor clip previews mechanical motion.
+
+Validation: all 366 current-build Unity checks passed, including 93 dedicated
+L25 checks. The real native SpawnBullet control flow was exercised with its
+AddBullet output captured: nine rounds selected the expected single muzzle,
+produced nine shot events and 18 particle Play events. Independent recoil,
+handles, original geometry/materials, interrupted/suppressed-shot sequencing,
+preview sequence and no missing scripts were checked. Rendered preview pose
+was inspected. Existing 273 review/coastal/F88 checks still pass. Standalone
+math suites were unchanged and not rerun for this presentation-only change.
+
+Runtime 1.9.3 built from 39 sources and installed with the game closed.
+SHA256: F5AAB72B9AEEEAA7BE78F8D9BD6AA5C7966E3FE6DCD5D37DC130C96E0B80199C
+Previous helper: UnitySetupBackup/L25/BeforeInstall.
+Original model/scene snapshot: UnitySetupBackup/L25/BeforeRig.
+Configured prefab/animation/weapon copies: UnitySetupBackup/L25/Configured.
+Rig tool: GunmaggedonRuntime/tools/SetupL25Rig.cs.
+No GitHub push or new asset pack build in this setup pass.

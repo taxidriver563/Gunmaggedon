@@ -1,0 +1,45 @@
+Searchlight smooth tracking and acoustic cues - Runtime 1.9.7
+Compatible installed asset pack: 0.0.25; no new pack needed.
+
+Targeted aircraft now use damped angular motion (0.25s smoothing, existing
+20deg/s yaw and 15deg/s elevation caps). Once an aircraft has actually been
+seen inside the beam, the target point refreshes every frame and the search
+wobble is removed. This replaces staircase-like cue updates and continued
+oscillation during an optical lock. Another radar contact cannot steal that
+recent visible lock. After 0.3s without visual contact, the lamp falls back
+to its existing coarse cue/search behavior; reporting still requires current
+beam contact and a clear sightline. Disabled lamps clear motion velocities.
+
+Engine-noise cues:
+- Read native aircraft IEngine RPM ratios once per second using the existing
+  candidate list; no additional battlefield-grid scans or per-frame engine scans.
+- Engine-off or <=0.15 RPM ratio produces no cue. Audible radius is 3km at low
+  running RPM, scaling to 5km at full RPM. Invalid or destroyed engine entries
+  are ignored. This is a gameplay estimate of audibility, not an audio-engine
+  sound-propagation simulation.
+- A cue estimates bearing with several degrees of slowly drifting error,
+  elevation error and up to 25% range error. The lamp sweeps that wider sector.
+- Radar remains the more precise cue and takes priority over hearing.
+- Hearing creates no evidence, detector contact, faction report or illumination
+  coverage. Normal sustained optical observation must still acquire the aircraft.
+- Existing exclusive aircraft claims apply, leaving other lamps free to search.
+- Aircraft priority over coastal support and night/low-light activation remain.
+
+Also corrected pre-acquisition loss: evidence resetting after 2.5 seconds of
+blind traversal no longer drops an unconfirmed assignment before its existing
+12-second acquisition timeout. Previously a distant search sector could be
+abandoned before the lamp had time to turn toward it.
+
+Validation: all 762 current-build Unity checks and all 12 SDK suites passed.
+New integration cases cover 3/5km audibility, stopped/friendly engines, rough
+cue error, no automatic reports, exclusive tokens, radar priority, continuous
+visible-point updates, no phase wobble in a visual lock, bounded damped aiming,
+radar retarget suppression and pre-acquisition traversal persistence. Existing
+coastal depression/horizon tests now advance realistic 0.02/0.05s steps rather
+than artificial 1-20s aim updates. Coastal range/support, L25 and F88 checks pass.
+
+Installed with Nuclear Option closed; previous runtime backed up to
+UnitySetupBackup/Searchlight/BeforeSmoothAcoustic. Source/installed hashes match.
+An actual mission visual check is still needed. Existing remote-client local
+sweep presentation is unchanged; multiplayer target-pose replication is not
+introduced by this update.

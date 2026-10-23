@@ -1,0 +1,71 @@
+F88 turret rig setup - 2026-10-21
+
+Live Unity scene: Assets/anvil from hell.unity
+Prefab: Assets/Blueprinter/Mods/Gunmageddon/F88_Turret_Rig.prefab
+Preview: Assets/Blueprinter/Mods/Gunmageddon/F88_Mechanism_Preview.anim
+Setup source: GunmaggedonRuntime/tools/SetupF88.cs
+Mechanism source: GunmaggedonRuntime/src/AA/F88Runtime.cs
+Validation: GunmaggedonRuntime/tests/regression/F88RigRegression.cs
+
+Scope is the mechanical turret, ahead of the heavy-flak behavior discussion.
+The original FBX, mesh and material assets are preserved. The imported instance
+was unpacked before reparenting, and all ten saved mesh matrices were verified
+against the original pose. No new mission unit/weapon definition is registered.
+Native Turret and Gun components are present but disabled, with no owner or
+ammunition definition and the gun on Safety. This prefab is a staged rig, not
+yet an operational mission unit. Firing/shell/fuze behavior remains future work.
+
+Hierarchy:
+  Model: base, supports, wheels (fixed carriage)
+  F88YawPivot: traverse, actualtraverse, PitchCrankPivot, YawCrankPivot
+    PitchPivot: gun (cradle), RecoilPivot
+      RecoilPivot: barrel, Muzzle, BreechSlidePivot, BreechSlideRest
+        BreechSlidePivot: breech
+
+Yaw axis is local Y at the turntable, elevation local X at the side trunnions.
+The trunnion uses the authored gun origin (0,2.885,-1.4473), confirmed by the
+visible side-ring vertices. Muzzle is root local (0,2.985,8.25), facing +Z.
+Recoil uses a zero-rest wrapper, 0.55m travel, with muzzle and breech following.
+The breech moves 0.36m along gun-local +X, so right remains right while aiming.
+It stays closed through initial recoil, opens, holds for loading, then closes
+before reload completes. Its original height/depth offsets are preserved.
+
+Provisional mechanical settings: 12 degrees/s traverse, 10 degrees/s elevation,
+-5 to +85 degrees elevation. Four-second reload is a preview/presentation value,
+not a finalized fire-control or ammunition design. Cranks use the L40 gearing:
+left = -12 times pitch change, right = 6 times yaw change. They stop with aim.
+
+The 8-second legacy Animation preview shows traverse, elevation, recoil and
+breech opening/closing. Select the scene F88, open Window > Animation > Animation
+and choose F88_Mechanism_Preview to scrub/play it. Auto-play is disabled, and the
+clip finishes at rest. The scene is saved at its original neutral pose.
+
+Runtime 1.8.10 is built/staged in GunmaggedonRuntime/build/1.8.10. Its native
+Turret initialization hook attaches the F88 mechanism only to F88YawPivot rigs
+when they are integrated later. It follows actual native reload state and aiming;
+no helper MonoBehaviour is serialized into the prefab. The installed game remains
+Runtime 1.8.9 / pack 0.0.19. No game pack was rebuilt or installed for this rig task.
+
+Verification: 37 dedicated Unity rig checks passed, including saved visible-mesh
+ownership, unchanged rest poses, no missing scripts, no L40 owner/component-list
+references, physical muzzle/barrel recoil and return, both handle motions and
+stopping, native reload state, rightward slide at nonzero aim, disable cleanup,
+and editor preview ending at rest. The animated pose was visually inspected.
+The fresh 1.8.10 build also passed 118 existing review/coastal checks and all nine
+standalone suites. Mission integration and multiplayer remain untested.
+
+Original model prefab and on-disk scene backup: UnitySetupBackup/F88/BeforeRig.
+Configured prefab/animation copies: UnitySetupBackup/F88/Configured.
+
+Follow-up: muzzle flash, custom shot/explosion audio and 25-percent longer smoke are now assigned. See F88-EFFECTS-SETUP.txt; 30 effects and 37 rig checks passed.
+
+Follow-up: operational F88_AA_Trailer prefab/definitions and predicted-area flak are now installed in Runtime 1.9.0 / pack 0.0.20. The standalone rig remains a preview asset. See F88-FLAK-BARRAGES.txt.
+
+Breech door correction (Runtime 1.9.1 / pack 0.0.21): the slide and its rest
+anchor now belong directly to PitchPivot, independently of RecoilPivot. The
+door follows turret aim and slides right 36cm during reload, without moving
+backward with the barrel. Both the preview rig and operational trailer are
+updated, along with preview animation bindings and future setup tooling.
+All 220 current-build Unity checks passed, including a new native-recoil
+assertion that the breech stays fixed at nonzero yaw/elevation. In-game visual
+confirmation remains outstanding. Pre-fix assets: BeforeBreechDoorFix.

@@ -118,8 +118,17 @@ namespace GunmageddonAudio
         internal GlobalPosition Position;
         internal float Born, Lifetime;
         internal Vector3 Radii;
+        internal bool Remote;
+        internal uint NetworkId;
         private ParticleSystem particles;
         private float nextUpdate;
+
+        internal void PresentAge(float age)
+        {
+            SetTint(ShellObscurants.Strength(age, Lifetime));
+            particles.Simulate(Mathf.Min(age, 10f), true, true, false);
+            if (age < Lifetime - 10f) particles.Play();
+        }
 
         internal void Initialize(SpecialShellKind kind, GlobalPosition position, float lifetime)
         {

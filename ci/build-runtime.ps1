@@ -39,7 +39,7 @@ try {
     $pluginSource = Get-Content (Join-Path $repoRoot 'GunmaggedonRuntime/src/Core/Plugin.cs') -Raw
     $versionMatch = [regex]::Match($pluginSource,'\[BepInPlugin\("[^"]+",\s*"[^"]+",\s*"([^"]+)"\)\]')
     if (-not $versionMatch.Success) { throw 'Cannot read the runtime plugin version.' }
-    $info = [ordered]@{ runtime_version = $versionMatch.Groups[1].Value; source_commit = $SourceRevision; dotnet_sdk = $sdkVersion; references_sha256 = $env:GUNMAGGEDON_REFERENCES_SHA256; asset_pack = '0.0.18' }
+    $info = [ordered]@{ runtime_version = $versionMatch.Groups[1].Value; source_commit = $SourceRevision; dotnet_sdk = $sdkVersion; references_sha256 = $env:GUNMAGGEDON_REFERENCES_SHA256; asset_pack = '0.0.26' }
     $package = Join-Path $scratch ('package-' + [Guid]::NewGuid().ToString('N'))
     $pluginFolder = Join-Path $package 'BepInEx/plugins/Gunmaggedon'
     New-Item -ItemType Directory -Path $pluginFolder -Force | Out-Null

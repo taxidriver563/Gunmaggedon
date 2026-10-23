@@ -11,6 +11,7 @@ Shader "Gunmaggedon/Searchlight Beam"
   _StartRadius("Aperture radius (m)",Float)=.58
   _Slope("Radius growth",Float)=.0192
   _DistanceFade("Observer fade distance (m)",Float)=20000
+  _CloudFeather("Cloud edge fade distance (m)",Float)=200
   [ToggleUI] _UseSceneDepth("Clip scattering at opaque geometry",Float)=1
   [HideInInspector] _CloudMap("Native cloud density",2D)="black"{}
   [HideInInspector] _CloudData("Cloud height, half thickness, extinction, enabled",Vector)=(0,0,0,0)
@@ -37,7 +38,7 @@ Shader "Gunmaggedon/Searchlight Beam"
    CBUFFER_START(UnityPerMaterial)
     float4 _BeamColor;
     float4 _CloudData,_CloudUV;
-    float _Intensity,_Opacity,_Length,_BeamRange,_VisibleLength,_DistanceFade,_StartRadius,_Slope,_UseSceneDepth;
+    float _Intensity,_Opacity,_Length,_BeamRange,_VisibleLength,_DistanceFade,_CloudFeather,_StartRadius,_Slope,_UseSceneDepth;
    CBUFFER_END
    TEXTURE2D(_CloudMap);SAMPLER(sampler_CloudMap);
    struct Attributes {float4 positionOS:POSITION;UNITY_VERTEX_INPUT_INSTANCE_ID};
@@ -79,19 +80,25 @@ Shader "Gunmaggedon/Searchlight Beam"
    {
     if(_CloudData.w<.5)return 1;
     float3 ray=samplePosition-source;
+    float distanceAlong=length(ray);if(distanceAlong<.001)return 1;
+    float3 direction=ray/distanceAlong;
     float lower=_CloudData.x-_CloudData.y,upper=_CloudData.x+_CloudData.y;
-    float start=0,end=1;
-    if(abs(ray.y)<.001) {if(lower>0||upper<0)return 1;}
+    float start=0,end=1e8;
+    if(abs(direction.y)<1e-5) {if(lower>0||upper<0)return 1;}
     else {
-     float a=lower/ray.y,b=upper/ray.y;
-     start=max(0,min(a,b));end=min(1,max(a,b));
+     float a=lower/direction.y,b=upper/direction.y;
+     start=max(0,min(a,b));end=max(a,b);
     }
     if(end<=start)return 1;
-    // Sample the first cloud intersection. Keep that obstruction for every
-    // point beyond it instead of revealing a faint tail above the layer.
-    float2 entryOffset=ray.xz*start;
+    // Anchor the fade to the first cloud intersection, even for samples beyond
+    // the layer. A finite smoothstep reaches exactly zero and stays there.
+    float2 entryOffset=direction.xz*start;
     float density=SAMPLE_TEXTURE2D(_CloudMap,sampler_CloudMap,frac(_CloudUV.xy+entryOffset*_CloudUV.zw)).r;
-    return density>.15?0:1;
+    if(density<=.15)return 1;
+    float feather=max(1,_CloudFeather);
+    float fadeStart=max(0,start-feather*.4);
+    float fadeEnd=start+min(feather*.6,(end-start)*.35);
+    return 1-smoothstep(fadeStart,max(fadeStart+1,fadeEnd),distanceAlong);
    }
    half4 Frag(Varyings i,half facing:VFACE):SV_Target
    {
@@ -127,7 +134,9 @@ Shader "Gunmaggedon/Searchlight Beam"
     if(inside)alpha*=.25;
     float3 source=TransformObjectToWorld(float3(0,0,0));
     float3 middleWS=TransformObjectToWorld(cameraOS+direction*((enter+leave)*.5));
-    clip(CloudTransmission(source,middleWS)-.5);
+    float transmission=CloudTransmission(source,middleWS);
+    clip(transmission-1e-5);
+    alpha*=transmission;
     alpha*=1-smoothstep(_DistanceFade*.7,_DistanceFade,distance(GetCameraPositionWS(),source));
     return half4(_BeamColor.rgb*_Intensity,alpha);
    }

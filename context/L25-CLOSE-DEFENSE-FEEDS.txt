@@ -1,0 +1,54 @@
+L25 close-defense profile and independent clip feeds - Runtime 1.9.4
+
+User confirmed: 15 rounds per barrel, reloading independently.
+Scope remains the staged turret rig; no spawnable trailer definition or pack
+build yet. Installed operational pack remains 0.0.23.
+
+The former shared Gun on PitchPivot is replaced by FeedLeft, FeedMiddle and
+FeedRight, each containing its own native Gun, AudioSource, one physical
+muzzle and its matching flash/smoke pair. Each native WeaponStation owns one
+gun with a distinct station number, preserving separate native ammunition,
+reload state and network shot routing for future unit integration.
+
+Settings:
+- Maximum range 3500m, also enforced by custom aim/fire authorization.
+- Native 25mm ballistics retained; lifetime extended to 14s to reach 3.5km.
+- Fifteen rounds per clip, 45 loaded total when the operational unit is stocked.
+- Provisional reload duration: two seconds for each gun independently.
+- 200rpm per gun; 600rpm aggregate with at least 0.1s between actual shots.
+- Round-robin sequence skips empty, reloading or cooling-down guns. With fewer
+  ready guns the aggregate rate drops; surviving guns retain their own 200rpm.
+- Native Gun owns ammo consumption and reload completion. BeforeGun clears
+  stale queued triggers on guns that are not eligible, preventing a skipped
+  SpawnBullet call from consuming ammunition or same-tick multi-barrel shots.
+- Public RoundsInClip(index) and ReloadSeconds(index) expose the actual native
+  state for later presentation/UI work; no new HUD or physical clip models.
+
+Close-defense optical tracking:
+- Best profile at or below 750m, progressively worse toward 3500m.
+- Optical sample interval grows from 0.12 to 0.5 seconds.
+- Velocity-estimate response time grows from 0.18 to 1.8 seconds.
+- Acquisition requires multiple observations; minimum delay grows from 0.15
+  to 1 second, rather than reading an exact aircraft Rigidbody velocity.
+- Aim wobble grows from 0.12 to 1.4 degrees; native launch spread from 0.18
+  to 1 degree. Gravity and an approximate drag flight-time card are applied.
+- Lost/stale sightings block fire. Bullets remain ordinary ballistic rounds.
+This is a tunable first profile; actual combat kill rates have not been measured.
+
+Validation: 381 combined Unity checks passed (108 L25), including real native
+Gun.FixedUpdate empty-clip reload, another feed firing during that reload,
+refill of only the empty clip, stale-queue suppression without wrong-feed
+consumption, native optical aim interception, tight nearby dispersion and
+range rejection beyond 3.5km. All 12 SDK suites passed; 103 new L25 tracking
+assertions cover faster close acquisition, measured lead convergence, tighter
+dispersion and lost-track reacquisition. Live mission/multiplayer testing is
+still deferred until the spawnable trailer is integrated.
+
+Migration helper: tools/SetupL25Feeds.cs after the initial SetupL25Rig.cs.
+The initial rig tool documents the old shared-gun stage; the feeds migration
+must follow it when recreating this rig. Original feed-stage backup and prior
+runtime: UnitySetupBackup/L25/BeforeIndependentFeeds.
+Current prefab/weapon copies: UnitySetupBackup/L25/Configured.
+The Animation preview and mesh/handle hierarchy remain compatible.
+Runtime 1.9.4 installed with game closed and source/installed hashes verified.
+SHA256: B88370D357D312C71AC8468FDE9BF5159211F53CB57CC2B6E77615ED6973C1E5

@@ -78,6 +78,7 @@ namespace GunmageddonAudio
                 "Place illumination ahead of observed ship movement after shell arrival. Lead is limited to keep the ship inside the new light at ignition.", new AcceptableValueRange<float>(0f, 40f)));
         }
 
+        internal static void Maintain(){var dead=RemovalBuffer<Gun>.Rent();try{foreach(var pair in Plans)if(!pair.Key)dead.Add(pair.Key);foreach(var gun in dead)Plans.Remove(gun);dead.Clear();foreach(var pair in RetryAfter)if(!pair.Key)dead.Add(pair.Key);foreach(var gun in dead)RetryAfter.Remove(gun);dead.Clear();foreach(var pair in Observations)if(!pair.Key)dead.Add(pair.Key);foreach(var gun in dead)Observations.Remove(gun);}finally{RemovalBuffer<Gun>.Return(dead);}}
         internal static bool NeedsLight(Unit target)
         {
             if (enabled == null || !enabled.Value || !target || !LevelInfo.i) return false;
@@ -162,17 +163,12 @@ namespace GunmageddonAudio
 
         private static void ReleaseReservation(Gun gun)
         {
-            Tokens.RemoveAll(t => t.Gun == gun && !t.InFlight);
+            for(int i=Tokens.Count-1;i>=0;i--)if(Tokens[i].Gun==gun&&!Tokens[i].InFlight)Tokens.RemoveAt(i);
         }
 
         internal static bool RequestToken(Gun gun, Plan plan, float now)
         {
-            foreach (var token in Tokens.Where(t => t.Expires <= now || (!t.InFlight && !t.Gun)).ToArray())
-            {
-                if (!token.InFlight && token.Gun) RetryAfter[token.Gun] = now + 5f;
-                Tokens.Remove(token);
-            }
-            foreach (var old in RetryAfter.Keys.Where(g => !g).ToArray()) RetryAfter.Remove(old);
+            for(int i=Tokens.Count-1;i>=0;i--){var token=Tokens[i];if(token.Expires>now&&(token.InFlight||token.Gun))continue;if(!token.InFlight&&token.Gun)RetryAfter[token.Gun]=now+5;Tokens.RemoveAt(i);}
             float retry;
             if (RetryAfter.TryGetValue(gun, out retry) && now < retry) return false;
             var own = Tokens.FirstOrDefault(t => t.Gun == gun);
@@ -206,7 +202,6 @@ namespace GunmageddonAudio
         internal static Plan GetPlan(Gun gun, Unit target)
         {
             if (!gun || !target) return null;
-            foreach (var old in Plans.Keys.Where(g => !g).ToArray()) Plans.Remove(old);
             var muzzles = Muzzles.GetValue(gun) as Transform[];
             if (muzzles == null || muzzles.Length == 0 || !muzzles[0]) return null;
             Plan previous;
@@ -266,7 +261,13 @@ namespace GunmageddonAudio
             if (!gun || !target || !gun.attachedUnit) return;
             Motion previous;
             Observations.TryGetValue(gun, out previous);
-            if (previous != null && previous.Target == target && Time.time - previous.PollAt < .5f) return;
+            if (previous != null && previous.Target == target && Time.time - previous.PollAt < .5f)
+            {
+                // Sampling motion is throttled, but a cancelled/expired lighting
+                // request must still be renewed while native AI has no gun target.
+                SearchlightRuntime.RequestCoastal(gun, target, previous.Position, previous.Velocity);
+                return;
+            }
             var hq = gun.attachedUnit.NetworkHQ; GlobalPosition known;
             if (!hq || !hq.TryGetKnownPosition(target, out known)) { Observations.Remove(gun); SearchlightRuntime.ReleaseCoastal(gun); return; }
             if (previous == null || previous.Target != target)

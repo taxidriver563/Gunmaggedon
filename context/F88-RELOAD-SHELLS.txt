@@ -1,0 +1,55 @@
+F88 shell extraction and loading - Runtime 1.9.2 / pack 0.0.22
+
+Both F88_Turret_Rig and F88_AA_Trailer now use the supplied shell_casing
+and shell_loaded meshes from Gunmaggedon F88 AAA Shells.fbx. Their geometry
+is centered into unit-scale wrappers, retaining the imported mesh/materials.
+They follow elevation and traverse, independently of barrel recoil.
+
+Nominal sequence after firing (seconds; slower frames may extend it):
+0.0-0.6: recoil recovery, breech stays shut.
+0.6-1.0: breech door slides right.
+1.0-1.8: spent casing slides aft out of the breech/loading tray.
+1.8: animated case disappears; matching physics prop appears at the same pose.
+1.8-3.8: at least two full seconds of empty-breech clearance.
+3.8-5.4: complete round moves forward from the tray into the chamber.
+5.4-6.0: breech door closes after the round is fully seated.
+6.0-6.2: secured dwell, then native ammunition can become loaded again.
+
+The phase clock resets at actual casing handoff. A delayed frame cannot skip
+the two-second pause, skip the visible insertion stage, or mark the gun ready
+before closure. Native reload time is 6.2 seconds; the runtime holds both
+bulletsLoaded and queued shots empty until the physical sequence finishes.
+The ordinary initial spawn remains preloaded with its breech closed.
+The manual fire gate also requires a mechanically ready gun.
+
+Ejected casings are harmless Rigidbody props with a small BoxCollider. They
+use gentle 0.6m/s rearward velocity, inherit carrier motion, ignore their own
+gun's colliders, and retire after eight seconds. A shared 64-prop pool bounds
+the physics cost. Native ejectionTransform remains null to avoid a second
+casing spawn; ejectionPrefab carries the custom casing reference.
+Remote native shot events start the same visual sequence without imposing a
+client-side reload timer that could block later remote fire events. Late-join
+reconstruction of an already active reload is not added in this change.
+
+F88_Mechanism_Preview.anim is now ten seconds long. Its demonstration shot is
+at 2.8s, casing handoff at 4.6s, insertion begins at 6.6s, door secured at 9s,
+and all aiming transforms return to rest at 10s. Preview does not simulate the
+detached physical casing; the runtime performs that handoff.
+
+Validation: 273 current-build Unity checks passed (53 reload checks), including
+actual Gun.FixedUpdate suppression of queued shots and native ammunition
+replenishment after closure, nonzero-aim handoff alignment, correct mesh
+references, and the remote presentation guard. All 11 SDK suites passed;
+F88ReloadTests adds 31,806 phase/ordering assertions across 20/30/60/144Hz and
+long frames. Extraction/loading side views were rendered and inspected.
+An actual mission and two-peer multiplayer visual check remain outstanding.
+
+Original prefabs/animation/metadata: UnitySetupBackup/F88/BeforeReloadShells.
+Configured copies: UnitySetupBackup/F88/Configured.
+SetupF88Reload.cs is the one-time editor migration after both F88 prefabs exist.
+SetupF88.cs and SetupF88Combat.cs also retain the new native reload duration.
+No original scene model objects were replaced and no GitHub push was made.
+
+Installed locally with Nuclear Option closed; previous 1.9.1 / 0.0.21 backed up.
+DLL SHA256: D56603CDEFF076F46D5BB7E1E405BF6E252CC6BD480FB0D2DFD58BF09867FD7F
+Pack SHA256: 933EC056693456A77FEE056DED80719B68A63D0AB8FAAD24F15FEDA9BDF6FFC1

@@ -1,3 +1,5 @@
+Superseded by the finite soft cutoff in pack 0.0.19: SEARCHLIGHT-SOFT-CUTOFF.txt.
+
 Searchlight hard cloud cutoff - asset pack 0.0.18, helper unchanged at 1.8.3
 
 Replaces the soft extinction tail introduced in pack 0.0.17. Once the beam

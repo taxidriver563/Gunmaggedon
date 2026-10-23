@@ -50,7 +50,7 @@ namespace GunmageddonAudio
 
     public sealed class AACrankMotion : MonoBehaviour
     {
-        Transform yaw, pitch, left, right; float oldYaw, oldPitch;
+        Transform yaw, pitch, left, right; float oldYaw, oldPitch; ModelDetail detail;
         void Awake()
         {
             var turret = GetComponentInChildren<Turret>(true);
@@ -59,12 +59,15 @@ namespace GunmageddonAudio
             left = yaw.Find("PitchCrankPivot"); right = yaw.Find("YawCrankPivot");
             if (!pitch || !left || !right) { enabled = false; return; }
             oldYaw = yaw.localEulerAngles.y; oldPitch = pitch.localEulerAngles.x;
+            detail = new ModelDetail(this);
         }
         void LateUpdate()
         {
             float y = yaw.localEulerAngles.y, p = pitch.localEulerAngles.x;
-            left.Rotate(Vector3.right, -Mathf.DeltaAngle(oldPitch, p) * 12f, Space.Self);
-            right.Rotate(Vector3.right, Mathf.DeltaAngle(oldYaw, y) * 6f, Space.Self);
+            if (detail == null || detail.Animate) {
+                left.Rotate(Vector3.right, -Mathf.DeltaAngle(oldPitch, p) * 12f, Space.Self);
+                right.Rotate(Vector3.right, Mathf.DeltaAngle(oldYaw, y) * 6f, Space.Self);
+            }
             oldYaw = y; oldPitch = p;
         }
         void OnDestroy() { L40Runtime.Unregister(this); }

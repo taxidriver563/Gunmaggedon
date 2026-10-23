@@ -59,6 +59,7 @@ namespace GunmageddonAudio
             ShellObscurants.Install(harmony);
         }
 
+        internal static void Maintain(){var dead=RemovalBuffer<Gun>.Rent();try{foreach(var pair in Loadouts)if(!pair.Key)dead.Add(pair.Key);foreach(var gun in dead)Loadouts.Remove(gun);}finally{RemovalBuffer<Gun>.Return(dead);}}
         internal static bool IsSpecial(Gun gun)
         {
             return gun && gun.info && gun.attachedUnit is Building && gun.info.name == "203mmEmplacement_SPECIAL";
@@ -90,7 +91,6 @@ namespace GunmageddonAudio
 
         internal static Carrier Prepare(Gun gun, Unit target, Vector3 launch, Vector3 velocity)
         {
-            foreach (var old in Loadouts.Keys.Where(g => !g).ToArray()) Loadouts.Remove(old);
             Loadout state;
             if (!Loadouts.TryGetValue(gun, out state)) Loadouts.Add(gun, state = new Loadout());
             if (state.Target != target)
@@ -178,10 +178,7 @@ namespace GunmageddonAudio
             EnsureMaterials();
             if (shot.Kind == SpecialShellKind.Cluster || shot.Kind == SpecialShellKind.TopAttack)
             {
-                var burst = new GameObject("Cluster carrier opening burst");
-                burst.transform.SetParent(Datum.origin, false);
-                Track(burst);
-                burst.AddComponent<ClusterCarrierBurst>().Initialize(location);
+                ClusterVisualPools.Opening(location);
             }
             if (shot.Kind == SpecialShellKind.TopAttack)
             {
@@ -189,13 +186,18 @@ namespace GunmageddonAudio
                 if (log != null) log.LogInfo("Special coastal gun released two parachute top attack submunitions.");
                 return;
             }
-            var go = new GameObject("Coastal special " + shot.Kind + " payload");
-            go.transform.SetParent(Datum.origin, false);
-            go.transform.position = location.ToLocalPosition();
-            Track(go);
-            go.AddComponent<SpecialPayloadFlight>().Initialize(shot.Kind, shot.Owner, location, velocity,
+            var go = PayloadObject(shot.Kind, location, false);
+            go.GetComponent<SpecialPayloadFlight>().Initialize(shot.Kind, shot.Owner, location, velocity,
                 shot.Kind == SpecialShellKind.Cluster ? (bomblets == null ? 36 : bomblets.Value) : 5, shot.Gravity);
             if (log != null) log.LogInfo("Special coastal gun released " + shot.Kind + " payload.");
+        }
+
+        internal static GameObject PayloadObject(SpecialShellKind kind, GlobalPosition location, bool burst)
+        {
+            OptimizationRuntime.EnsureMission();
+            EnsureMaterials();
+            if(burst)ClusterVisualPools.Opening(location);
+            var lease=ClusterVisualPools.Flights.Rent();var flight=lease.Value;flight.Lease=lease.Id;RuntimePool<SpecialPayloadFlight>.Place(flight,Datum.origin,location.ToLocalPosition());return flight.gameObject;
         }
 
         internal static bool IsEquipment(UnitPart part)
@@ -212,9 +214,10 @@ namespace GunmageddonAudio
             return damage * Mathf.Clamp01(1f - distance / 7f);
         }
 
-        internal static void Detonate(Vector3 position, Unit owner, bool water = false)
+        internal static void Detonate(Vector3 position, Unit owner, bool water = false, bool applyDamage = true)
         {
             // Keep scratch per active invocation: damage callbacks may trigger another explosion.
+            if (applyDamage) {
             var scratch = ClusterDamageQuery.Rent(position);
             try
             {
@@ -239,23 +242,8 @@ namespace GunmageddonAudio
             {
                 scratch.Release();
             }
-            var go = new GameObject(water ? "Cluster bomblet water splash" : "Cluster bomblet impact");
-            go.transform.SetParent(Datum.origin, false); go.transform.position = position;
-            if (water) go.transform.rotation = Quaternion.LookRotation(Vector3.up);
-            Track(go);
-            var ps = go.AddComponent<ParticleSystem>();
-            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            var main = ps.main; main.loop = false; main.playOnAwake = false;
-            main.simulationSpace = ParticleSystemSimulationSpace.Custom; main.customSimulationSpace = Datum.origin;
-            main.startLifetime = water ? 1.2f : .45f; main.startSpeed = water ? 10f : 12f;
-            main.startSize = water ? 1.2f : .5f;
-            main.startColor = water ? new Color(.75f, .85f, .9f, .9f) : new Color(1f, .6f, .15f);
-            main.gravityModifier = water ? 1f : .6f;
-            var emission = ps.emission; emission.rateOverTime = 0f;
-            if (water) { var shape = ps.shape; shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = 25f; shape.radius = .5f; }
-            ps.GetComponent<ParticleSystemRenderer>().sharedMaterial = water ? SmokeMaterial : SparkMaterial;
-            ps.Play(); ps.Emit(water ? 24 : 14);
-            if (Application.isPlaying) UnityEngine.Object.Destroy(go, water ? 2f : 1.5f);
+            }
+            ClusterVisualPools.Impact(position,water);
         }
 
         internal static void Cloud(SpecialShellKind kind, GlobalPosition position)
@@ -265,6 +253,7 @@ namespace GunmageddonAudio
             go.transform.SetParent(Datum.origin, false); Track(go);
             go.AddComponent<ShellCloud>().Initialize(kind, position,
                 kind == SpecialShellKind.Smoke ? (smokeSeconds == null ? 90f : smokeSeconds.Value) : (chaffSeconds == null ? 70f : chaffSeconds.Value));
+            SpecialPayloadNetwork.CloudsChanged();
         }
 
         internal static void Track(GameObject go) { Effects.RemoveAll(e => !e); Effects.Add(go); }
@@ -313,31 +302,41 @@ namespace GunmageddonAudio
             internal Vector3 Velocity;
             internal LineRenderer Line;
             internal SpottingTrail Trail;
+            internal long HeadLease;
+            internal readonly Vector3[] HeadPositions=new Vector3[2];
         }
         private readonly List<Piece> pieces = new List<Piece>();
+        private readonly Stack<Piece> spare=new Stack<Piece>();internal long Lease;
         private SpecialShellKind kind;
         private Unit owner;
         private float age;
         private float gravity;
+        private bool remote;
+        private float catchUp;
 
-        internal void Initialize(SpecialShellKind shell, Unit source, GlobalPosition position, Vector3 velocity, int count, float gravityAcceleration)
+        internal void CatchUp(float seconds) { if (remote) catchUp = seconds; }
+
+        internal void Initialize(SpecialShellKind shell, Unit source, GlobalPosition position, Vector3 velocity, int count, float gravityAcceleration, Vector3[] receivedVelocities = null)
         {
-            kind = shell; owner = source; gravity = gravityAcceleration;
+            OptimizationRuntime.EnsureMission();
+            ResetFlight();age=catchUp=0;gameObject.SetActive(true);kind = shell; owner = source; gravity = gravityAcceleration; remote = receivedVelocities != null;
+            var velocities = receivedVelocities ?? new Vector3[count];
             float phase = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
             for (int i = 0; i < count; i++)
             {
-                var go = new GameObject("Falling " + shell + " submunition"); go.transform.SetParent(transform, false);
-                var line = go.AddComponent<LineRenderer>(); line.useWorldSpace = false; line.positionCount = 2;
+                var headLease=ClusterVisualPools.Heads.Rent();var line=headLease.Value;var go=line.gameObject;go.transform.SetParent(transform,false);go.transform.localPosition=Vector3.zero;go.transform.localRotation=Quaternion.identity;go.transform.localScale=Vector3.one;go.SetActive(true); line.useWorldSpace = false; line.positionCount = 2;
                 line.sharedMaterial = SpecialShells.SparkMaterial; line.startWidth = .35f; line.endWidth = .08f;
                 line.startColor = SpecialShells.ShellColor(shell); line.endColor = new Color(1f, 1f, 1f, 0f);
                 line.enabled = false;
                 Vector3 pieceVelocity;
-                if (shell == SpecialShellKind.Cluster) pieceVelocity = SpecialShells.ClusterVelocity(velocity, i, count, phase);
+                if (remote) pieceVelocity = velocities[i];
+                else if (shell == SpecialShellKind.Cluster) pieceVelocity = SpecialShells.ClusterVelocity(velocity, i, count, phase);
                 else
                 {
                     Vector2 scatter = UnityEngine.Random.insideUnitCircle * 40f;
                     pieceVelocity = velocity + new Vector3(scatter.x, UnityEngine.Random.Range(-12f, 5f), scatter.y);
                 }
+                velocities[i] = pieceVelocity;
                 SpottingTrail trail = null;
                 if (shell == SpecialShellKind.Cluster)
                 {
@@ -350,25 +349,26 @@ namespace GunmageddonAudio
                         trail.MinimumSampleDistance = .25f;
                         var renderer = trail.GetComponent<LineRenderer>();
                         renderer.startWidth = .28f; renderer.endWidth = .025f;
-                        SpecialShells.Track(trail.gameObject);
                     }
                     // A compact bright head remains visible at the front of the trail.
                     line.startColor = new Color(4f, 2.8f, 1.2f, 1f);
                     line.endColor = new Color(2f, 1f, .3f, .3f);
                 }
-                pieces.Add(new Piece { Position = position, Velocity = pieceVelocity, Line = line, Trail = trail });
+                var piece=spare.Count>0?spare.Pop():new Piece();piece.Position=position;piece.Velocity=pieceVelocity;piece.Line=line;piece.Trail=trail;piece.HeadLease=headLease.Id;pieces.Add(piece);
             }
+            if (!remote) SpecialPayloadNetwork.Release(shell, position, gravityAcceleration, velocities);
         }
 
         private void FixedUpdate()
         {
-            age += Time.fixedDeltaTime;
+            float dt = Time.fixedDeltaTime + catchUp; catchUp = 0f;
+            age += dt;
             for (int i = pieces.Count - 1; i >= 0; i--)
             {
                 var p = pieces[i];
                 Vector3 from = p.Position.ToLocalPosition();
-                p.Velocity += Vector3.down * (gravity * Time.fixedDeltaTime);
-                Vector3 to = from + p.Velocity * Time.fixedDeltaTime;
+                Vector3 to = from + p.Velocity * dt + Vector3.down * (gravity * dt * (dt + Time.fixedDeltaTime) * .5f);
+                p.Velocity += Vector3.down * (gravity * dt);
                 RaycastHit hit;
                 bool impact = Physics.Linecast(from, to, out hit, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
                 if (impact) to = hit.point;
@@ -382,13 +382,14 @@ namespace GunmageddonAudio
                 if (p.Trail) p.Trail.Sample(p.Position, Time.time);
                 if (impact || sea || (kind == SpecialShellKind.Chaff && age >= .65f) || age >= 15f)
                 {
-                    if (kind == SpecialShellKind.Cluster) { if (impact || sea) SpecialShells.Detonate(to, owner, sea); }
-                    else SpecialShells.Cloud(kind, p.Position);
+                    if (kind == SpecialShellKind.Cluster) { if (impact || sea) SpecialShells.Detonate(to, owner, sea, !remote); }
+                    else if (!remote) SpecialShells.Cloud(kind, p.Position);
                     RetireTrail(p.Trail);
-                    Destroy(p.Line.gameObject); pieces.RemoveAt(i);
+                    ClusterVisualPools.Heads.Release(p.Line,p.HeadLease);p.Line=null;p.Trail=null;spare.Push(p);
+                    pieces.RemoveAt(i);
                 }
             }
-            if (pieces.Count == 0) Destroy(gameObject);
+            if(pieces.Count==0&&!ClusterVisualPools.Flights.Release(this,Lease))RuntimePool<SpecialPayloadFlight>.Remove(gameObject);
         }
 
         private void LateUpdate()
@@ -397,8 +398,9 @@ namespace GunmageddonAudio
             foreach (var p in pieces)
             {
                 p.Line.transform.position = p.Position.ToLocalPosition();
-                p.Line.SetPosition(0, Vector3.zero);
-                p.Line.SetPosition(1, Vector3.ClampMagnitude(-p.Velocity * .025f, kind == SpecialShellKind.Cluster ? 1.8f : 12f));
+                p.HeadPositions[0]=Vector3.zero;
+                p.HeadPositions[1]=Vector3.ClampMagnitude(-p.Velocity*.025f,kind==SpecialShellKind.Cluster?1.8f:12f);
+                p.Line.SetPositions(p.HeadPositions);
                 p.Line.enabled = true;
             }
         }
@@ -407,13 +409,15 @@ namespace GunmageddonAudio
         {
             if (!trail) return;
             trail.Freeze();
-            if (Application.isPlaying) Destroy(trail.gameObject, trail.Lifetime + .1f);
-            else DestroyImmediate(trail.gameObject);
+
         }
 
-        private void OnDestroy()
+        internal void ResetFlight()
         {
-            foreach (var piece in pieces) RetireTrail(piece.Trail);
+            SpecialPayloadNetwork.UntrackFlight(gameObject);
+            foreach(var piece in pieces){RetireTrail(piece.Trail);if(piece.Line)ClusterVisualPools.Heads.Release(piece.Line,piece.HeadLease);piece.Line=null;piece.Trail=null;spare.Push(piece);}
+            pieces.Clear();owner=null;age=catchUp=gravity=0;remote=false;
         }
+        private void OnDestroy(){ResetFlight();}
     }
 }

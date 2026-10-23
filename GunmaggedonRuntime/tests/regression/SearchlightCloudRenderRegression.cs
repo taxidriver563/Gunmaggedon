@@ -51,13 +51,18 @@ public static class SearchlightCloudRenderRegression
             double below=band(2000,dense)/Math.Max(.00001,band(2000,clear));double above=band(6500,dense)/Math.Max(.00001,band(6500,clear));
             double gapDifference=clear.Zip(gap,(a,b)=>Math.Abs(a.r-b.r)+Math.Abs(a.g-b.g)+Math.Abs(a.b-b.b)).Max();
             double thinAbove=band(6500,thin)/Math.Max(.00001,band(6500,clear));
+            float entry=(data.x-data.y)/origin.forward.y;
+            double edge=band(entry,dense)/Math.Max(.00001,band(entry,clear));
+            double afterFade=band(entry+500,dense)/Math.Max(.00001,band(entry+500,clear));
             Check(band(2000,clear)>.01&&band(6500,clear)>.01,"Clear control must have visible beam pixels");
             Check(below>.97&&below<1.03,"Cloud fade changed the beam below the cloud: "+below);
             Check(above<.0001,"Dense-cloud cutoff left a visible outgoing beam: "+above);
             Check(thinAbove<.0001,"Thin cloud left the faint continuation visible: "+thinAbove);
+            Check(edge>.05&&edge<.95,"Cloud boundary needs a partial, soft transition: "+edge);
+            Check(afterFade<.0001,"Finite cloud fade must reach zero near the boundary: "+afterFade);
             Check(gapDifference<.001,"Empty cloud-map gaps should preserve clear beam pixels");
             Check(ShaderUtil.GetShaderMessages(beam.sharedMaterial.shader).Length==0,"Cloud shader compilation warnings/errors");
-            return new{passed=true,belowCloudRatio=below,aboveCloudRatio=above,thinCloudAboveRatio=thinAbove,gapMaximumDifference=gapDifference,previewFolder=output};
+            return new{passed=true,belowCloudRatio=below,cloudEdgeRatio=edge,afterFadeRatio=afterFade,aboveCloudRatio=above,thinCloudAboveRatio=thinAbove,gapMaximumDifference=gapDifference,previewFolder=output};
         } finally {
             RenderTexture.active=previous;UnityEngine.Object.DestroyImmediate(rt);UnityEngine.Object.DestroyImmediate(image);UnityEngine.Object.DestroyImmediate(encoded);UnityEngine.Object.DestroyImmediate(map);EditorSceneManager.ClosePreviewScene(scene);
         }

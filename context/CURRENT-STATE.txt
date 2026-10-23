@@ -1,23 +1,19 @@
-Current release: helper 1.8.1 + asset pack 0.0.16
-Public alpha label: v0.0.1
+Current alpha: v0.0.26 | runtime 1.10.0 | Blueprinter asset pack 0.0.26
 
-203 mm coastal guns: moderate artillery arcs, colored ranging trails/splashes,
-low-light illumination flares, and ordinary HE/AP ammunition.
-SPECIAL coastal gun: cluster, smoke, chaff and parachute top-attack ammunition.
-L40 AA trailer: delayed optical correction, animated cranks, recoil, firing
-audio and mild spent-casing ejection.
-Searchlight trailer: low-light activation, gradual acquisition, radar cues
-within 300 metres, coordinated aircraft claims, cone beam and directional glare.
+See ../README.md and ../releases/v0.0.26.md for features and installation.
+F88 heavy flak and L25 triple AA trailers join the coastal guns, L40 and
+searchlight. All units have three physical-model LOD levels; long-range effects
+are managed separately. See LOD-POLICY.txt and UNIT-LOD-RETROFIT.txt.
+
+Runtime optimization implementation/evidence: RUNTIME-OPTIMIZATION.txt.
+All 14 standalone suites passed locally; ten Unity groups passed 1,568 checks.
+The staged L25 preview-rig tracer mismatch is a separate known failure; the
+operational trailer's 444 checks passed with its intended one-in-three ratio.
 
 Known limitations:
 - Custom mission hitch/unhitch is disabled pending vehicle-integration repair.
-- Remote searchlight clients use local sweeps rather than replicated tracking.
-- Actual CIWS interception, mission balance and multiplayer effects need testing.
-- No representative mission FPS benchmark has been completed.
+- Remote searchlight clients use local sweeps instead of host target pointing.
+- Live multiplayer missions, balance and representative combat FPS need testing.
+- Native allocations are unavailable; editor/synthetic benchmarks are not
+  mission FPS evidence. Separate stage combat comparisons were not run.
 - Dazzler occlusion uses opaque depth; transparent glass does not block it.
-
-Privacy cleanup changes source metadata and documentation only. Packaged helper
-and asset-pack binaries retain their published checksums.
-
-Development: Gunmaggedon Runtime 1.8.4 with asset pack 0.0.18.
-See RUNTIME-RENAME.txt for the helper/folder rename and installation migration.

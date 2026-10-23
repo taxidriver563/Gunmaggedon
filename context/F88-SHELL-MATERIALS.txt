@@ -1,0 +1,27 @@
+F88 shell material correction - pack 0.0.23 (Runtime remains 1.9.2)
+
+Cause: the new reload prefabs and detached casing copied the FBX's embedded
+Gunmaggedon_F88_Shell material. That embedded material had no textures.
+The separate shell model in the scene used a textured material override, so
+its editor appearance did not match the prefabs included in the pack.
+
+All five shell renderers across F88_Turret_Rig, F88_AA_Trailer and
+F88_SpentCasing now explicitly use Materials/Gunmaggedon_F88_Shell_BaseColor.mat.
+The original FBX material name is remapped to that same external material.
+SetupF88Reload also explicitly assigns it when creating future shell visuals.
+No changes to firing, reload timing, meshes, UVs or shell physics.
+
+Verified all seven prefab/imported-model shell renderers reference the intended
+material. Checked all four assets' dependency graphs include the supplied
+BaseColor, Normal and Metallic texture files. The material's existing shader
+and texture settings were retained. Full gameplay suites were not rerun for
+this reference-only asset correction; an in-game visual check is still needed.
+
+Pre-fix assets/import metadata: UnitySetupBackup/F88/BeforeShellMaterials.
+Migration helper: GunmaggedonRuntime/tools/SetupF88ShellMaterials.cs.
+
+Loaded the final .nobp as an AssetBundle and confirmed the shell material
+and its three assigned textures are present and resolvable. Installed with
+the game closed, keeping the old pack backup; source/installed hashes match.
+Pack SHA256: 39D9EB1170AB774198DB6E3DF9171477A9C67519EDD1516E1694E7306AA0249D
+Runtime DLL remains 1.9.2.

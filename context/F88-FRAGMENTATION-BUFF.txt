@@ -1,0 +1,87 @@
+F88 fragmentation and responsiveness buff
+Date: 2026-10-22
+Runtime: 1.9.9; compatible existing pack: 0.0.26
+Deployment: installed locally with verified hash; game was closed.
+Previous runtime 1.9.8: UnitySetupBackup/F88/BalanceBuff/BeforeInstall/.
+Runtime SHA256:
+B65250D12AD8F167105E18BBDCE8C89FC3353C76A6E4DFAB9A64EAB4D3334D9C
+
+Problem
+The native BlastFrag call with yield 1 searches only a 20m radius. Native
+armor further limits useful blast damage, while F88 shots intentionally cover
+a much larger aerial volume. Increasing yield alone also increases close-range
+blast power, so it does not independently balance a broad fragment envelope.
+The one-gun barrage pattern also had a fixed offset toward one side.
+
+Behavior
+- Retains the native close blast, then performs one additional instantaneous
+  aircraft-fragment pass out to 140m from the actual timed airburst.
+- Additional fragment damage falls off as (1 - distance/140)^0.75; zero at or
+  beyond the boundary. Distances use collider surfaces, not aircraft centers.
+- Maximum additional native part-HP budget per aircraft: 12 times falloff.
+  At most three exposed parts, each capped at 4 times its own falloff.
+  The existing close blast is separate and is not covered by these outer caps.
+- Fragment penetration is capped at native value 140. Strong armor can block
+  fragments; native pierce tolerance and armor are used to limit each hit.
+  Calls go through IDamageable.TakeDamage, retaining damage attribution,
+  native aircraft damage handling and RPCs; no direct HP assignment is used.
+- Terrain, hulls and other intervening colliders block fragment paths. Each
+  part is considered once despite multiple colliders. Budgets are reserved
+  before callbacks, and no aircraft receives more than three part hits/pass.
+- This adds no smoke damage or timed damage-over-time component. Repeated
+  shell bursts accumulate damage. Fragments are physical hazards to friendly
+  aircraft too; they do not use an enemy-only damage filter.
+- Damage requires authoritative timed expiry and server/local-simulation
+  aircraft. Remote presentation messages remain visual only.
+- Ground/ship units retain only the existing native core blast behavior.
+- Reusable per-call pooled overlap buffers, part candidates and aircraft
+  budgets avoid a per-frame search. Buffers grow on saturation; an allocating
+  fallback preserves all targets if the 1024-collider buffer is full. Nested
+  damage callbacks receive independent scratch and references clear on return.
+
+Other F88 improvements
+- Custom controller yaw: 12 -> 16 degrees/sec; elevation: 10 -> 12 degrees/sec.
+  Remote pose interpolation uses the same rates. These runtime overrides do
+  not change the prefab's native/manual-control speed fields.
+- Plan preparation begins with up to 1.55s of reload remaining (was 1.05s),
+  allowing more time for three aim samples before the breech becomes ready.
+- A lone gun now centers its random barrage around the committed estimate;
+  multiple guns retain distinct overlapping sector offsets.
+- Mechanical dispersion 0.65 degrees and fuze error +/-0.18s are unchanged.
+  Observation error, radar's knowledge-only advantage, committed-area fire,
+  night illumination requirements and full 6.2s mechanical reload remain.
+
+LOD and assets
+No asset pack rebuild is required. All existing unit LODs, physical geometry,
+sounds, particles and loading animation assets remain from pack 0.0.26.
+The 800-check LOD integration suite passed with the new runtime.
+
+Validation
+- All 13 SDK suites passed, including 24959 fragmentation-policy assertions
+  and 4030 barrage assertions (including removal of lone-gun directional bias).
+- 1545 checks passed across nine Unity groups: static review, coastal support,
+  F88 rig/effects/flak/reload, L25 operational trailer, LOD and new fragments.
+- Fragment integration uses a temporary additive scene for real default-scene
+  overlap/line casts. Preview scenes do not participate in those queries.
+- Native UnitPart.TakeDamage runs on synthetic six-part Aircraft components;
+  armor 20/tolerance 5. The woven Aircraft.RpcDamage transport is intercepted
+  and native compressed part-HP damage values are recorded, without network
+  transport or a live flight/health simulation.
+- At aircraft center 50m from burst: 8.677734375 total part HP per pass.
+  At center (100,30,0), about 104m: 4.453125 total part HP per pass.
+  Repeated passes doubled those totals. Coverage includes distance falloff,
+  per-aircraft caps, six exposed parts, 70 duplicate colliders/buffer growth,
+  solid obstruction, high armor, ground-unit exclusion and authority checks.
+- Existing timed-expiry fixture still verifies one authoritative native blast,
+  no proximity trigger, no remote damage, and no repeated smoke damage.
+- Broad validation has one unrelated failure: L25_Turret_Rig's three tracer
+  ratios are currently 1, while its regression expects 3. L25_AA_Trailer's
+  live settings remain 3. This F88 change does not overwrite the staged rig.
+- Report: UnitySetupBackup/F88/BalanceBuff/validation.json.
+- Live aircraft combat effectiveness, actual mission HP losses, multiplayer
+  transport and FPS remain untested. The native RPC calculation test is not
+  a measured live-game survival or kill-rate benchmark.
+
+Sources
+src/AA/FlakFragmentationPolicy.cs, src/AA/F88Fragments.cs,
+src/AA/F88FlakRuntime.cs and src/AA/FlakBarrageSolution.cs.

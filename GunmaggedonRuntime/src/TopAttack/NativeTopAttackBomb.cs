@@ -8,6 +8,7 @@ namespace GunmageddonAudio
         internal const string Key = "Gunmageddon_TopAttackBomb";
         private static Gun pendingGun;
         private static float pendingPhase;
+        private static Missile pendingBomb;
 
         internal static bool Is(Missile missile) { return missile && missile.definition && missile.definition.jsonKey == Key; }
 
@@ -31,6 +32,7 @@ namespace GunmageddonAudio
         private static void Started(Missile __instance)
         {
             if (!Is(__instance)) return;
+            if (!ReferenceEquals(pendingGun, null)) pendingBomb = __instance;
             Begin(__instance, pendingGun, pendingPhase);
         }
 
@@ -54,13 +56,19 @@ namespace GunmageddonAudio
         {
             if (!Spawner.i) return null;
             pendingGun = gun; pendingPhase = phase;
+            Missile bomb = null;
             try
             {
-                var bomb = Spawner.i.SpawnMissile(definition, position.ToLocalPosition(), Quaternion.identity, velocity, target, owner);
+                bomb = Spawner.i.SpawnMissile(definition, position.ToLocalPosition(), Quaternion.identity, velocity, target, owner);
+                if (!bomb) return null;
                 Begin(bomb, gun, phase);
+                var payload = bomb.GetComponent<TopAttackSubmunition>();
+                if (!payload || !payload.GetComponent<LineRenderer>()) { Expire(bomb); return null; }
+                payload.TakeReservation();
                 return bomb.gameObject;
             }
-            finally { pendingGun = null; pendingPhase = 0f; }
+            catch { Expire(bomb ? bomb : pendingBomb); throw; }
+            finally { pendingGun = null; pendingPhase = 0f; pendingBomb = null; }
         }
 
         internal static void Expire(Missile missile)

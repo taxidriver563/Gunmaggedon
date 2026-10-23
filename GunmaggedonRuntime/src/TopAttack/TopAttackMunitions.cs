@@ -86,15 +86,19 @@ namespace GunmageddonAudio
             shot.TopAttackReserved = false;
             if (!bombDefinition || location.ToLocalPosition().y < Datum.LocalSeaY + 30f)
             { Return(shot.Gun, 2); return; }
-            var parachute = CoastalIllumination.GetNativeParachute();
-            if (!parachute) { Return(shot.Gun, 2); return; }
-            Vector3 side = Vector3.Cross(velocity.normalized, Vector3.up).normalized;
-            for (int i = 0; i < 2; i++)
+            int remaining = 2;
+            try
             {
-                var go = NativeTopAttackBomb.Spawn(bombDefinition, shot.Gun, shot.Owner, shot.Target,
-                    location, velocity + side * (i == 0 ? -14f : 14f), i * Mathf.PI);
-                if (!go) Return(shot.Gun, 1);
+                if (!CoastalIllumination.GetNativeParachute()) return;
+                Vector3 side = Vector3.Cross(velocity.normalized, Vector3.up).normalized;
+                for (int i = 0; i < 2; i++)
+                {
+                    var go = NativeTopAttackBomb.Spawn(bombDefinition, shot.Gun, shot.Owner, shot.Target,
+                        location, velocity + side * (i == 0 ? -14f : 14f), i * Mathf.PI);
+                    if (go) remaining--;
+                }
             }
+            finally { Return(shot.Gun, remaining); }
         }
 
         internal static void Track(GameObject go) { Objects.RemoveAll(o => !o); Objects.Add(go); }
@@ -132,7 +136,6 @@ namespace GunmageddonAudio
         private sealed class Candidate
         {
             internal Unit Unit;
-            internal Collider[] Colliders;
             internal GlobalPosition PreviousCenter;
             internal int Seen;
         }
@@ -156,7 +159,7 @@ namespace GunmageddonAudio
         internal void Initialize(Gun source, Unit shooter, GlobalPosition location, Vector3 initialVelocity, float initialPhase, Parachute parachute)
         {
             gun = source; owner = shooter; center = location; velocity = initialVelocity; phase = initialPhase;
-            ownsSlot = !ReferenceEquals(source, null); bomb = GetComponent<Missile>();
+            bomb = GetComponent<Missile>();
             transform.position = location.ToLocalPosition(); previousOrigin = location;
             model = transform.Find("SubmunitionBody");
             parachuteVisual = gameObject.AddComponent<TopAttackParachute>(); parachuteVisual.Initialize(parachute);
@@ -167,6 +170,9 @@ namespace GunmageddonAudio
             previousDirection = Direction(phase);
         }
 
+        // Spawn owns the reservation until initialization has fully succeeded.
+        internal void TakeReservation() { ownsSlot = !ReferenceEquals(gun, null); }
+
         private static Vector3 Direction(float angle)
         {
             float tilt = Mathf.Lerp(5f, 35f, .5f - .5f * Mathf.Cos(angle * .21f)) * Mathf.Deg2Rad;
@@ -175,19 +181,7 @@ namespace GunmageddonAudio
 
         private Bounds Hull(Candidate candidate)
         {
-            bool found = false; Bounds bounds = new Bounds(candidate.Unit.transform.position, Vector3.zero);
-            foreach (var collider in candidate.Colliders)
-            {
-                if (!collider || collider.isTrigger || !collider.enabled || !collider.gameObject.activeInHierarchy) continue;
-                if (!found) { bounds = collider.bounds; found = true; } else bounds.Encapsulate(collider.bounds);
-            }
-            if (!found)
-            {
-                var d = candidate.Unit.definition;
-                bounds = new Bounds(candidate.Unit.transform.position + Vector3.up * (d ? d.height * .3f : 2f),
-                    d ? new Vector3(d.width, Mathf.Max(2f, d.height), d.length) : new Vector3(5, 4, 20));
-            }
-            return bounds;
+            return SharedShipBounds.Get(candidate.Unit);
         }
 
         private void Discover()
@@ -201,7 +195,7 @@ namespace GunmageddonAudio
                 Candidate candidate;
                 if (!candidates.TryGetValue(unit, out candidate))
                 {
-                    candidate = new Candidate { Unit = unit, Colliders = unit.GetComponentsInChildren<Collider>(true) };
+                    candidate = new Candidate { Unit = unit };
                     var hull = Hull(candidate);
                     candidate.PreviousCenter = (hull.center - (unit.rb ? unit.rb.velocity * Time.fixedDeltaTime : Vector3.zero)).ToGlobalPosition();
                     candidates.Add(unit, candidate);
@@ -403,7 +397,7 @@ namespace GunmageddonAudio
 
     public sealed class TopAttackSlug : MonoBehaviour
     {
-        private static readonly RaycastHit[] Hits = new RaycastHit[64];
+        private static RaycastHit[] Hits = new RaycastHit[64];
         private readonly List<IDamageable> damaged = new List<IDamageable>(8);
         private Unit owner;
         private FactionHQ firingHQ;
@@ -430,13 +424,22 @@ namespace GunmageddonAudio
             float dt = Time.fixedDeltaTime; age += dt;
             Vector3 from = position.ToLocalPosition(); velocity += Vector3.down * (9.81f * dt);
             Vector3 to = from + velocity * dt; float distance = Vector3.Distance(from, to);
-            int count = Physics.RaycastNonAlloc(from, velocity.normalized, Hits, distance, ~PhysicsLayers.ExclusionZonesMask, QueryTriggerInteraction.Ignore);
+            int count;
+            while (true)
+            {
+                count = Physics.RaycastNonAlloc(from, velocity.normalized, Hits, distance, ~PhysicsLayers.ExclusionZonesMask, QueryTriggerInteraction.Ignore);
+                if (count < Hits.Length || Hits.Length >= 512) break;
+                Array.Resize(ref Hits, Hits.Length * 2);
+            }
+            var hits = count == Hits.Length ? Physics.RaycastAll(from, velocity.normalized, distance,
+                ~PhysicsLayers.ExclusionZonesMask, QueryTriggerInteraction.Ignore) : Hits;
+            if (!ReferenceEquals(hits, Hits)) count = hits.Length;
             // Sort the small hit set in place, preserving physical near-to-far penetration.
-            for (int i = 1; i < count; i++) { var h = Hits[i]; int j = i - 1; while (j >= 0 && Hits[j].distance > h.distance) { Hits[j + 1] = Hits[j]; j--; } Hits[j + 1] = h; }
+            for (int i = 1; i < count; i++) { var h = hits[i]; int j = i - 1; while (j >= 0 && hits[j].distance > h.distance) { hits[j + 1] = hits[j]; j--; } hits[j + 1] = h; }
             bool stop = false;
             for (int i = 0; i < count; i++)
             {
-                var hit = Hits[i]; var part = hit.collider.GetComponent<IDamageable>() ?? hit.collider.GetComponentInParent<IDamageable>();
+                var hit = hits[i]; var part = hit.collider.GetComponent<IDamageable>() ?? hit.collider.GetComponentInParent<IDamageable>();
                 if (!impactShown) { impactShown = true; TopAttackEffects.Impact(hit.point, hit.normal, part != null, part == null && hit.point.y <= Datum.LocalSeaY + .2f); }
                 if (part == null) { to = hit.point; stop = true; break; }
                 if (damaged.Contains(part)) continue;
@@ -452,6 +455,7 @@ namespace GunmageddonAudio
                 penetration -= Mathf.Max(100f, part.GetArmorProperties().pierceArmor);
                 if (penetration <= 0f) { to = hit.point; stop = true; break; }
             }
+            Array.Clear(Hits, 0, Hits.Length);
             if (!stop && from.y > Datum.LocalSeaY + .1f && to.y <= Datum.LocalSeaY + .1f)
             {
                 float fraction = (from.y - Datum.LocalSeaY - .1f) / (from.y - to.y);
@@ -468,7 +472,7 @@ namespace GunmageddonAudio
         private void OnDestroy()
         {
             if (!trail) return; trail.Freeze();
-            if (Application.isPlaying) Destroy(trail.gameObject, .25f); else DestroyImmediate(trail.gameObject);
+            trail=null; // Shared trail manager owns the remaining fade and pool return.
         }
     }
 }

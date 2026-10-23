@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1706624141, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
+  m_Name: L25_AA_Weapon
+  m_EditorClassIdentifier: 
+  weaponPrefab: {fileID: 0}
+  effectiveness:
+    antiSurface: 0
+    antiAir: 1
+    antiMissile: 0
+    antiRadar: 0
+  targetRequirements:
+    lineOfSight: 1
+    minAltitude: 0
+    maxAltitude: 5000
+    minRange: 0
+    maxRange: 3500
+    maxSpeed: 100000
+    minIR: 0
+    minRadar: 0
+    minAlignment: 4
+    minOwnerSpeed: 0
+    minValue: 0
+  pK: 0.01
+  weaponName: L25 Triple 25mm
+  shortName: 25mm Triple
+  description: Triple 25mm light antiaircraft mount with sequential barrel firing.
+  fireInterval: 0.3
+  muzzleVelocity: 1100
+  maxSpeed: -1
+  dragCoef: 0.65
+  gravMult: 1
+  pierceDamage: 420
+  blastDamage: 0.04
+  weaponIcon: {fileID: 21300000, guid: 16b74c83a3daec5459db46242cbe79e6, type: 2}
+  armorTierEffectiveness: 5
+  airburstHeight: 0
+  visibilityWhenFired: 2000
+  costPerRound: 0.00006
+  massPerRound: 0.4
+  useWeaponDoors: 0
+  boresight: 0
+  laserGuided: 0
+  missile: 0
+  bomb: 0
+  glideBomb: 0
+  gun: 1
+  overHorizon: 0
+  nuclear: 0
+  strategic: 0
+  energy: 0
+  jammer: 0
+  troops: 0
+  hideInDisplay: 0
+  cargo: 0
+  rearmGround: 0
+  rearmShip: 0
+  sling: 0

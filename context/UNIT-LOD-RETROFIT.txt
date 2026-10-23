@@ -1,0 +1,94 @@
+Unit LOD retrofit
+Date: 2026-10-22
+Runtime: 1.9.8; asset pack: 0.0.26
+Deployment: installed locally; DLL and pack hashes verified. Game was closed.
+
+Scope
+All seven unit definitions now reference prefabs with enabled three-level
+LODGroups. The staged F88 and L25 turret rigs were updated too. The SPECIAL
+gun's inactive bomb template has its own small-object group.
+
+Geometry budgets (all mesh submeshes, including temporarily hidden details):
+Unit                          Near      Middle    Distant
+CD-203 standard               1844       851        503
+CD-203 special physical gun   1844       851        503
+F88                           6594      3071       1576
+L25                           9848      4035       2350
+L40                           7284      3445       1865
+Searchlight physical trailer  4082      1854       1090
+Top-attack bomb                314       168         64
+
+These are geometry reductions, not measured FPS improvements. Earlier rough
+audit counts considered only the first submesh and therefore undercounted
+some models. The totals above include every submesh.
+
+Implementation
+- Original near meshes, materials, gameplay components and articulated paths
+  remain intact. Generated meshes preserve material sections, UV channels,
+  vertex normals, tangents and colors; no FBX or texture is modified.
+- Cheaper mesh children sit at identity beneath their original model part,
+  following yaw/pitch, recoil and loading-parent activation correctly.
+- Small cranks and loading-shell meshes appear only at near detail.
+- Physical-unit transition heights: 0.045, 0.012, final cull 0.0005.
+  Bomb/template: 0.06, 0.018, final cull 0.001. These are screen-height
+  proportions, respecting zoom/FOV and Unity LOD bias, not fixed distances.
+- Bounds include model renderers only, with a 20% movement allowance.
+- Distant-level model shadows are disabled. Near/middle materials and
+  renderer settings are retained. Transitions switch without shader fading.
+- SearchlightBeam and LensGlow stay outside the physical-model LODGroup.
+  Their existing cloud, range, direction and activation controls remain in
+  charge. Light tracking and illumination support continue at every LOD.
+- Runtime-created trails, flares, scan lines, slugs and the native parachute
+  remain independent effects; this pass changes unit model geometry.
+
+Cosmetic animation
+- ModelDetail caches near-level renderer references once, using Unity's
+  actual renderer visibility to decide whether close-detail motion is useful.
+  Visibility can lag a render frame; multiple cameras/shadows can retain near
+  work conservatively. No per-frame scene search or mesh allocation is added.
+- L40, L25 and F88 crank updates pause while near renderers are not visible.
+- L25 custom recoil skips distant/offscreen transform updates. Its firing
+  sequence, clip state, shared tracer counter and shot cadence still advance.
+- F88 distant breech stays closed and loading meshes remain hidden; cosmetic
+  casing handoffs are skipped. The complete reload cycle, extraction event,
+  two-second clearance interval and secured-breech readiness gate still run.
+  Returning near restores the current loading pose, without restarting reload.
+- Native recoil animation is retained where it also drives muzzle transforms.
+  Editor previews and older packs without multi-level groups keep animating.
+
+Validation
+- Temporary-copy migration checks compared all original gameplay-component
+  serialization before/after setup; no gameplay component changed or vanished.
+- Render contact sheet inspected: UnitySetupBackup/LOD/preview.png. Columns
+  are near/middle/distant; rows are bomb, standard, special, F88, L25, L40,
+  searchlight. These are enlarged previews, not representative transition sizes.
+- 1705 current-build Unity checks passed, including 800 new LOD checks:
+  renderer coverage, decreasing geometry, materials, finite vertices, bounds,
+  articulated hierarchy, rendered near/far visibility, L25 recoil/tracer
+  behavior, F88 distant reload and returning near during insertion.
+- All 12 SDK suites passed. Existing combat/rig/reload/tracer checks passed.
+- Built pack loaded successfully; all seven exported unit prefabs retain three
+  levels, meshes and material references, with the geometry budgets above.
+  Export checks use GetIndexCount per submesh because imported source meshes
+  may have CPU vertex/index access disabled in player builds.
+- Visibility checks await editor frames because LOD visibility is not updated
+  synchronously in a single-frame near/far toggle. CurrentBuildValidation.Run
+  now returns Task<object>; callers must await it.
+- Mission camera transitions, multiplayer viewing and actual FPS/GC gains
+  remain unverified. Do not report live mission testing from these results.
+
+Reproduction and rollback
+- Editor migration: GunmaggedonRuntime/tools/SetupUnitLODs.cs.
+  PreviewOnly and RenderPreview operate on temporary copies; Run saves assets.
+  Run requires GUNMAGGEDON_ROOT and preserves first-run prefab backups.
+- Mesh assets: Assets/Blueprinter/Mods/Gunmageddon/LODMeshes/ in Unity project.
+- Prefab and modinfo backups: UnitySetupBackup/LOD/BeforeRetrofit/.
+- Migration report: UnitySetupBackup/LOD/retrofit-report.json.
+- Validation: UnitySetupBackup/LOD/validation.json.
+- Export report: UnitySetupBackup/LOD/export-validation.json.
+- Previous runtime 1.9.7 and pack 0.0.25: UnitySetupBackup/LOD/BeforeInstall/.
+  The previous installed pack is renamed .nobp.disabled; only 0.0.26 is active.
+- Installed runtime SHA256:
+  E2A0E2F65F0EDE7B53C694B712049328244C87FC43C7BD177C7568644B8B558D
+- Installed pack SHA256:
+  9AD29A553297A88A2CDD0DDF2195817754EA242E0B3D5A9D57535418D369C123
