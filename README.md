@@ -41,18 +41,6 @@ The standalone `Gunmaggedon.Runtime.dll` attachment is the same CI-built runtime
 
 For ordinary coastal guns, `[Coastal ammunition] Mode` accepts `Auto`, `HE`, or `AP`. Auto selects AP against ships at least 65 m long or armor tier 3+, while ranging and illumination requirements still apply.
 
-## Development and verification
-
-[Release CI](ci/README.txt) runs the standalone suites, builds the tagged runtime source with private compile references, and attaches build-provenance attestations. Private game/Unity reference DLLs are not redistributed. The Blueprinter asset pack is built separately in Unity.
-
-See [build instructions](context/BUILD-AND-VALIDATION.txt), [LOD policy](context/LOD-POLICY.txt), and [runtime optimization evidence](context/RUNTIME-OPTIMIZATION.txt). All 14 standalone suites and 1,568 checks across ten Unity groups passed locally. A separate staged L25 preview-rig tracer check remains mismatched; the operational trailer uses the intended ratio.
-
-This remains an alpha. Mission balance, live multiplayer presentation, and representative combat FPS need further testing. Custom mission hitch/unhitch remains disabled. Remote searchlight clients still use local sweeps rather than replicated host pointing. Native allocation measurements and full combat benchmarks are not certified by editor microbenchmarks.
-
-## Source audio
-
-Generated firing and flak audio source files are maintained privately. Public source includes their Unity `.meta` files to preserve asset GUIDs. To rebuild the asset pack, authorized maintainers must restore the six original MP3s at their original paths before opening/building in Unity. See [audio source setup](context/AUDIO-SOURCE-PRIVACY.txt). Public Git history was rewritten on 2026-10-23 to remove raw audio; existing contributors should re-clone and avoid pushing old history. [Commit mapping](context/AUDIO-HISTORY-COMMIT-MAP.txt) preserves the link to existing binary provenance. Runtime-only CI does not need these files. The playable release retains its integrated sound effects.
-
 ## Disclaimer
 
 This project is an unofficial community modification and is not affiliated with, sponsored by, or endorsed by Shockfront Studios Pty Ltd. Original Nuclear Option assets, vehicle designs, audio, and code are Copyright (c) 2026 Shockfront Studios Pty Ltd. All rights reserved. Nuclear Option and Shockfront Studios are trademarks or registered trademarks of Shockfront Studios Pty Ltd. Original mod content and all other trademarks belong to their respective owners.
