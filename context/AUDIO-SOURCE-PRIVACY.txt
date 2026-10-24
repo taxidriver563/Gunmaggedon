@@ -40,3 +40,11 @@ Existing contributors should re-clone; do not merge or push the old history,
 which would make the removed files public again. Commit mappings are recorded
 in AUDIO-HISTORY-COMMIT-MAP.txt. Existing binary build-info/attestations refer
 to original commit IDs and were not modified or reissued by this cleanup.
+
+Published verification: main 80be3f6 and all three tags confirmed through the
+GitHub API; source audio absent, README/release disclaimers exact, release
+asset IDs and digests unchanged. An anonymous old-commit raw-audio HEAD
+request still returned HTTP 200. Files are NOT fully inaccessible/private
+until retained GitHub objects/cache are addressed. A support-request draft
+is saved locally in GunmaggedonRuntime/build/audio-privacy/; it has not been
+sent. Existing downloads/forks cannot be revoked by this change.
