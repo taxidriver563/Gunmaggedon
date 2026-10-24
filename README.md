@@ -4,7 +4,7 @@ A gun-based warfare expansion for Nuclear Option, covering coastal artillery, pr
 
 ## Current release
 
-**[Alpha v0.0.26](https://github.com/taxidriver563/Gunmaggedon/releases/tag/v0.0.26): runtime 1.10.0 + asset pack 0.0.26. Both are required.**
+**[Alpha v0.0.26](https://github.com/taxidriver563/Gunmaggedon/releases/tag/Releases): runtime 1.10.0 + asset pack 0.0.26. Both are required.**
 
 - Standard 203 mm coastal gun with HE/AP ammunition, artillery arcs, colored ranging rounds, matching splashes, and low-light parachute illumination.
 - SPECIAL coastal gun with cluster, smoke, chaff, and parachute top-attack ammunition; physical slugs, discharge effects, and spent-canister separation.
@@ -21,7 +21,7 @@ See the [patch notes](releases/v0.0.26.md) for changes and validation limits.
 Requires compatible BepInEx and Blueprinter. Game/dependency assemblies are not included.
 
 1. Close Nuclear Option and back up your current mod/configuration.
-2. Download `Gunmaggedon.Runtime.zip` and `Gunmageddon_0.0.26.nobp` from the [release](https://github.com/taxidriver563/Gunmaggedon/releases/tag/v0.0.26).
+2. Download `Gunmaggedon.Runtime.zip` and `Gunmageddon_0.0.26.nobp` from the [release](https://github.com/taxidriver563/Gunmaggedon/releases/tag/Releases).
 3. Extract the runtime ZIP into the game folder, merging its `BepInEx` folder. Place the `.nobp` in `BepInEx/plugins`.
 4. Remove old `GunmageddonAudio.dll` copies and keep only one Gunmaggedon runtime and the current asset pack active.
 5. Start the game. Existing settings remain in `BepInEx/config/gunmageddon.203mm.audio.cfg`.
@@ -37,3 +37,11 @@ For ordinary coastal guns, `[Coastal ammunition] Mode` accepts `Auto`, `HE`, or 
 See [build instructions](context/BUILD-AND-VALIDATION.txt), [LOD policy](context/LOD-POLICY.txt), and [runtime optimization evidence](context/RUNTIME-OPTIMIZATION.txt). All 14 standalone suites and 1,568 checks across ten Unity groups passed locally. A separate staged L25 preview-rig tracer check remains mismatched; the operational trailer uses the intended ratio.
 
 This remains an alpha. Mission balance, live multiplayer presentation, and representative combat FPS need further testing. Custom mission hitch/unhitch remains disabled. Remote searchlight clients still use local sweeps rather than replicated host pointing. Native allocation measurements and full combat benchmarks are not certified by editor microbenchmarks.
+
+## Source audio
+
+Generated firing and flak audio source files are maintained privately. Public source includes their Unity `.meta` files to preserve asset GUIDs. To rebuild the asset pack, authorized maintainers must restore the six original MP3s at their original paths before opening/building in Unity. See [audio source setup](context/AUDIO-SOURCE-PRIVACY.txt). Runtime-only CI does not need these files. The playable release retains its integrated sound effects.
+
+## Disclaimer
+
+This project is an unofficial community modification and is not affiliated with, sponsored by, or endorsed by Shockfront Studios Pty Ltd. Original Nuclear Option assets, vehicle designs, audio, and code are Copyright (c) 2026 Shockfront Studios Pty Ltd. All rights reserved. Nuclear Option and Shockfront Studios are trademarks or registered trademarks of Shockfront Studios Pty Ltd. Original mod content and all other trademarks belong to their respective owners.

@@ -130,3 +130,9 @@ id_ed25519
 
 # Generated CI packages
 /artifacts/
+
+# Private generated source audio; distribute only in the playable mod.
+/Assets/Blueprinter/Mods/Gunmageddon/**/*.mp3
+/Assets/Blueprinter/Mods/Gunmageddon/**/*.wav
+/Assets/Blueprinter/Mods/Gunmageddon/**/*.ogg
+/PrivateAudio/

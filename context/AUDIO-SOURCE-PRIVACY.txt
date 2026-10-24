@@ -1,0 +1,29 @@
+Private generated audio source setup - 2026-10-23
+
+The six generated firing/flak MP3 source files are excluded from public source.
+The playable .nobp keeps its integrated audio; no runtime, balance, prefab or
+LOD changes are made. This is source-distribution cleanup, not encryption or
+a claim that packed mod audio cannot be extracted.
+
+Private maintainers: restore the original MP3s at these relative paths before
+importing/building the Blueprinter asset pack. Retained .meta files preserve
+their existing Unity GUIDs; do not regenerate them. Public source alone cannot
+reproduce the complete audio-containing asset pack. Runtime-only CI is unaffected.
+
+Assets/Blueprinter/Mods/Gunmageddon/203mm_Cannon_Fire_Close.mp3
+Assets/Blueprinter/Mods/Gunmageddon/203mm_Cannon_Fire_Distant.mp3
+Assets/Blueprinter/Mods/Gunmageddon/25mm_Autocannon_Fire.mp3
+Assets/Blueprinter/Mods/Gunmageddon/40mm_Autocannon_Fire_Close.mp3
+Assets/Blueprinter/Mods/Gunmageddon/88mm_Cannon_Fire_Close.mp3
+Assets/Blueprinter/Mods/Gunmageddon/Flak_Explosion.mp3
+
+Future publication must skip raw audio, including newly added MP3/WAV/OGG files.
+The local publication helper and public ignore rules enforce this exclusion.
+Keep generation records and evidence of paid-plan rights privately. Exclusion
+from public source does not by itself establish licensing or moderator approval.
+
+Audio copies were already published. A history rewrite cannot revoke existing
+downloads, forks or clones; GitHub may retain cached commits and pull-request
+references. Old build-info/attestations identify the original release commit;
+existing released binaries are unchanged by source-history cleanup. Consult the
+repository history mapping if matching those original source revisions.
