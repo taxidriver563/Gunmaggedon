@@ -16,6 +16,17 @@ A gun-based warfare expansion for Nuclear Option, covering coastal artillery, pr
 
 See the [patch notes](releases/v0.0.26.md) for changes and validation limits.
 
+## Old Guard: what to expect
+
+Old Guard brings primitive gun crews and fire control into Nuclear Option. Their limited accuracy is intentional: these guns need time to work out where you're going, and changing direction gives them something new to get wrong.
+
+- **L40: walking the clips onto target.** The crew observes how a clip misses, then makes a delayed aim correction for the next one. Flying a predictable course gives them time to improve their solution. Hard turns and changing speed can throw that work away; they do not instantly snap to perfect lead.
+- **L25: the close-range last line.** The triple mount is more accurate against aircraft that get dangerously close, with a 3.5 km maximum range. Its three barrels fire in sequence and each has its own 15-round clip and independent reload. It still relies on imperfect optical tracking.
+- **F88: fill the sky, not chase the cockpit.** Heavy flak fires timed bursts into the region where the crew expects an aircraft to be. Nearby radar improves their information, not the gun's dispersion. Expect area suppression and accumulating fragment damage rather than pinpoint hits.
+- **Give them support.** Searchlights help crews engage at night, while nearby radar can improve supported units' awareness. Neither turns an old gun into a modern SPAAG.
+
+**Do not expect these units to survive against anything above Rank 2 aircraft.** You're bringing hand cranks to a jet fight. The crews appreciate your optimism, but optimism is not a countermeasure.
+
 ## Install
 
 Requires compatible BepInEx and Blueprinter. Game/dependency assemblies are not included.
