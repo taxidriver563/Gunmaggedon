@@ -27,3 +27,16 @@ downloads, forks or clones; GitHub may retain cached commits and pull-request
 references. Old build-info/attestations identify the original release commit;
 existing released binaries are unchanged by source-history cleanup. Consult the
 repository history mapping if matching those original source revisions.
+
+History cleanup
+On 2026-10-23 all public branches and tags were rewritten to remove these six
+raw source paths. Before publishing, the rewritten latest tree was compared
+with the prepared source tree; all other tracked file contents were identical.
+All six raw audio blob IDs and paths were absent from reachable rewritten
+history. The user-authorized cleanup has a complete private local Git bundle
+backup and separately hash-verified source audio/metadata backups.
+
+Existing contributors should re-clone; do not merge or push the old history,
+which would make the removed files public again. Commit mappings are recorded
+in AUDIO-HISTORY-COMMIT-MAP.txt. Existing binary build-info/attestations refer
+to original commit IDs and were not modified or reissued by this cleanup.

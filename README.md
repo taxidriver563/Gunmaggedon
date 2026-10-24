@@ -40,7 +40,7 @@ This remains an alpha. Mission balance, live multiplayer presentation, and repre
 
 ## Source audio
 
-Generated firing and flak audio source files are maintained privately. Public source includes their Unity `.meta` files to preserve asset GUIDs. To rebuild the asset pack, authorized maintainers must restore the six original MP3s at their original paths before opening/building in Unity. See [audio source setup](context/AUDIO-SOURCE-PRIVACY.txt). Runtime-only CI does not need these files. The playable release retains its integrated sound effects.
+Generated firing and flak audio source files are maintained privately. Public source includes their Unity `.meta` files to preserve asset GUIDs. To rebuild the asset pack, authorized maintainers must restore the six original MP3s at their original paths before opening/building in Unity. See [audio source setup](context/AUDIO-SOURCE-PRIVACY.txt). Public Git history was rewritten on 2026-10-23 to remove raw audio; existing contributors should re-clone and avoid pushing old history. [Commit mapping](context/AUDIO-HISTORY-COMMIT-MAP.txt) preserves the link to existing binary provenance. Runtime-only CI does not need these files. The playable release retains its integrated sound effects.
 
 ## Disclaimer
 
