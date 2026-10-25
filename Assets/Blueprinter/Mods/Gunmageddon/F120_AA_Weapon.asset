@@ -21,9 +21,9 @@ MonoBehaviour:
   targetRequirements:
     lineOfSight: 1
     minAltitude: 250
-    maxAltitude: 12000
+    maxAltitude: 20000
     minRange: 600
-    maxRange: 15000
+    maxRange: 20000
     maxSpeed: 100000
     minIR: 0
     minRadar: 0

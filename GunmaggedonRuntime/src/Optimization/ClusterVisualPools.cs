@@ -10,7 +10,7 @@ namespace GunmageddonAudio
         static readonly RuntimePool<ClusterCarrierBurst> openings=new RuntimePool<ClusterCarrierBurst>(128,CreateOpening,o=>o.ResetEffect());
         static readonly RuntimePool<ClusterImpactVisual> water=new RuntimePool<ClusterImpactVisual>(128,()=>CreateImpact(true),ResetImpact);
         static readonly RuntimePool<ClusterImpactVisual> land=new RuntimePool<ClusterImpactVisual>(128,()=>CreateImpact(false),ResetImpact);
-        internal static readonly RuntimePool<LineRenderer> Heads=new RuntimePool<LineRenderer>(512,CreateHead,l=>{l.enabled=false;l.positionCount=0;l.sharedMaterial=null;l.transform.SetParent(Datum.origin,false);});
+        internal static readonly RuntimePool<LineRenderer> Heads=new RuntimePool<LineRenderer>(512,CreateHead,l=>{l.enabled=false;l.positionCount=0;l.SetPropertyBlock(null);l.sharedMaterial=null;l.transform.SetParent(Datum.origin,false);});
         internal static readonly RuntimePool<SpecialPayloadFlight> Flights=new RuntimePool<SpecialPayloadFlight>(16,CreateFlight,f=>f.ResetFlight());
         static ClusterCarrierBurst CreateOpening(){var g=new GameObject("Cluster carrier opening burst");g.SetActive(false);return g.AddComponent<ClusterCarrierBurst>();}
         static SpecialPayloadFlight CreateFlight(){var g=new GameObject("Coastal payload flight");g.SetActive(false);return g.AddComponent<SpecialPayloadFlight>();}

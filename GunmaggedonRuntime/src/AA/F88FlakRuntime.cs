@@ -15,14 +15,14 @@ namespace GunmageddonAudio
         static readonly Dictionary<Gun,F88FlakController> Guns=new Dictionary<Gun,F88FlakController>();
         static readonly Dictionary<BulletSim.Bullet,Flight> Flights=new Dictionary<BulletSim.Bullet,Flight>();
         static readonly FieldInfo SimGun=AccessTools.Field(typeof(BulletSim),"gun"),SimVisual=AccessTools.Field(typeof(BulletSim),"visualOnly");
-        sealed class Flight {internal bool Authority,Heavy;internal PersistentID Source;internal float Blast;}
+        sealed class Flight {internal bool Authority,Heavy,Incendiary;internal PersistentID Source;internal float Blast;}
         sealed class Pending {internal Pending Previous;internal Flight Flight;internal Unit Owner;internal WeaponInfo Info;}
         [ThreadStatic]static Pending pending;
         internal static GameObject EffectPrefab;
         internal static GameObject HeavyEffectPrefab;
-        internal static bool Heavy(Gun g){return g&&g.info&&g.info.name==HeavyWeapon;}
+        internal static bool Heavy(Gun g){return g&&g.info&&(g.info.name==HeavyWeapon||IncendiaryCanisterRuntime.Matches(g));}
         internal static bool Matches(Gun g){return g&&g.info&&g.attachedUnit&&g.attachedUnit.definition&&
-            (g.info.name==Weapon&&g.attachedUnit.definition.jsonKey==Key||g.info.name==HeavyWeapon&&g.attachedUnit.definition.jsonKey==HeavyKey);}
+            (g.info.name==Weapon&&g.attachedUnit.definition.jsonKey==Key||g.info.name==HeavyWeapon&&g.attachedUnit.definition.jsonKey==HeavyKey||IncendiaryCanisterRuntime.Matches(g));}
         internal static void Install(Harmony h)
         {
             h.Patch(AccessTools.Method(typeof(Turret),"FixedUpdate"),prefix:new HarmonyMethod(typeof(F88FlakRuntime),nameof(NativeTurret)));
@@ -33,7 +33,7 @@ namespace GunmageddonAudio
             h.Patch(AccessTools.Method(typeof(BulletSim.Bullet),"Remove"),prefix:new HarmonyMethod(typeof(F88FlakRuntime),nameof(Remove)));
             F88FlakNetwork.Install();
         }
-        internal static void Register(F88FlakController c,Gun gun){Controllers.Add(c);Guns[gun]=c;var effect=AccessTools.Field(typeof(Gun),"selfDestructEffect").GetValue(gun) as GameObject;if(Heavy(gun))HeavyEffectPrefab=effect;else EffectPrefab=effect;}
+        internal static void Register(F88FlakController c,Gun gun){Controllers.Add(c);Guns[gun]=c;var effect=AccessTools.Field(typeof(Gun),"selfDestructEffect").GetValue(gun) as GameObject;if(IncendiaryCanisterRuntime.Matches(gun))IncendiaryCanisterRuntime.EffectPrefab=effect;else if(Heavy(gun))HeavyEffectPrefab=effect;else EffectPrefab=effect;}
         internal static void Unregister(F88FlakController c,Gun gun){Controllers.Remove(c);if(!ReferenceEquals(gun,null))Guns.Remove(gun);}
         static bool NativeTurret(Turret __instance){return !__instance.GetComponent<F88FlakController>();}
         static bool AllowFire(Gun __instance)
@@ -46,13 +46,13 @@ namespace GunmageddonAudio
             bool visual=(bool)SimVisual.GetValue(__instance);F88FlakController c;
             if(!visual&&gun.attachedUnit.LocalSim&&Guns.TryGetValue(gun,out c))__3=c.Fuse;
             __state=new Pending{Previous=pending,Owner=gun.attachedUnit,Info=gun.info,
-                Flight=new Flight{Authority=!visual&&gun.attachedUnit.LocalSim,Source=gun.attachedUnit.persistentID,Blast=gun.info.blastDamage,Heavy=Heavy(gun)}};
+                Flight=new Flight{Authority=!visual&&gun.attachedUnit.LocalSim&&(!IncendiaryCanisterRuntime.Matches(gun)||gun.attachedUnit.IsServer),Source=gun.attachedUnit.persistentID,Blast=gun.info.blastDamage,Heavy=Heavy(gun),Incendiary=IncendiaryCanisterRuntime.Matches(gun)}};
             pending=__state;
         }
         static Exception Added(Exception __exception,Pending __state){if(__state!=null)pending=__state.Previous;return __exception;}
         static void TraceStart(BulletSim.Bullet __instance,WeaponInfo info,Unit owner)
         {
-            if(!info||(info.name!=Weapon&&info.name!=HeavyWeapon))return;
+            if(!info||(info.name!=Weapon&&info.name!=HeavyWeapon&&info.name!=IncendiaryCanisterRuntime.Weapon))return;
             __instance.proximityFuse=false;__instance.target=null;__instance.explosive=false;
             if(pending!=null&&pending.Info==info&&pending.Owner==owner&&!Flights.ContainsKey(__instance))Flights[__instance]=pending.Flight;
         }
@@ -61,6 +61,7 @@ namespace GunmageddonAudio
             Flight f;if(!Flights.TryGetValue(__instance,out f)||__instance.active)return;
             Flights.Remove(__instance);
             if(!f.Authority||__instance.impacted||__instance.destructTimer>0)return;
+            if(f.Incendiary){IncendiaryCanisterRuntime.Burst(__instance.position,__instance.velocity,f.Source);return;}
             BurstProfile(__instance.position,f.Source,f.Blast,f.Heavy);
         }
         internal static void Burst(GlobalPosition position,PersistentID source,float blast)
@@ -77,20 +78,20 @@ namespace GunmageddonAudio
         internal static void Shutdown()
         {
             foreach(var c in Controllers.ToArray())if(c)UnityEngine.Object.Destroy(c);
-            Controllers.Clear();Guns.Clear();Flights.Clear();pending=null;EffectPrefab=HeavyEffectPrefab=null;F88FlakNetwork.Shutdown();F88FlakEffects.Shutdown();F88Fragments.Clear();
+            Controllers.Clear();Guns.Clear();Flights.Clear();pending=null;EffectPrefab=HeavyEffectPrefab=null;IncendiaryCanisterRuntime.Shutdown();F88FlakNetwork.Shutdown();F88FlakEffects.Shutdown();F88Fragments.Clear();
         }
     }
 
     public sealed class F88FlakController : MonoBehaviour
     {
-        static readonly FieldInfo KnownUnit=AccessTools.Field(typeof(TrackingInfo),"unit"),Muzzles=AccessTools.Field(typeof(Gun),"muzzles"),TurretDisabled=AccessTools.Field(typeof(Turret),"disabled"),Stowed=AccessTools.Field(typeof(Turret),"stowed"),Reload=AccessTools.Field(typeof(Gun),"timeUntilReload");
-        readonly List<TrackingInfo> contacts=new List<TrackingInfo>();readonly List<Radar> radars=new List<Radar>();
+        static readonly FieldInfo Muzzles=AccessTools.Field(typeof(Gun),"muzzles"),TurretDisabled=AccessTools.Field(typeof(Turret),"disabled"),Stowed=AccessTools.Field(typeof(Turret),"stowed"),Reload=AccessTools.Field(typeof(Gun),"timeUntilReload");
+        readonly List<Unit> contacts=new List<Unit>();readonly List<Radar> radars=new List<Radar>();
         Turret turret;Gun gun;Unit owner;WeaponStation station;Transform pitch,muzzle;Unit target;
         FlakBarrageSolution track;FlakBarrageArea area;
         Vector3 direction;GlobalPosition point;float nextContacts,nextRadar,nextObservation,nextPose;bool planned;int shots;
         float fuse,remoteYaw,remotePitch,nextAim;double flightEstimate;int aimSamples;bool remotePose;OpticalVector shotOffset;double fuseError;
         internal bool Advanced {get{return F88FlakRuntime.Heavy(gun);}}
-        float MaximumRange {get{return Advanced?15000:12000;}}
+        float MaximumRange {get{return Advanced?20000:12000;}}
         float Commitment {get{return (float)(Advanced?FlakBarrageSolution.AdvancedCommitSeconds:FlakBarrageSolution.CommitSeconds);}}
         internal bool ReadyToFire {get{return planned&&aimSamples>=3&&Operational&&track!=null&&track.CanContinue(Time.time);}}
         internal float Fuse {get{return fuse;}}
@@ -115,7 +116,8 @@ namespace GunmageddonAudio
             if(CoastalIllumination.IsLowLight(LevelInfo.i,muzzle.position,.15f)&&!SearchlightRuntime.IlluminatesAircraft(owner.NetworkHQ,aircraft))return false;
             return !ShellObscurants.SmokeBlocks(muzzle.position,aircraft.transform.position)&&aircraft.LineOfSight(muzzle.position,10f);
         }
-        bool Eligible(Unit u){return u is Aircraft&&u&&!u.Networkdisabled&&u.gameObject.activeInHierarchy&&u.NetworkHQ&&u.NetworkHQ!=owner.NetworkHQ;}
+        internal static bool TargetKind(Unit u,bool advanced){return u&&(u is Aircraft||advanced&&u is Missile&&u.definition&&R230Solution.Piledriver(u.definition.jsonKey));}
+        bool Eligible(Unit u){return TargetKind(u,Advanced)&&!u.Networkdisabled&&u.gameObject.activeInHierarchy&&u.NetworkHQ&&u.NetworkHQ!=owner.NetworkHQ;}
         void FindRadar()
         {
             SharedWorldQueries.Radars(owner.GlobalPosition(),300,radars);
@@ -123,30 +125,37 @@ namespace GunmageddonAudio
         }
         void ChooseContact(float now)
         {
-            // Candidate identity comes from faction-known contacts, never a world
-            // aircraft scan. Sight/radar evidence is checked separately.
-            SharedWorldQueries.KnownContacts(owner.NetworkHQ,owner.transform,MaximumRange,contacts);
+            // Broad identity is not detection evidence. Own verified optics can
+            // acquire without waiting for a precise faction tracking entry.
+            SharedWorldQueries.Units(muzzle.position.ToGlobalPosition(),MaximumRange,contacts);
             Unit best=null;float distance=float.MaxValue;
-            foreach(var contact in contacts) {
-                var u=KnownUnit.GetValue(contact) as Unit;if(!Eligible(u))continue;
-                GlobalPosition known;if(!owner.NetworkHQ.TryGetKnownPosition(u,out known))continue;
+            foreach(var u in contacts) {
+                if(!Eligible(u))continue;
+                GlobalPosition known;bool radar;if(!TryObservation(u,out known,out radar))continue;
                 var p=known.ToLocalPosition();float d=(p-muzzle.position).sqrMagnitude;
-                if(p.y<Datum.LocalSeaY+(Advanced?250:350)||p.y>Datum.LocalSeaY+(Advanced?12000:9000)||d<(Advanced?600*600:800*800)||d>MaximumRange*MaximumRange||(!RadarContact(u)&&!OpticalContact(u)))continue;
+                if(p.y<Datum.LocalSeaY+(Advanced?250:350)||p.y>Datum.LocalSeaY+(Advanced?20000:9000)||d<(Advanced?600*600:800*800)||d>MaximumRange*MaximumRange)continue;
                 if(u==target){best=u;break;}if(d<distance){distance=d;best=u;}
             }
             contacts.Clear();
             if(best!=target&&(!target||track==null||!track.CanContinue(now))) {
                 target=best;planned=false;shots=0;area=default(FlakBarrageArea);nextObservation=0;
-                track=target?new FlakBarrageSolution(GetInstanceID()^target.GetInstanceID(),Advanced):null;
+                track=target?new FlakBarrageSolution(GetInstanceID()^target.GetInstanceID(),Advanced,target is Missile?6000:600):null;
             }
+        }
+        bool TryObservation(Unit u,out GlobalPosition observed,out bool radar)
+        {
+            radar=RadarContact(u);
+            if(radar&&owner.NetworkHQ.TryGetKnownPosition(u,out observed))return true;
+            radar=false;
+            if(OpticalContact(u)){observed=u.transform.position.ToGlobalPosition();return true;}
+            observed=default(GlobalPosition);return false;
         }
         void Observe(float now)
         {
             if(!Eligible(target)||track==null)return;
-            bool radar=RadarContact(target);GlobalPosition known;
-            if(!radar&&!OpticalContact(target))return;
-            if(!owner.NetworkHQ.TryGetKnownPosition(target,out known))return;
-            Vector3 observed=radar?known.ToLocalPosition():target.transform.position;
+            bool radar;GlobalPosition known;
+            if(!TryObservation(target,out known,out radar))return;
+            Vector3 observed=known.ToLocalPosition();
             track.Observe(V(observed.ToGlobalPosition()),now,Vector3.Distance(muzzle.position,observed),radar);
             nextObservation=now+(Advanced?(radar?.2f:.5f):(radar?.35f:1.5f));
         }
@@ -163,7 +172,10 @@ namespace GunmageddonAudio
                 (other.transform.position-transform.position).sqrMagnitude<=1500*1500){count++;if(other.GetInstanceID()<GetInstanceID())index++;}
             var sample=track.Plan(area,now,0,index,count);
             shotOffset=sample.Point-(area.Position+area.Velocity*Math.Max(0,now-area.SampleAt));fuseError=sample.FuseError;
-            planned=true;nextAim=0;aimSamples=0;flightEstimate=Vector3.Distance(V(area.Position),muzzle.position)/gun.info.muzzleVelocity;
+            planned=true;nextAim=0;aimSamples=0;var relative = V(area.Position)-muzzle.position;
+            var measuredVelocity = new Vector3((float)area.Velocity.X,(float)area.Velocity.Y,(float)area.Velocity.Z);
+            float closing = target is Missile ? Mathf.Max(0,-Vector3.Dot(measuredVelocity,relative.normalized)) : 0;
+            flightEstimate=relative.magnitude/(gun.info.muzzleVelocity+closing);
         }
         void SolveAim(float now)
         {
@@ -174,10 +186,10 @@ namespace GunmageddonAudio
                 destination=V(prediction.Position+prediction.Velocity*(Math.Max(0,now-prediction.SampleAt)+seconds)+shotOffset);
                 if(destination.y<Datum.LocalSeaY+(Advanced?200:300)){planned=false;return;}
                 var relative=destination-muzzle.position;
-                if(!FlakBarrageSolution.Solve(new OpticalVector(relative.x,relative.y,relative.z),gun.info.muzzleVelocity,gun.info.dragCoef,9.81*gun.info.gravMult,Time.fixedDeltaTime,out vector,out seconds)){planned=false;return;}
+                if(!FlakBarrageSolution.Solve(new OpticalVector(relative.x,relative.y,relative.z),gun.info.muzzleVelocity,gun.info.dragCoef,9.81*gun.info.gravMult,Time.fixedDeltaTime,out vector,out seconds,Advanced?60:24)){planned=false;return;}
             }
-            flightEstimate=seconds;aimSamples++;
-            direction=new Vector3((float)vector.X,(float)vector.Y,(float)vector.Z);point=destination.ToGlobalPosition();fuse=Mathf.Clamp((float)(seconds+fuseError),.5f,24f);
+            flightEstimate=target is Missile?flightEstimate*.8+seconds*.2:seconds;aimSamples++;
+            direction=new Vector3((float)vector.X,(float)vector.Y,(float)vector.Z);point=destination.ToGlobalPosition();fuse=IncendiaryCanisterRuntime.Matches(gun)?(float)IncendiaryCanisterPolicy.Fuse(seconds,fuseError,60):Mathf.Clamp((float)(seconds+fuseError),.5f,Advanced?60f:24f);
         }
         internal WeaponStation ReadyStation()
         {

@@ -72,7 +72,7 @@ public static class SetupF120
             var info=AssetDatabase.LoadAssetAtPath<WeaponInfo>(Dir+"F120_AA_Weapon.asset");
             Set(info,"weaponName","120mm Timed Heavy Flak");Set(info,"shortName","120mm Flak");Set(info,"description","Postwar optical fire control, short committed predictions and a broad 240m fragmentation envelope. Timed shells, not proximity or homing rounds.");
             Set(info,"muzzleVelocity",950f);Set(info,"dragCoef",.035f);Set(info,"massPerRound",22f);Set(info,"pierceDamage",1200f);Set(info,"blastDamage",1.5f);Set(info,"fireInterval",6.2f);
-            Set(info,"targetRequirements.minRange",600f);Set(info,"targetRequirements.maxRange",15000f);Set(info,"targetRequirements.minAltitude",250f);Set(info,"targetRequirements.maxAltitude",12000f);
+            Set(info,"targetRequirements.minRange",600f);Set(info,"targetRequirements.maxRange",20000f);Set(info,"targetRequirements.minAltitude",250f);Set(info,"targetRequirements.maxAltitude",20000f);
             Set(gun,"info",info);Set(gun,"ammo",80);Set(gun,"magazines",80);Set(gun,"magazineCapacity",1);Set(gun,"reloadTime",6.2f);Set(gun,"recoilTravel",.65f);Set(gun,"bulletSpread",.45f);Set(gun,"ForceServerAuthority",true);
             var gs=new SerializedObject(gun);gs.FindProperty("muzzles").arraySize=1;gs.FindProperty("muzzles").GetArrayElementAtIndex(0).objectReferenceValue=muzzle;gs.ApplyModifiedPropertiesWithoutUndo();
             var ts=new SerializedObject(turret);ts.FindProperty("weaponStations").GetArrayElementAtIndex(0).FindPropertyRelative("WeaponInfo").objectReferenceValue=info;ts.ApplyModifiedPropertiesWithoutUndo();
@@ -117,6 +117,6 @@ public static class SetupF120
         }finally{EditorSceneManager.ClosePreviewScene(preview);}
         var scene=source.scene;var instance=(GameObject)PrefabUtility.InstantiatePrefab(result,scene);Undo.RegisterCreatedObjectUndo(instance,"Set up F120");Undo.DestroyObjectImmediate(source);Selection.activeGameObject=instance;
         EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);
-        return new{prefab=Prefab,unitKey="Gunmaggedon_F120_AA",fragmentRadius=240,range=15000,partsBefore=before.Count,breechDirection="up",existingCarriagePrefabUnchanged=true};
+        return new{prefab=Prefab,unitKey="Gunmaggedon_F120_AA",fragmentRadius=240,range=20000,partsBefore=before.Count,breechDirection="up",existingCarriagePrefabUnchanged=true};
     }
 }

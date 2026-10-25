@@ -7,23 +7,27 @@ namespace GunmageddonAudio
     internal static class TrailService
     {
         static readonly List<SpottingTrail> active=new List<SpottingTrail>();static bool subscribed;
+        static Action presentation;
         static readonly RuntimePool<SpottingTrail> pool=new RuntimePool<SpottingTrail>(256,Create,t=>t.ResetTrail());
         static SpottingTrail Create(){var go=new GameObject("Coastal pooled trail");go.SetActive(false);return go.AddComponent<SpottingTrail>();}
         internal static SpottingTrail Rent(Vector3 position,Color color,float lifetime,Material material)
         {
             OptimizationRuntime.EnsureMission();var lease=pool.Rent();var t=lease.Value;t.Lease=lease.Id;RuntimePool<SpottingTrail>.Place(t,Datum.origin,position);t.Initialize(position.ToGlobalPosition(),color,lifetime,material);t.gameObject.SetActive(true);Register(t);return t;
         }
-        internal static void Register(SpottingTrail t){if(!active.Contains(t))active.Add(t);if(subscribed)return;Camera.onPreCull+=CameraCull;RenderPipelineManager.beginCameraRendering+=PipelineCamera;subscribed=true;}
-        internal static void Unregister(SpottingTrail t){active.Remove(t);if(active.Count==0)Unsubscribe();}
+        static void Subscribe(){if(subscribed)return;Camera.onPreCull+=CameraCull;RenderPipelineManager.beginCameraRendering+=PipelineCamera;subscribed=true;}
+        internal static void Register(SpottingTrail t){if(!active.Contains(t))active.Add(t);Subscribe();}
+        internal static void Unregister(SpottingTrail t){active.Remove(t);if(active.Count==0&&presentation==null)Unsubscribe();}
+        internal static void RegisterPresentation(Action callback){presentation-=callback;presentation+=callback;Subscribe();}
+        internal static void UnregisterPresentation(Action callback){presentation-=callback;if(active.Count==0&&presentation==null)Unsubscribe();}
         static void Unsubscribe(){if(!subscribed)return;Camera.onPreCull-=CameraCull;RenderPipelineManager.beginCameraRendering-=PipelineCamera;subscribed=false;}
         static void CameraCull(Camera camera){Refresh(false);}
         static void PipelineCamera(ScriptableRenderContext context,Camera camera){Refresh(false);}
         internal static void Tick(){Refresh(true);}
         static void Refresh(bool retire)
         {
-            OptimizationMetrics.Begin("Trails");try{for(int i=active.Count-1;i>=0;i--){if(i>=active.Count)continue;var t=active[i];if(!t){active.RemoveAt(i);continue;}t.Refresh(Time.time);if(retire&&t.Expired){if(!pool.Release(t,t.Lease))RuntimePool<SpottingTrail>.Remove(t.gameObject);}}}finally{OptimizationMetrics.End();}
+            OptimizationMetrics.Begin("Trails");try{if(presentation!=null)presentation();for(int i=active.Count-1;i>=0;i--){if(i>=active.Count)continue;var t=active[i];if(!t){active.RemoveAt(i);continue;}t.Refresh(Time.time);if(retire&&t.Expired){if(!pool.Release(t,t.Lease))RuntimePool<SpottingTrail>.Remove(t.gameObject);}}}finally{OptimizationMetrics.End();}
         }
-        internal static void Clear(){pool.Clear();active.Clear();Unsubscribe();}
+        internal static void Clear(){pool.Clear();active.Clear();presentation=null;Unsubscribe();}
     }
     public sealed class SpottingTrail:MonoBehaviour
     {

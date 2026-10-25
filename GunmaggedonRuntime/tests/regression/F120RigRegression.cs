@@ -12,20 +12,22 @@ public static class F120RigRegression
     static int checks;
     static void Check(bool value,string text){checks++;if(!value)throw new Exception(text);}
     static object Call(object o,string method,params object[] args){return o.GetType().GetMethod(method,F).Invoke(o,args);}
-    public static object Run()
+    public static object Run() { return RunVariant(false); }
+    public static object RunSpecial() { return RunVariant(true); }
+    static object RunVariant(bool special)
     {
         checks=0;var loaded=Assembly.Load(File.ReadAllBytes(Environment.GetEnvironmentVariable("GUNMAGGEDON_TEST_HELPER")));
         var assembly=AppDomain.CurrentDomain.GetAssemblies().First(a=>a.ManifestModule.ModuleVersionId==loaded.ManifestModule.ModuleVersionId);
         var motionType=assembly.GetType("GunmageddonAudio.F88TurretMotion");var runtime=assembly.GetType("GunmageddonAudio.F88Runtime");
-        var asset=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Blueprinter/Mods/Gunmageddon/F120_AAA_Trailer.prefab");Check(asset,"Saved F120 unit exists");
+        var asset=AssetDatabase.LoadAssetAtPath<GameObject>((special?"Assets/Blueprinter/Mods/Gunmageddon/F120_AAA_Trailer Special.prefab":"Assets/Blueprinter/Mods/Gunmageddon/F120_AAA_Trailer.prefab"));Check(asset,"Saved F120 unit exists");
         var scene=EditorSceneManager.NewPreviewScene();var holder=new GameObject("Inactive F120 validation");holder.SetActive(false);SceneManager.MoveGameObjectToScene(holder,scene);
         try{
             var root=UnityEngine.Object.Instantiate(asset,holder.transform,false);var yaw=root.transform.Find("F120YawPivot");var pitch=yaw.Find("PitchPivot");var gun=pitch.GetComponent<Gun>();
             Check(root.transform.localScale==Vector3.one&&root.GetComponentsInChildren<Rigidbody>(true).Length==1,"One unit-scale body; no nested imported body");
             Check(root.GetComponentsInChildren<WheelCollider>(true).Length==0,"Native GroundVehicle owns suspension without a competing WheelCollider solver");
-            Check(root.GetComponent<GroundVehicle>().definition.jsonKey=="Gunmaggedon_F120_AA"&&gun.info.name=="F120_AA_Weapon","Distinct unit and ammunition keys");
+            Check(root.GetComponent<GroundVehicle>().definition.jsonKey==(special?"Gunmaggedon_F120S_AA":"Gunmaggedon_F120_AA")&&gun.info.name==(special?"F120S_AA_Weapon":"F120_AA_Weapon"),"Distinct unit and ammunition keys");
             Check(yaw.GetComponent<TargetDetector>()&&new SerializedObject(yaw.GetComponent<TargetDetector>()).FindProperty("visualRange").floatValue==10000,"Visual rangefinder uses an improved finite optical range");
-            Check(gun.info.targetRequirements.maxRange==15000&&gun.info.targetRequirements.minAltitude==250,"Heavy AA engagement envelope");
+            Check(gun.info.targetRequirements.maxRange==20000&&gun.info.targetRequirements.maxAltitude==20000&&gun.info.targetRequirements.minAltitude==250,"Heavy AA engagement envelope");
             var motion=yaw.gameObject.AddComponent(motionType);Call(motion,"Awake");var door=pitch.Find("BreechSlidePivot");var rest=pitch.Find("BreechSlideRest");
             var visuals=pitch.Find("ReloadVisuals");var casing=visuals.Find("ExtractingCasing");var live=visuals.Find("LoadingShell");
             Check(!casing.gameObject.activeSelf&&!live.gameObject.activeSelf,"Only loading phases show temporary shells");
@@ -45,7 +47,7 @@ public static class F120RigRegression
             var spent=gs.FindProperty("ejectionPrefab").objectReferenceValue as GameObject;Check(spent&&spent.GetComponent<Rigidbody>()&&!spent.GetComponent<Unit>(),"Casing is a harmless independent physics prop");
             var original=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/BlueprinterSetupBackups/F120_Original.prefab");
             foreach(var renderer in original.GetComponentsInChildren<MeshRenderer>(true).Where(r=>!r.name.StartsWith("GM_LOD")&&r.name!="shell_casing"&&r.name!="shell_loaded")){
-                var mesh=renderer.GetComponent<MeshFilter>().sharedMesh;var current=root.GetComponentsInChildren<MeshFilter>(true).Single(m=>!m.name.StartsWith("GM_LOD")&&m.sharedMesh==mesh&&m.GetComponent<MeshRenderer>()&&m.GetComponent<MeshRenderer>().sharedMaterial==renderer.sharedMaterial);
+                var mesh=renderer.GetComponent<MeshFilter>().sharedMesh;var current=root.GetComponentsInChildren<MeshFilter>(true).Single(m=>!m.name.StartsWith("GM_LOD")&&m.sharedMesh==mesh&&m.GetComponent<MeshRenderer>()&&(special||m.GetComponent<MeshRenderer>().sharedMaterial==renderer.sharedMaterial));
                 var before=renderer.localToWorldMatrix;var after=current.transform.localToWorldMatrix;for(int i=0;i<16;i++)Check(Mathf.Abs(before[i]-after[i])<.001f,"Authored mesh pose preserved: "+renderer.name);
             }
             var lod=root.GetComponent<LODGroup>();var levels=lod.GetLODs();Check(lod.enabled&&levels.Length>=3,"Enabled model LOD levels");

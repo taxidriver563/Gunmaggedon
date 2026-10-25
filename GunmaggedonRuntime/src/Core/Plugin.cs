@@ -9,7 +9,7 @@ using UnityEngine;
 namespace GunmageddonAudio
 {
     // Keep the original plugin ID so BepInEx retains existing configuration.
-    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.14.5")]
+    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.15.3")]
     public sealed class Plugin : BaseUnityPlugin
     {
         internal static Plugin Instance;
@@ -90,6 +90,7 @@ namespace GunmageddonAudio
         internal void LoggerForCoastalDiagnostics(string message) { Logger.LogInfo("CD203 firing trace: " + message); }
 #endif
         private void LateUpdate() { TrailService.Tick(); }
+        private void FixedUpdate() { IncendiaryCanisterRuntime.Tick(Time.fixedDeltaTime); }
 
         private static bool GunSound(Component __instance)
         {

@@ -42,6 +42,11 @@ public static class F120FireControlTests
         Check(FlakFragmentationPolicy.Falloff(180)==0&&FlakFragmentationPolicy.HeavyFalloff(180)>0,"Heavy shell reaches well beyond F88 envelope");
         Check(FlakFragmentationPolicy.HeavyFalloff(240)==0&&FlakFragmentationPolicy.HeavyFalloff(double.NaN)==0,"Boundary and invalid distance produce no damage");
         Check(FlakFragmentationPolicy.HeavyHitPoints(50,200,5,22)==0,"Strong armor blocks heavy fragments");
+        Check(FlakBarrageSolution.Solve(new OpticalVector(20000,3000,0),950,.035,9.81,.02,out direction,out flight,60)&&flight>24&&flight<60,"20km heavy shell solves beyond old24sec limit");
+        Check(!FlakBarrageSolution.Solve(new OpticalVector(20000,3000,0),950,.035,9.81,.02,out direction,out flight),"F88 default flight horizon remains24sec");
+        var ballistic=new FlakBarrageSolution(19,true,6000);var ordinary=new FlakBarrageSolution(19,true);
+        for(int i=0;i<=10;i++){var sample=new OpticalVector(15000-i*600,19000-i*300,0);ballistic.Observe(sample,i*.2,20000,true);ordinary.Observe(sample,i*.2,20000,true);}
+        Check(ballistic.Velocity.Length>2500&&ballistic.Velocity.Length<4000&&ordinary.Velocity.Length<=600.001,"Missile tracking uses observations without aircraft speed clipping");
         Console.WriteLine("F120: "+checks+" assertions passed. Optical mean position error "+(oldError/300).ToString("F2")+" -> "+(newError/300).ToString("F2")+"m; six-second lead error "+(oldLead/300).ToString("F2")+" -> "+(newLead/300).ToString("F2")+"m. Policy simulations, not combat hit rates.");
     }
 }
