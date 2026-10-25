@@ -1,0 +1,52 @@
+F120 native damage routing — 2026-10-24
+
+Cause
+The F120 setup removed the F88's colliders on its root/turret UnitPart objects,
+then created replacement colliders on wheel contacts, pitch/recoil and carriage
+collision helpers. Those 13 objects had no IDamageable component. Native
+Bullet.TrajectoryTrace, DamageEffects.ArmorPenetrate/BlastFrag/FragTrace resolve
+IDamageable on the collider's own GameObject, not an ancestor. Impacts therefore
+failed to damage the unit despite its existing critical chassis/turret parts.
+
+Correction
+FixF120Damage.cs narrowly migrates the prefab, with a before-change backup.
+Each non-trigger collision object now carries a native UnitPart with this unit
+and its single Rigidbody assigned. Chassis/wheel/support shapes inherit the
+existing chassis armor; pitch/barrel shapes inherit the existing turret armor.
+All are critical, as on the existing reference parts. Added parts have zero
+mass so total mass/suspension stay unchanged. These helper objects do not detach
+or fragment independently (negative structural/integrity thresholds and empty
+disintegration arrays); native lethal critical damage still disables/reports
+the whole unit. No runtime damage multiplier or invulnerability bypass added.
+SetupF120.cs includes the same invariant for future initial setups.
+No geometry, collider shape, targeting, firing, recoil, loading, LOD or materials
+were changed. Shared carriage and F88 prefab are not migration targets.
+
+Verification
+F120DamageIntegration: 80 checks passed on isolated native prefab clones.
+All 13 same-object damage lookups resolve; all receive native sublethal damage
+(100 -> 90 HP), reject non-server damage and disable/report a kill after lethal
+native penetration. Real UnitPart.TakeDamage/ApplyDamage and armor paths used;
+RPC delivery is locally replayed and mission kill-report transport intercepted.
+Distant LOD retains all damage components/colliders. This is not a live mission
+or network transport certification. Test clones and patches cleaned up.
+Fixture is included in both validation preparation scripts and combined runner.
+Export/install identity and additional regression results recorded below.
+
+Combined targeted Unity run passed 2,298 checks: damage 80, rig/physics/reload
+1003, F120 native firing/authority 37, all-unit LOD 1178. Exported pack checked
+independently with UnityPy: all 13 non-trigger colliders have same-object native
+critical damage parts with non-null unit references. LOD references/counts and
+8322/4699/2897 triangle reductions preserved. Existing F88/shared carriage prefab
+hashes unchanged. Active scene left clean in edit mode with only F120 root.
+Evidence: build/f120/damage-fix-native.json, export-damage-validation.json.
+
+Installed asset pack 0.0.28 with Nuclear Option closed, verified SHA256:
+EE84443BE88A4558DE81879A62C9A2E2BD734561F271A03EC585929FAA56E8F3
+Runtime remains installed 1.11.1, unchanged SHA256:
+681FFEBA51843FF6C8EBEFDE2D7A3092E33E388186610AC14FE74B89A83232E3
+Rollback pack .27 and original prefab are in
+UnitySetupBackup/F120/BeforeDamageFix/. Restore with game closed, and keep only
+one active Gunmageddon pack in plugins. Runtime source/build unchanged.
+CI compatibility manifest now names .28. No GitHub push/public release made.
+Fresh mission damage and multiplayer kill transport still require in-game testing.

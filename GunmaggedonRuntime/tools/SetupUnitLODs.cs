@@ -106,6 +106,12 @@ public static class SetupUnitLODs
         }finally{PrefabUtility.UnloadPrefabContents(contents);}}
         AssetDatabase.SaveAssets();var json=Newtonsoft.Json.JsonConvert.SerializeObject(reports,Newtonsoft.Json.Formatting.Indented);File.WriteAllText(Path.Combine(root,"UnitySetupBackup/LOD/retrofit-report.json"),json);return json;
     }
+    public static void ConfigureCarriage(GameObject root)
+    {
+        Preview=false;Cache.Clear();
+        if(!AssetDatabase.IsValidFolder(Generated))AssetDatabase.CreateFolder(Dir.TrimEnd('/'),"LODMeshes");
+        Configure(root,false);Cache.Clear();
+    }
     public static object PreviewOnly()
     {
         Preview=true;Cache.Clear();var report=new List<object>();

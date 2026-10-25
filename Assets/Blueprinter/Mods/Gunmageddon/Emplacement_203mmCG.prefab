@@ -94,6 +94,8 @@ GameObject:
   - component: {fileID: 2544447141435460547}
   - component: {fileID: 8538749870823486825}
   - component: {fileID: 3657001970911398050}
+  - component: {fileID: 5576932304812241264}
+  - component: {fileID: 633399511967112911}
   m_Layer: 0
   m_Name: traverse_mesh
   m_TagString: Untagged
@@ -168,6 +170,67 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5576932304812241264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 548250722661549407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  id: 0
+  criticalPart: 1
+  parentUnit: {fileID: 5534784177295565065}
+  mass: 0
+  rb: {fileID: 0}
+  centerOfMass: {fileID: 0}
+  hitPoints: 100
+  armorProperties:
+    pierceArmor: 0
+    blastArmor: 0
+    fireArmor: 0
+    pierceTolerance: 1
+    blastTolerance: 1
+    fireTolerance: 1
+    overpressureLimit: 5
+  structuralThreshold: -1000000
+  integrityThreshold: -3.4028235e+38
+  hitSound: {fileID: 0}
+  impactDamage:
+    threshold: 0
+    multiplier: 0
+  damageMaterial:
+    threshold: 0
+    renderers: []
+    indices:
+  damageEffects: []
+  disintegrationEffects: []
+  disintegrateObjects: []
+--- !u!65 &633399511967112911
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 548250722661549407}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.10143431, y: 0.10143431, z: 0.033999994}
+  m_Center: {x: 0, y: 0, z: 0.016999997}
 --- !u!1 &564129281823752446
 GameObject:
   m_ObjectHideFlags: 0
@@ -2524,8 +2587,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1761350240, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   attachedUnit: {fileID: 5534784177295565065}
   scanner: {fileID: 5533732009923916572}
   part: {fileID: 2902876514544575270}
@@ -2549,6 +2612,8 @@ GameObject:
   - component: {fileID: 5023554603634790552}
   - component: {fileID: 7562227149016372434}
   - component: {fileID: 8080909620693175344}
+  - component: {fileID: 7765937991180974860}
+  - component: {fileID: 5391291185647590327}
   m_Layer: 0
   m_Name: gun_mesh
   m_TagString: Untagged
@@ -2623,6 +2688,67 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &7765937991180974860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433863392770666052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  id: 0
+  criticalPart: 1
+  parentUnit: {fileID: 5534784177295565065}
+  mass: 0
+  rb: {fileID: 0}
+  centerOfMass: {fileID: 0}
+  hitPoints: 100
+  armorProperties:
+    pierceArmor: 0
+    blastArmor: 0
+    fireArmor: 0
+    pierceTolerance: 1
+    blastTolerance: 1
+    fireTolerance: 1
+    overpressureLimit: 5
+  structuralThreshold: -1000000
+  integrityThreshold: -3.4028235e+38
+  hitSound: {fileID: 0}
+  impactDamage:
+    threshold: 0
+    multiplier: 0
+  damageMaterial:
+    threshold: 0
+    renderers: []
+    indices:
+  damageEffects: []
+  disintegrationEffects: []
+  disintegrateObjects: []
+--- !u!65 &5391291185647590327
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433863392770666052}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.030270245, y: 0.07225884, z: 0.023015875}
+  m_Center: {x: 0, y: -0.015174939, z: 0.0011959807}
 --- !u!1 &1495484649164830474
 GameObject:
   m_ObjectHideFlags: 0
@@ -2667,8 +2793,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 576076454, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   attachedUnit: {fileID: 5534784177295565065}
   targetAcquisitionMode: 1
   fireControl: {fileID: 0}
@@ -5716,8 +5842,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1662383224, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   attachedUnit: {fileID: 5534784177295565065}
   info: {fileID: 11400000, guid: c960dd3a21315354ab5e3284cefa3926, type: 2}
   ammo: 1
@@ -6069,6 +6195,8 @@ GameObject:
   - component: {fileID: 3986962931778135883}
   - component: {fileID: 3134472066042322099}
   - component: {fileID: 3881135314420861582}
+  - component: {fileID: 5221419736377399647}
+  - component: {fileID: 2509016841754929145}
   m_Layer: 0
   m_Name: concrete
   m_TagString: Untagged
@@ -6143,6 +6271,68 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5221419736377399647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5028812901146918140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  id: 0
+  criticalPart: 1
+  parentUnit: {fileID: 5534784177295565065}
+  mass: 0
+  rb: {fileID: 0}
+  centerOfMass: {fileID: 0}
+  hitPoints: 100
+  armorProperties:
+    pierceArmor: 300
+    blastArmor: 150
+    fireArmor: 100
+    pierceTolerance: 6
+    blastTolerance: 4
+    fireTolerance: 10
+    overpressureLimit: 30
+  structuralThreshold: -1000000
+  integrityThreshold: -3.4028235e+38
+  hitSound: {fileID: 0}
+  impactDamage:
+    threshold: 0
+    multiplier: 0
+  damageMaterial:
+    threshold: 0
+    renderers: []
+    indices:
+  damageEffects: []
+  disintegrationEffects: []
+  disintegrateObjects: []
+--- !u!64 &2509016841754929145
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5028812901146918140}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -5702695669863534817, guid: 098921aa7b9282c42bef53e2dc03072e, type: 3}
 --- !u!1 &5227514156769247122
 GameObject:
   m_ObjectHideFlags: 0
@@ -6188,6 +6378,8 @@ GameObject:
   - component: {fileID: 7736147029626846584}
   - component: {fileID: 832339199826320349}
   - component: {fileID: 3105133647031004350}
+  - component: {fileID: 4260252871728151582}
+  - component: {fileID: 509264488517931948}
   m_Layer: 0
   m_Name: barrel_mesh
   m_TagString: Untagged
@@ -6262,6 +6454,67 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &4260252871728151582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5760513183604222338}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  id: 0
+  criticalPart: 1
+  parentUnit: {fileID: 5534784177295565065}
+  mass: 0
+  rb: {fileID: 0}
+  centerOfMass: {fileID: 0}
+  hitPoints: 100
+  armorProperties:
+    pierceArmor: 0
+    blastArmor: 0
+    fireArmor: 0
+    pierceTolerance: 1
+    blastTolerance: 1
+    fireTolerance: 1
+    overpressureLimit: 5
+  structuralThreshold: -1000000
+  integrityThreshold: -3.4028235e+38
+  hitSound: {fileID: 0}
+  impactDamage:
+    threshold: 0
+    multiplier: 0
+  damageMaterial:
+    threshold: 0
+    renderers: []
+    indices:
+  damageEffects: []
+  disintegrationEffects: []
+  disintegrateObjects: []
+--- !u!65 &509264488517931948
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5760513183604222338}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.0068947193, y: 0.05499999, z: 0.00689472}
+  m_Center: {x: 0, y: -0.027499994, z: -0.0000000024447218}
 --- !u!1 &6108420546067759098
 GameObject:
   m_ObjectHideFlags: 0
@@ -8754,7 +9007,6 @@ GameObject:
   - component: {fileID: 3471293176241630565}
   - component: {fileID: 5534784177295565065}
   - component: {fileID: 2902876514544575270}
-  - component: {fileID: 7221717563713416123}
   - component: {fileID: 8230487033649379539}
   m_Layer: 0
   m_Name: Emplacement_203mmCG
@@ -8791,8 +9043,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 680085626, guid: 35c838180ffa3b627a4ee1e66ae78cec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   SpawnSettings:
     SendPosition: 1
     SendRotation: 1
@@ -8814,14 +9066,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -677928877, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   SyncSettings:
     From: 2
     To: 3
     Timing: 0
     Interval: 0.1
-  MapUniqueName: 
+  MapUniqueName:
   MapHQ: {fileID: 0}
   MapAirbase: {fileID: 0}
   weaponStations: []
@@ -8854,8 +9106,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5534784177295565065}
@@ -8880,31 +9132,10 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices: 
+    indices:
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
---- !u!65 &7221717563713416123
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7673472629574892760}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 15, y: 8, z: 15}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!205 &8230487033649379539
 LODGroup:
   m_ObjectHideFlags: 0

@@ -24,14 +24,14 @@ MonoBehaviour:
     antiMissile: 0
     antiRadar: 0
   jsonKey: Emplacement_203mmCoastalGun_SPECIAL
-  unitName: CD-203 Coastal Defense Gun (Special)
+  unitName: CD-203S
   bogeyName: 
   description: A specialized CD-203 support battery. It ranges its targets before
     firing cluster shells against exposed weapons and sensors, smoke screens to obscure
     optical sightlines, and chaff to disrupt radar tracking. Parachute top-attack
     rounds deploy two scanning submunitions against small ships, each firing one
     physical penetrator projectile.
-  code: Coastal Artillery
+  code: CD-203S
   visibleRange: 6000
   iconRange: 5000
   radarSize: 1

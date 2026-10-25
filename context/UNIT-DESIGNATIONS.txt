@@ -1,0 +1,38 @@
+Designation-only unit names — 2026-10-24
+
+User requirement: all units use their designation alone, including hyphenation.
+Display names and definition codes now use:
+  Standard coastal emplacement: CD-203
+  Special coastal emplacement:  CD-203S
+  Triple 25 mm trailer:         L-25
+  40 mm trailer:                L-40
+  88 mm heavy flak:             F-88
+  120 mm heavy flak:            F-120
+  Searchlight trailer:          SL-1 (fictional designation chosen for this mod)
+  Top-attack bomb/submunition:  TA-1 (fictional designation)
+  Stratopenetrator emplacement: R-230 (added in pack .31)
+
+Migration: GunmaggedonRuntime/tools/RenameUnitDesignations.cs, all eight native
+UnitDefinition assets in the external Blueprinter Mods/Gunmageddon folder.
+Internal jsonKey values, asset filenames/GUIDs, prefab/hierarchy names and
+weapon identities stay unchanged. Existing missions and runtime lookups continue
+using the established keys. Descriptions still explain the role and ammunition.
+No gameplay source, collider, geometry, animation or LOD configuration changed.
+After using historical initial-setup helpers, apply this naming migration so
+older hardcoded verbose names do not become the final exported display names.
+
+Editor validation compares serialized definitions before/after, excluding only
+unitName and code. Backups/report: UnitySetupBackup/Designations/BeforeRename/.
+No gameplay test suite needed for a display metadata change. Exported definition
+and LOD checks plus installation identity are recorded below.
+
+Exported pack .30 passed independent UnityPy comparisons with .29: all eight
+names/codes correct; every other serialized definition property/reference equal.
+All 12 exported LODGroups remain enabled with at least three levels. No prefab
+or animation edits. User scene left clean in edit mode with original F120 root.
+Evidence: build/designations/export-validation.json and install.json.
+Pack 0.0.30 installed with Nuclear Option closed and SHA256 verified:
+089C5D5B6283D8A56AAC3BA60019DE7B770109BEAB5760F78E97E5CDDE3654A8
+Runtime remains 1.11.1 unchanged. Previous .29 pack backed up alongside definition
+backups. Restore with game closed and keep one active Gunmageddon pack.
+No GitHub push or public release; in-game menu display not directly observed.

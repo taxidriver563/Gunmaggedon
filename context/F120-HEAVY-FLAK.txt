@@ -1,0 +1,132 @@
+F120 Stratohammer Heavy Flak Trailer — 2026-10-24
+Current runtime 1.11.1 / asset pack 0.0.28
+
+Damage hotfix — 2026-10-24, pack 0.0.28
+Fixed missing native damage receivers on all 13 collision shapes; previously
+native same-object IDamageable lookup could not reach health. Damage now takes
+the normal armor/HP/critical kill path. Native tests and exported LOD/hitbox
+checks passed; installed pack hash verified. See F120-DAMAGE-FIX.txt for details.
+
+Accuracy hotfix — 2026-10-24, runtime 1.11.1
+Tester reported excessively distant bursts. The original F120 retained a broad
+85 m + uncertainty horizontal pattern and differentiated noisy observations
+over about one second, amplifying velocity error during long shell flights.
+Advanced tracking now fits up to 16 actual observations over a rolling three
+seconds (minimum .9 s baseline); no native target velocity is consulted.
+Observation noise optical 8+range*.002 m, radar 4+range*.001 m. Fresh pattern
+radius base 32 m + 12 m uncertainty, vertical scatter +/-20 m. Sector offsets
+remain, at the tighter scale. Mechanical shell spread .20 degrees, fuze error
++/-.04 s, firing alignment .20 degrees (previously 1 degree). Native prefab
+serialized spread remains .45; the authoritative per-bullet hook overrides it.
+While aiming, F120 uses its latest track with a fixed shot offset; it no longer
+copies neighboring guns' stale area estimates. F88's committed barrage remains
+unchanged. Four-second planning horizon, acquisition gates, reload, damage,
+fragment radius, presentation and LOD policy are unchanged.
+Four Mono suites: 94,105 assertions passed. F120 six-second optical lead error
+48.94 m versus 201.39 m in the prior F120 profile and 220.41 m for F88 in the
+same seeded scenario; current-position error 11.72 m versus prior F120 51.16 m.
+Synthetic policy results only; live mission accuracy remains unverified.
+Five fresh isolated native groups passed 2,306 checks: F88 35, F120 37 (includes
+fresh observations updating an already prepared shot without rerolling offset),
+reload 53, F120 rig 1003, LOD 1178. Scene left clean in edit mode.
+Compiled/validated current source and installed runtime 1.11.1, hash matched:
+681FFEBA51843FF6C8EBEFDE2D7A3092E33E388186610AC14FE74B89A83232E3
+Unchanged installed asset pack .27. Previous runtime 1.11.0 backed up under
+UnitySetupBackup/F120/BeforeAccuracy-1.11.1/. No publication.
+Evidence: build/f120/accuracy-1.11.1-native.json and accuracy-1.11.1-install.json.
+The initial setup settings/results below are historical where superseded above.
+
+Scope and assets
+Postwar Old Guard heavy timed-fuze flak, using the user's imported F120 model
+and mounted revamp carriage. Spawn key: Gunmaggedon_F120_AA.
+External Unity project Assets/Blueprinter/Mods/Gunmageddon/:
+  F120_AAA_Trailer.prefab, F120_AA_Definition.asset, F120_AA_Weapon.asset
+  F120_Flak_Airburst.prefab, F120_SpentCasing.prefab
+  F120_Mechanism_Preview.anim
+Durable setup source: GunmaggedonRuntime/tools/SetupF120.cs. Inspect before
+running: this is an initial setup helper, not an idempotent prefab migration.
+Original mounted scene/prefab backups: UnitySetupBackup/F120/BeforeSetup/.
+
+Fire-control profile (provisional gameplay balance, not historical specs)
+The modeled sensors represent an optical rangefinder, not an onboard radar.
+Maximum engagement 15 km; own optical range 10 km; altitude 250–12,000 m;
+minimum engagement 600 m. Nearby friendly active, unjammed radar support uses
+the existing inclusive 300 m boundary and contact/visibility/authority gates.
+F120 estimates motion from observations; it does not read perfect target velocity.
+Optical/radar observation intervals 0.5/0.2 s, shorter four-second area plans,
+less observation noise, faster correction, 0.45 degree launch spread and 0.10 s
+fuze error distinguish it from F88's older committed barrage behavior. It still
+fires unguided timed shells with finite spread and uncertain lead.
+Yaw/pitch 20/16 degrees per second. 950 m/s, drag .035, gravity 1, mass 22 kg.
+80 rounds, single-round loading; 6.2-second ordered cycle. Trailer mass 12 t.
+
+Fragmentation
+240 m radius versus F88's 140 m. Range falloff remains (1-d/r)^.75.
+Maximum additional fragment budget 22 HP per aircraft per burst, at most four
+parts and 6 HP per part, penetration 165. Native core blast remains separate.
+Real obstruction, armor, duplicate filtering, damage attribution and server
+authority apply; the lingering puff does not apply continuous damage.
+No proximity fuze, homing or automatic guaranteed hit was added.
+
+Mechanical presentation
+Door slides UP 0.38 m on local Y and is outside the barrel recoil hierarchy.
+Native barrel recoil is .65 m and carries the muzzle/effects transform.
+Reload: recoil .6 s, open .4, extract .8, clearance 2.0, insert 1.6,
+close .6, secured dwell .2. Casing handoff is exactly once after extraction;
+loading waits the full two-second clearance and readiness waits for secured door.
+Articulated elevation/traverse cranks, hidden loading props and own spent casing.
+Reuses the existing 88mm_Cannon_Fire_Close as a temporary firing sound and
+Flak_Explosion for bursts. F120 puffs/muzzle visuals are larger, separately pooled.
+Mixed F88/F120 casing/effect reuse now preserves each template/model/material.
+Burst network handshake is version 2 with a caliber flag. Multiplayer peers
+need matching updated runtimes; live transport/mixed-version behavior unverified.
+
+LOD / physics
+Enabled three-level LODGroup, 36/32/32 model renderers, 8322/4699/2897 triangles.
+Thresholds .045/.012/.0005, center (0,5.4,0), size 26 for elevated/rotated poses.
+Small details removed and meshes simplified at distance. Loading props remain
+inactive until needed. Cosmetic pose work respects LOD; readiness/targeting and
+native muzzle recoil continue independently. Muzzle/burst particles have their
+own effect lifetimes rather than model LOD visibility.
+Root has one native GroundVehicle Rigidbody, unit scale; no competing nested
+WheelColliders/Rigidbody. Isolated settling from .04 m did not launch the unit.
+This does NOT correct the shared revamp carriage's documented linkage/steering
+presentation mismatch (REVAMP-CARRIAGE-RIG.txt). F88 and shared carriage prefab
+file hashes remained unchanged by setup and export. Mission towing unverified;
+dynamic hitch/unhitch remains disabled as on the inherited setup.
+
+Verification
+Four relevant standalone Mono suites: 94,105 assertions passed (barrage,
+fragmentation, reload, new F120 fire control). Full 15-suite SDK run not performed
+in this pass because the pinned SDK was unavailable through the local tooling.
+Seeded policy simulations reduce mean position error 106.66 -> 51.16 m and
+six-second lead error 220.41 -> 201.39 m; these are not measured combat hit rates.
+Fresh namespace-isolated Unity runtime/fixtures: 14 groups, 3,002 checks passed.
+Includes native F120 rig 1003, fire control 35, fragmentation 11, mixed presentation
+6; F88/native reload, other units, LOD and optimization regressions included.
+Combined runner still reports the known unrelated L25 staged preview tracer
+ratio mismatch (1 versus expected 3). No unrelated tracer setting overwritten.
+Native heavy fragments: ~18.535 HP at 50 m, ~4.170 HP at 180 m, none at 255 m;
+armor/authority/ground/obstruction guards tested. RPC transport intercepted.
+Export checked independently with UnityPy: manifest .27, F120 assets/materials,
+all LOD renderer/mesh references and triangle reductions present; no read errors.
+Only six existing custom audio clips are bundled; game references remain remaps.
+Editor render reviewed: textures, rest pose and hidden loading props correct.
+Active user scene restored clean, only F120_AAA_Trailer root, edit mode.
+Live mission accuracy, balance, long combat stability, multiplayer transport and
+mission performance are UNVERIFIED. No FPS claim is made.
+
+Build / installation / publication
+Compiled normal production runtime: 1.11.0, 51 C# sources.
+Validated runtime: fresh namespace-isolated copies of current source; native
+fixtures record identity in build/f120/current-validation.json. Export result:
+build/f120/export-validation.json. Final production runtime compiled afterward.
+Installed with Nuclear Option closed; both installed hashes matched staging:
+  Gunmaggedon.Runtime.dll SHA256
+  3BA15A44B7BC69BBFAABE146C4E87A6BDAEA1277940486954916ABF185FF0F5B
+  Gunmageddon_0.0.27.nobp SHA256
+  DB48AEED18A4ADE3DBE7E650ED4BFB1BC63FE3B5AA0DABFCA3782D4414FFE3AE
+Rollback: UnitySetupBackup/F120/BeforeInstall/ contains runtime 1.10.0 and pack
+0.0.26. With game closed restore DLL and .26 pack, move .27 outside plugins;
+keep only one active Gunmageddon pack. Existing config was preserved.
+No GitHub push/release was performed. Published release remains 0.0.26.

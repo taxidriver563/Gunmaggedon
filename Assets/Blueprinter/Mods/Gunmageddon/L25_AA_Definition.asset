@@ -24,12 +24,12 @@ MonoBehaviour:
     antiMissile: 0
     antiRadar: 0
   jsonKey: Gunmaggedon_L25_AA
-  unitName: L25 Triple AA Trailer
+  unitName: L-25
   bogeyName: 
   description: Close-defense triple 25mm anti-aircraft gun. Optical tracking is strongest
     at short range, with a 3.5km engagement limit. Three independent 15-round clips
     feed staggered barrel fire.
-  code: AAA
+  code: L-25
   visibleRange: 6000
   iconRange: 0
   radarSize: 1

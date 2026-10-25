@@ -1,0 +1,147 @@
+2026-10-24 R230 emission balance: runtime1.13.4 / pack0.0.31 unchanged.
+User verified1.13.3 beam rendered but reported excessive ocean reflections.
+Replaced absolute _Emissive4->8 with a snapshot of the native material's value,
+scaled1.00->1.10 with charge. Reference material0.13 means0.13->0.143; actual
+runtime value follows installed game assets. Native HDR _Color and other emission
+properties are inherited unchanged; removed custom64->128 tint and extra
+_EmissionColor/keyword overrides. Prefer native prefab material to live laser
+material when discovering templates, avoiding live intensity-adjusted colors.
+Beam texture/geometry, endpoint aura, width, model LODs and all gameplay unchanged.
+Compiled55 sources and fresh isolated native fixtures; native idle-gun IL contract
+passed. Fixture checks ten-percent gain and unchanged native tint. Unity/render
+execution unavailable: final bloom/reflection balance requires a mission retest.
+Compiled/installed1.13.4; source/IL checks only, not Unity-certified or published.
+Installed with game closed and staged/installed SHA256 match:
+40C357FC7C0A0F9E8B072F64FC5190725FFDEF23300F70D704F57EB0A79BD8BD
+Rollback1.13.3: UnitySetupBackup/R230/BeforeEmissionBalance-1.13.4/.
+Evidence: GunmaggedonRuntime/build/r230/emission-balance-1.13.4-install.json and
+emission-balance-1.13.4-sources.json. No asset pack export or public push.
+2026-10-24 R230 native laser/emission: runtime1.13.3 / pack0.0.31 unchanged.
+Warning now resolves a loaded native Laser.beamRenderer and borrows its mesh,
+Shader Graphs/LaserCone material and native dense_cookie1 texture slot:
+_Triplanar_e8f423b0745f4324b5f1c2df6a5d2320_Texture_1_Texture2D.
+A private material clone preserves the original shader/texture mapping. Drives
+native _Emissive from4 to8 and HDR _Color from(64,3,1) to(128,3,1) with charge.
+Matching Z-axis mesh replaces both procedural LineRenderers when resolved.
+Native _WorldOffset is refreshed before each camera, matching Laser.FixedUpdate.
+No Laser weapon component is instantiated, no stock material is modified, and no
+stock texture/mesh/shader is copied into the mod or public checkout. Runtime
+borrows the installed game's objects only; private material is destroyed on
+teardown. Lookup is throttled to once/sec and shared while presenters exist;
+last presenter teardown clears borrowed template references. Existing beam is
+fallback until native assets load; a successful binding logs material/texture.
+Endpoint aura remains. Model LODs unchanged; native warning is explicitly managed
+by charge lifetime, separate from physical model detail. No ballistics, damage,
+capacitor timing, recoil or network-protocol changes.
+Compiled55 production sources and fresh isolated native fixtures. Native idle
+firing contract IL check passed. Integration fixture now requires successful
+native texture/shader resolution, a private emissive material and hidden native
+renderer after discharge. Fixture execution, shader output, bloom, camera/origin
+rendering and multiplayer remain unverified because Unity is disconnected.
+Compiled/installed1.13.3, source checks only; not Unity-certified or published.
+Installed with game closed and matching staged/installed SHA256:
+C93AEE1ADDE989A2B16848240862C1E807BC6D2C598DA13F2935D430A7FA97B2
+Rollback1.13.2: UnitySetupBackup/R230/BeforeNativeLaser-1.13.3/.
+Evidence: GunmaggedonRuntime/build/r230/native-laser-1.13.3-install.json and
+native-laser-1.13.3-sources.json. No pack export or public push.
+2026-10-24 R230 presentation update: runtime1.13.2 / pack0.0.31 unchanged.
+Removed native recoil transform/travel/impulse and reset the authored wrapper to
+rest; muzzle remains attached to pitch/yaw. Durable SetupR230 helper now specifies
+no recoil too. No live Unity prefab edits or pack re-export were performed.
+Warning beam uses a continuous cross-section texture, bright pink/red core and
+wider red halo. Camera-relative width improves distant visibility, bounded to
+0.5-80m core before charge scaling; halo four times wider. Endpoint now has a
+bright core plus soft red aura 3.5 times its radius. Textures/materials are owned
+by each presenter and destroyed on teardown; no per-camera material allocations.
+Both beam layers and both billboard layers hide on cancel/discharge/expiry.
+Existing global endpoint refresh, camera callbacks and replicated charge state
+remain. Charge-only effects are managed separately from physical model LODs;
+existing three model levels and gameplay targeting/timing remain unchanged.
+Compiled55 production sources and isolated native fixtures. Passed38,430 R230
+policy assertions and compiled/native idle-gun IL contract check. Native fixture
+now checks zero recoil and all four warning layers clearing; model LOD audit
+excludes these explicitly lifetime-managed effects. Unity unavailable: actual
+rendering, recoil execution, LOD transitions and multiplayer remain unverified.
+Compiled and installed1.13.2; validation is static/Mono only, not Unity-certified.
+Installed with game closed; staged and installed SHA256:
+0F6B26EABEAB54908C8D0B739F8454B91C4EF026B1DF650FDF56D8DF732195CF
+Rollback1.13.1: UnitySetupBackup/R230/BeforePresentation-1.13.2/.
+Evidence: GunmaggedonRuntime/build/r230/presentation-1.13.2-install.json and
+presentation-1.13.2-sources.json. No public checkout edits or publication.
+R230 capacitor bank and firing warning — 2026-10-24
+Current runtime1.13.1, unchanged asset pack0.0.31. No new modeled parts or subsystem
+damage. All effects generated in runtime from the actual native muzzle.
+
+Idle-gun fix (2026-10-24)
+User reported no firing after1.13.0. Native Gun.Awake disables its Behaviour and
+Gun.Fire enables it on request. New NativeReady/WarningReady incorrectly required
+gun.enabled before allowing a request, creating an idle-state circular gate.
+Both enabled requirements removed. Native safety/ammunition/reload plus all
+range/authority/charge/alignment gates remain. Updated native fixture explicitly
+starts disabled and checks that native Fire enables it; fixture execution is
+still pending Unity availability. New verify-r230-idle-contract.ps1 checks actual
+compiled gate IL against native Fire's enabling contract; it passed.
+Recharge reduced20->10 seconds per user. Warning can begin during the final two
+seconds of bank recharge, so full charge can fire at10s (if all other gates pass)
+without an extra two-second wait. Cannot fire before refill. Three-shot bank
+and two-second warning retained; cancelled warnings spend no cell.
+38,430 Mono assertions passed, including warning/refill boundary. Production55
+sources and native fixtures compile; render/live mission behavior unverified.
+Installed with game closed, SHA256 matched:
+6BAACA49FACF098A9A525C65157A1E5DEDBC327A55DB652479D893AD857D82E6
+Rollback1.13.0: UnitySetupBackup/R230/BeforeIdleFix-1.13.1/.
+Evidence build/r230/idle-1.13.1-install.json. No public push.
+Initial1.13.0 settings/results below are historical where superseded above.
+
+Capacitor state
+Three cells initially. Native authoritative Gun.SpawnBullet postfix consumes
+one cell per shot; duplicate same-timestamp callback cannot double-debit. Cancelled
+charge consumes nothing. After third discharge, full bank recharges20 seconds
+from that shot. A fresh two-second warning is still required after refill.
+The normal native eight-second reload remains; warning can overlap its final
+two seconds. Once aligned acquisition is ready, each shot requires two seconds
+of valid charge. Target switch, LOS/range loss, misalignment, disabled/stowed
+state, unavailable ammo or invalid solution cancels charge. No ready-state
+transfer between targets. The .75-second first-target acquisition remains.
+Cycles reset with a newly spawned unit/mission; no new save/config interface.
+
+Visual presentation
+Red two-point camera-facing laser originates at the actual barrel muzzle.
+Endpoint is the predicted firing/intercept point, with a soft HDR-red pulsing
+orb that grows/brights as charge progresses. Orb screen visibility is aided by
+distance-scaled size; it is a presentation marker, not physical geometry.
+Reuses SpecialShells.EnsureMaterials/SparkMaterial. One retained quad mesh per
+gun; no colliders, lights, damage or per-frame material creation. Reusable point
+buffer/property block. Effects are created once per controller and reused.
+Shared pre-camera callbacks refresh local-coordinate beam endpoints and the
+orb for camera changes/floating-origin rebases; compatible builtin/SRP hooks.
+Warning hides on shot or charge cancellation; remote warnings expire after
+.4s without refreshed messages. Disable/destruction removes active registration,
+callbacks and owned mesh/objects. No delayed destruction of reused instances.
+Model LODs remain unchanged. Beam/orb deliberately use active warning lifetime
+instead of model LOD; gameplay clocks/readiness and native muzzle recoil remain
+independent of renderer visibility. Unity rendering must be checked in-game.
+
+Networking
+New R230ChargeCue sends owner NetId, global endpoint, progress and active state.
+Shared heavy-flak presentation handshake now version3; all multiplayer peers
+need matching runtime1.13.0. Older peers are not sent unknown cue packets.
+Host sends charge updates at .1s intervals, reliable immediate stop, and current
+state on subsequent ticks for joining peers. Client receiver validates finite
+values and resolves only an R230 controller; presentation cannot authorize fire.
+No capacitor state/damage is simulated authoritatively by the visual cue.
+
+Validation / deployment
+38,429 local Mono assertions passed: prior range/priority/lead/acquisition plus
+two-second warning boundary, three shots, exact recharge boundary, cancellation,
+target switch, duplicate debit and100 independent banks. Production55-source
+runtime and updated isolated Unity fixtures compile. Fixtures include native
+shot debit, beam/muzzle ownership, visual retirement and message round-trip.
+Unity connection is UNAVAILABLE; these native fixtures were NOT executed and
+no rendered/mission/multiplayer result is claimed. Shader appearance, orb size,
+real transport and repeated mission teardown remain integration checks.
+Installed with Nuclear Option closed; staged/installed SHA256 matched:
+4C4829189F753DC186B0C099DF94D79ECBF413751FB8CBBD8F370174DEF50BFA
+Rollback1.12.4: UnitySetupBackup/R230/BeforeCapacitors-1.13.0/.
+Install evidence: build/r230/capacitors-1.13.0-install.json.
+No asset-pack export or GitHub push/release performed.

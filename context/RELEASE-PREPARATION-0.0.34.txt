@@ -1,0 +1,59 @@
+Release preparation fixes - candidate0.0.34
+2026-10-24
+
+- Runtime1.14.2 honors each L25 feed's authored tracer interval while sharing a
+  turret-wide successful-shot phase. Ratio0/1 means every shot;3 retains the old
+  every-third pattern. The user's preview-rig values(1,1,1) are untouched and
+  copied to the spawnable trailer. Native interrupted/suppressed shots do not
+  advance phase. Tests check actual BulletSim flags at intervals1,2,3 and mixed
+  feed availability; authored values must remain unchanged.
+- Sequential Unity fixtures now load the helper through Assembly.LoadFrom,
+  avoiding duplicate CLR identities for Unity components. Historical benchmark
+  loading also reuses the first matching baseline MVID. This fixes the combined
+  nuclear test failure without weakening proximity or authority assertions.
+- CI metadata reads the compatible pack from public modinfo.json. The install
+  README uses a token filled from the same value. Workspace-only manual builds
+  may explicitly pass -AssetPackVersion. No separate hardcoded CI pack pin.
+- Public checkout fast-forwarded from10a5da8 to remote db4c6c3 before changes.
+  The user's newer README edits and Old Guard wording were retained. Current
+  source/assets and private-audio metadata copied by explicit allowlist; raw
+  audio, private references, local skills, caches and binaries excluded. FBX
+  path strings sanitized using the existing privacy helper; geometry untouched.
+  Release notes prepared at Publish/GitHubCheckout/releases/v0.0.34.md.
+
+Validation
+All19 sequential native Unity groups pass:3596 checks, including L25 rig226,
+R23088 and R230N28. Test scenes are isolated and the main scene stays clean.
+15 standalone suites pass under Unity Mono. The optimization suite also passes
+347 assertions using the installed .NET6 runtime and Unity's Roslyn compiler;
+no tests changed to accommodate the runner. This is not a pinned SDK10 CI run.
+The pinned .NET10.0.402 SDK is unavailable locally; hosted workflow/provenance
+validation remains pending an authorized source push/tag/release.
+
+Candidate runtime1.14.2 and pack0.0.34 built. Live mission validation of1.5kt
+blast damage/appearance and multiplayer transport still needs a game test.
+No GitHub push, tag or release publication was performed during preparation.
+
+Final artifact and privacy checks
+Runtime and pack installed locally with Nuclear Option closed; both staged and
+installed hashes match. Rollback1.14.1 / pack0.0.33 retained under
+UnitySetupBackup/ReleasePreparation-1.14.2/Installed/.
+Runtime SHA256:
+D3031BCF8F4B4E371ED4C351E6E54A4D2894EBFB6DCA3D75ACBEBEDBFE3F310E
+Pack SHA256:
+1AB54D53E61D50ACF73250AFB805EA2B3065B20EFF64F50C985CEEF662A12F5D
+The built pack independently loads in Unity:258 mod/generated asset paths,
+manifest0.0.34, exported R230N LODs1060/610/288 and L25 ratios1/1/1.
+All56 public runtime source files byte-match the workspace. Public source
+compiles against the exact SHA-pinned private CI reference archive using
+Mono/Roslyn. CI PowerShell parser checks pass, and install-template rendering
+resolves0.0.34. Exact hosted SDK10 build/provenance is still pending.
+No credentials, private reference archive/DLLs, local skills or raw audio in
+the public candidate. Six previously ignored local audio copies were moved to
+hash-verified private backup outside the checkout; Unity project originals and
+all metadata remain intact. The user's Old Guard README section byte-matches
+the latest remote version. No push, commit, tag or release was created.
+
+Evidence under GunmaggedonRuntime/build/release-review-1.14.1/ (historical audit
+folder name): unity-results.json, unit-results.json, final-public-audit.json,
+source-sync.json, local-audio-private-backup.json, patched-install.json.

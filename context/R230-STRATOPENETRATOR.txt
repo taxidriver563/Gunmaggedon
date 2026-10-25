@@ -1,0 +1,195 @@
+R-230 Stratopenetrator — 2026-10-24
+
+Current installed runtime 1.14.1 / pack 0.0.33. R-230N1.5kt correction: R230-NUCLEAR-15KT.txt. Separate R-230N variant added; standard gameplay unchanged (R230-NUCLEAR.txt). Native emission with at most10% boost. Native emissive laser material/texture resolved at runtime. Recoil removed; layered warning beam and endpoint aura updated.
+Capacitor idle-gun readiness deadlock fixed, recharge10s with warning overlapping
+final2s. See R230-CAPACITORS-WARNING.txt for native contract and evidence.
+Three-shot capacitor bank and two-second laser/red-orb warning now implemented;
+see R230-CAPACITORS-WARNING.txt for current timing, network3 and validation limits.
+
+Previous minimum-range balance (runtime1.12.4):
+Minimum-range balance (2026-10-24): hard 5,000m minimum muzzle-to-target slant
+range, inclusive at exactly5km; maximum65km unchanged. Shared visibility/range
+gate is used both during selection and immediately before firing, so an acquired
+target entering the dead zone clears tracking/acquisition and cannot receive
+another shot. Existing projectiles continue naturally; no in-flight deletion.
+No damage/accuracy/cadence, prefab/geometry, LOD or other weapon changes.
+38,021 Mono assertions passed, including minimum/maximum and invalid-range
+boundaries; 53-source production runtime and fresh native fixtures compile.
+Unity remains disconnected: native execution and mission balance unverified.
+Installed with game closed, verified SHA256:
+DA897E2B175E911ADCDB6C2B4DAE56AA97927E359F7DC1A72A6ADF9DF78853ED
+Rollback: UnitySetupBackup/R230/BeforeMinimumRange-1.12.4/.
+Evidence build/r230/minimum-range-1.12.4-install.json. No public push/release.
+Support dependency, committed telegraphed shots and capacitor cycles discussed
+as potential future balance mechanisms only; none implemented in this change.
+
+Previous balance/priority update (runtime1.12.3):
+Balance/priority update (2026-10-24): yaw traverse32deg/s (was36); pitch remains30.
+Tracer size6 (was5). Controller applies both on native initialization for host
+and remote presentation; existing .31 prefab inspector defaults remain36/5.
+Each new target requires .75 seconds of continuously aligned tracking before
+its first shot. Initial alignment interruption restarts this timer; once acquired,
+the same target retains acquisition through reloads, with exact alignment still
+required to fire. Target switch/loss, disable or unreachable solution clears lock.
+Piledrivers climbing >50m/s, receding radially >50m/s, or projected outside
+65.25km at approximate shot-arrival time are secondary tier -1; aircraft beat
+them regardless of held-target bonus. They remain eligible when nothing more
+urgent is visible. Incoming terminal Piledrivers retain tier3, other threatening
+Piledrivers tier2, strategic bombers tier1, ordinary aircraft tier0.
+No change to 50km terminal threshold, 100x optics/65km LOS, damage, ammo/reload,
+ballistic lead, geometry or LODs. Native muzzle recoil still runs at every LOD.
+38,018 Mono assertions passed (new acquisition timing, target resets, climbing/
+receding/projected exit cases plus prior intercept checks). Production53-source
+build and fresh isolated fixtures compile. Native integration execution remains
+UNVERIFIED because Unity tools are disconnected; mission behavior needs retest.
+Runtime1.12.3 installed with game closed; verified SHA256:
+A32F69AE052C69CC4349CE6B2EF334106D46712229D6A4AAF43C3A91E2CC11B5
+Rollback1.12.2: UnitySetupBackup/R230/BeforeBalance-1.12.3/.
+Evidence build/r230/balance-1.12.3-install.json. No public push/release.
+
+Previous optics update (runtime1.12.2):
+Optics correction (2026-10-24): Native Unit.LineOfSight(origin,magnification)
+first checks target Unit.visibility * magnification, then terrain LOS. R230
+incorrectly passed 1, imposing the target's normal optical visibility cap even
+though its own range test allowed 65km. Piledriver HE/20kt and SFB definitions
+have visibleRange5000. R230 now uses 100x magnification, retaining the exact
+65km maximum, terrain/smoke checks and all previous threat/fire settings.
+User narrowed the requested correction to magnification; no native scanner or
+prefab changes added. Optical visibility remains affected by native conditions.
+Earlier integration fixture mocked LOS as unrestricted, masking this failure.
+It now models the native 5km*multiplier cutoff so distant-target checks exercise
+the correct contract. Fresh fixtures compile but were NOT executed because the
+Unity tool connection is unavailable. 38,007 Mono assertions passed; production
+53-source runtime compiled. Live mission/detection behavior awaits retest.
+Installed with game closed, SHA256 verified:
+4E6533825B60BC3DB08BB3105B5A4E1A097F0F7FDD70C3B3527A7764251604EC
+Rollback1.12.1: UnitySetupBackup/R230/BeforeOptics-1.12.2/.
+Evidence: build/r230/optics-1.12.2-install.json. No public push/release.
+
+Previous terminal/lead update (runtime1.12.1):
+Terminal/lead hotfix: descending Piledrivers at <=50,000 m ASL now get terminal
+priority (descent faster than 50 m/s). Previous cutoff was 18km/45s ETA.
+Piledrivers could already be selected above that cutoff as tier2, so changing
+classification alone does not explain all late/missed interceptions. Initial
+lead also assumed constant missile velocity, missing continued descent
+acceleration during several seconds of projectile flight.
+Missile lead now extrapolates measured acceleration, capped at 150 m/s^2 and
+smoothed over .08 seconds, with a native-gravity fallback when the target's
+Rigidbody has gravity enabled. Measurement resets on a target switch, loss or
+long observation gap; aircraft retain their previous constant-velocity model.
+Both target and shell compensation use gravity-first fixed-step timing.
+65km LOS range, ammo/damage, .003 degree spread, alignment, LOD and eight-second
+reload unchanged. A dense salvo can still exceed one emplacement's shot cadence.
+38,006 Mono policy assertions passed, including 50km inclusive/exclusive ascent/
+descent boundaries and 1,000 accelerated high-altitude intercept cases. Targeted
+native run: R23075 + F12037 + LOD1225 = 1,337 checks passed. Actual native bullet
+trajectory compared with isolated PhysX ballistic descent at 50km: 0.04024m
+closest approach in one controlled case. This is not a live hit-rate guarantee.
+Compiled current production runtime and validated fresh isolated source copies;
+installed hash verified with game closed:
+C8D45CDA8352222A165159D92A2ED9F9BA35812C451A90C92D1062E67241089A
+Pack .31 remains unchanged. Runtime1.12.0 rollback:
+UnitySetupBackup/R230/BeforeTerminal-1.12.1/. Evidence:
+build/r230/terminal-1.12.1-native.json and terminal-1.12.1-install.json.
+Scene left clean in edit mode. Live salvo performance unverified; no public push.
+
+Building-mounted long-range railgun. User removed the imported pistons because
+their geometry did not support the required extension; no pistons or constraints
+are reconstructed. Three authored meshes: foundation/base, traverse, gun.
+Authored world poses preserved under unit-scale yaw/pitch/recoil wrappers.
+Designation R-230; jsonKey Gunmaggedon_R230; native weapon R230_Railgun.
+External Unity assets R230_Emplacement.prefab, R230_Definition.asset and
+R230_Railgun.asset. Initial setup tool: tools/SetupR230.cs. Original scene/model
+backups: UnitySetupBackup/R230/BeforeSetup/ and external R230_Original.prefab.
+Setup refuses an existing R230 asset; use a migration for later changes.
+
+Engagement and threat policy
+Inclusive 65,000 m muzzle-to-target LOS envelope. Own advanced direct LOS scan;
+does not require an existing faction contact or nearby radar/searchlight.
+Enemy aircraft and the two actual native Piledriver definitions are candidates:
+ballisticMissile1 and ballisticMissile1_tacNuke. Ground/ships/ordinary missiles,
+friendlies, inactive/destroyed/disabled units are excluded. Native LOS and smoke
+occlusion rechecked at acquisition and firing. No firing through terrain.
+Strict priority tiers:
+  3: terminal Piledriver
+  2: other visible Piledriver
+  1: strategic bomber (FastBomber1/Alkyon, Darkreach, or strategic aircraft flag)
+  0: other aircraft, ranked by native unit value, anti-surface role, closing speed
+     and distance, with a small current-target retention bonus.
+Higher tiers always override lower tiers regardless of ordinary threat score.
+Terminal means descending faster than 50 m/s at altitude <=50 km above
+sea level. This is an explicit provisional
+gameplay criterion, not a native flight-phase flag. Acquisition refreshes every
+.2 seconds; ordinary aircraft remain eligible when no higher-tier target is visible.
+
+Provisional weapon balance
+15,000 m/s unguided kinetic shot, zero drag, normal gravity, .003 degree native
+spread; aim alignment gate .004 degrees using cross-product precision. Eight-
+second reload, 60 rounds, one-round native magazine, 16-second projectile life.
+Pierce 15,000 and native blast 25; actual damage uses native armor/health paths.
+These are mod gameplay defaults, not historical specifications or tested balance.
+Intercept is solved with native gravity-first integration compensation and
+measured Piledriver acceleration (aircraft use constant velocity). Uses current
+target position/velocity while LOS is valid; no
+perfect future trajectory, homing or proximity fuze. Maneuvers during flight
+can still evade the shot. 36/30 degree/s yaw/pitch; -5 to90 degree elevation.
+Native Gun.Fire/SpawnBullet/BulletSim, ammunition, recoil, effects, damage and
+single-fire networking retained. Remote aim uses the existing F88 pose transport;
+receive dispatch now recognizes R230 too. Matching runtime required on peers.
+Four existing base-game railgun audio variations and muzzle/impact effects are
+referenced using Blueprinter remaps. No raw game audio/models copied into public
+source. Firing gun has its required spatial AudioSource. Native recoil .12 m
+continues to move the muzzle at every LOD; no dispensable cosmetic mechanisms.
+
+Damage / LOD
+Static Building, no trailer physics or towing. Foundation extends below root
+for placement into terrain; original geometry preserved. Three same-object
+native UnitPart collision receivers: base, traverse, gun. Each is critical and
+can disable the emplacement; no invulnerability. No separate destroyed model
+was supplied; no copied CD-203 wreck is assigned.
+Model LODs 1060/610/288 triangles, three renderers each; .045/.012/.0005 screen
+thresholds. Bounds center (0,-1,0), size52; near meshes preserve materials and
+aim/recoil hierarchy. All model renderers managed; railgun particles/tracer use
+their own native effect lifetime. Targeting/firing/damage independent of LOD.
+
+Verification / rollout
+R230SolutionTests: 36,005 Mono assertions passed (strict overrides, terminal
+classification, 2,000 varied fast-target intercept residuals under 2 cm against
+the matching synthetic integration formula). This is not mission accuracy.
+R230Integration: 69 native checks passed. Includes building setup, actual native
+Fire/SpawnBullet reaching the intercepted BulletSim backend with correct launch
+arguments; damage can disable all hitboxes; authority/faction/range/LOS gates,
+override ordering, spatial audio/FX and 12 yaw/elevation LOD-bound poses.
+Fixture LOS evidence is controlled and native RPC/backend transport is intercepted;
+the test does not certify real mission projectile hits or multiplayer delivery.
+Live mission balance, dynamic missile maneuver interception, long combat stability
+and performance remain unverified. Further combined/export/install results below.
+
+Combined targeted current-source native validation: 1,575 checks passed across
+R230 69, F88 35, F120 37, all-unit LOD 1225, concrete damage 74, coastal support
+101 and static-review/network lifecycle 34. Existing unrelated L25 preview tracer
+mismatch was not changed or included in this targeted run. Full SDK suite not
+rerun; policy execution used the local Unity/Mono compiler/runtime.
+External model render reviewed close-up: materials/textures and authored gun pose
+correct. Three source mesh/material matches compared against original matrices.
+Native IL inspection confirms Missile.StartMissile registers through Unit's
+grid registration, so Piledriver candidates are included by the shared grid query.
+Exported pack verified independently: key/designation, native railgun settings,
+three same-object damage receivers, muzzle particles, source audio references,
+LOD renderer/mesh references and 1060/610/288 triangle reduction. Exactly the
+same six custom audio payloads remain; no stock railgun audio payload added.
+Evidence: build/r230/native-validation.json and export-validation.json.
+User scene left saved/clean in edit mode with only R230_Emplacement; isolated
+test scenes, globals and Harmony patches cleaned up. No public GitHub changes.
+
+Compiled production runtime 1.12.0 from 53 sources; validated fresh namespace-
+isolated copies of current source. Installed with Nuclear Option closed and
+binary hashes matched staging:
+  Gunmaggedon.Runtime.dll
+  B4A4674B6ABE7BB8C38A29410A34890E58CCF55C6DCCB29BE04AEFF1395F116C
+  Gunmageddon_0.0.31.nobp
+  D8EB4410648FEA00DD995CAFCCF1D9891468D1CFFC9D100B122C66D7BE71C9F2
+Rollback runtime1.11.1 / pack.30: UnitySetupBackup/R230/BeforeInstall/.
+Restore only with game closed and keep one active Gunmageddon pack. Existing
+configuration preserved. Installed evidence: build/r230/install.json.
+No live mission or real multiplayer transport result is claimed by this rollout.

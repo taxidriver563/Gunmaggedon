@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory=$true)][string]$ReferencesDirectory,
     [string]$OutputDirectory,
     [string]$DotnetPath = 'dotnet',
-    [string]$SourceRevision
+    [string]$SourceRevision,
+    [string]$AssetPackVersion
 )
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -39,13 +40,21 @@ try {
     $pluginSource = Get-Content (Join-Path $repoRoot 'GunmaggedonRuntime/src/Core/Plugin.cs') -Raw
     $versionMatch = [regex]::Match($pluginSource,'\[BepInPlugin\("[^"]+",\s*"[^"]+",\s*"([^"]+)"\)\]')
     if (-not $versionMatch.Success) { throw 'Cannot read the runtime plugin version.' }
-    $info = [ordered]@{ runtime_version = $versionMatch.Groups[1].Value; source_commit = $SourceRevision; dotnet_sdk = $sdkVersion; references_sha256 = $env:GUNMAGGEDON_REFERENCES_SHA256; asset_pack = '0.0.26' }
+    $packMetadata = Join-Path $repoRoot 'Assets/Blueprinter/Mods/Gunmageddon/modinfo.json'
+    $assetPack = $AssetPackVersion
+    if (-not $assetPack) {
+        if (-not (Test-Path -LiteralPath $packMetadata)) { throw 'Run from the public Unity checkout or pass -AssetPackVersion for a workspace-only build.' }
+        $assetPack = (Get-Content -LiteralPath $packMetadata -Raw | ConvertFrom-Json).version
+    }
+    if ($assetPack -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid asset-pack version in modinfo.json.' }
+    $info = [ordered]@{ runtime_version = $versionMatch.Groups[1].Value; source_commit = $SourceRevision; dotnet_sdk = $sdkVersion; references_sha256 = $env:GUNMAGGEDON_REFERENCES_SHA256; asset_pack = $assetPack }
     $package = Join-Path $scratch ('package-' + [Guid]::NewGuid().ToString('N'))
     $pluginFolder = Join-Path $package 'BepInEx/plugins/Gunmaggedon'
     New-Item -ItemType Directory -Path $pluginFolder -Force | Out-Null
     Copy-Item -LiteralPath $dll -Destination (Join-Path $pluginFolder 'Gunmaggedon.Runtime.dll') -Force
     [IO.File]::WriteAllText((Join-Path $package 'build-info.json'),($info | ConvertTo-Json))
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'RUNTIME-INSTALL.txt') -Destination (Join-Path $package 'README.txt') -Force
+    $installText = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'RUNTIME-INSTALL.txt')).Replace('{{ASSET_PACK_VERSION}}',$assetPack)
+    [IO.File]::WriteAllText((Join-Path $package 'README.txt'),$installText)
     Compress-Archive -Path (Join-Path $package '*') -DestinationPath (Join-Path $OutputDirectory 'Gunmaggedon.Runtime.zip') -Force
     Write-Output "Built $($sources.Count) runtime sources using SDK $sdkVersion; release folder contains only the mod DLL and install ZIP."
 } finally { Pop-Location }

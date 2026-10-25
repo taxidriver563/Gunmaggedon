@@ -28,7 +28,7 @@ public static class UnitLODIntegration
         try{
             var co=new GameObject("LOD validation camera",typeof(Camera));SceneManager.MoveGameObjectToScene(co,scene);var camera=co.GetComponent<Camera>();camera.enabled=false;camera.scene=scene;camera.overrideSceneCullingMask=EditorSceneManager.GetSceneCullingMask(scene);camera.targetTexture=rt;camera.cullingMask=1<<31;camera.nearClipPlane=.01f;camera.farClipPlane=1000;
             var paths=AssetDatabase.FindAssets("t:Prefab",new[]{dir}).Select(AssetDatabase.GUIDToAssetPath).Where(p=>{var g=AssetDatabase.LoadAssetAtPath<GameObject>(p);return g.GetComponent<Unit>()||p.EndsWith("_Turret_Rig.prefab");}).ToArray();
-            Check(paths.Length==9,"All seven units and both staged rigs covered");
+            Check(paths.Length>=10&&paths.Any(p=>p.EndsWith("F120_AAA_Trailer.prefab")),"Existing units, new F120 and staged rigs covered");
             foreach(var path in paths){
                 var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(path);var root=UnityEngine.Object.Instantiate(prefab);SceneManager.MoveGameObjectToScene(root,scene);root.SetActive(false);
                 foreach(var t in root.GetComponentsInChildren<Transform>(true))t.gameObject.layer=31;

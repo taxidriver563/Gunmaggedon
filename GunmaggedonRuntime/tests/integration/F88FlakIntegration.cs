@@ -25,7 +25,9 @@ public static class F88FlakIntegration
     static void Set(object o,string n,object v){o.GetType().GetField(n,F).SetValue(o,v);}
     static object Call(object o,string n,params object[] a){return o.GetType().GetMethod(n,F).Invoke(o,a);}
     static object Static(Type t,string n,params object[] a){return t.GetMethod(n,S).Invoke(null,a);}
-    public static object Run()
+    public static object Run(){return RunProfile(false);}
+    public static object RunHeavy(){return RunProfile(true);}
+    static object RunProfile(bool heavy)
     {
         checks=damage=bursts=0;local=true;var repo=Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT");
         var loaded=Assembly.Load(File.ReadAllBytes(Environment.GetEnvironmentVariable("GUNMAGGEDON_TEST_HELPER")??Path.Combine(repo,"GunmaggedonRuntime/build/1.9.2/Gunmaggedon.Runtime.dll")));
@@ -38,13 +40,13 @@ public static class F88FlakIntegration
             datum.SetValue(null,stage.transform);datumPos.SetValue(null,Vector3.zero);
             prefix(typeof(Unit).GetProperty("LocalSim").GetGetMethod(),"Local");prefix(typeof(Unit).GetProperty("NetworkHQ").GetGetMethod(),"Team");prefix(typeof(DamageEffects).GetMethod("BlastFrag"),"Damage");
             Static(runtime,"Install",new ManualLogSource("F88 flak fixture"));prefix(effects.GetMethod("Play",S),"FX");
-            var prefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Blueprinter/Mods/Gunmageddon/F88_AA_Trailer.prefab");Check(prefab,"Operational F88 prefab exists");
+            var prefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Blueprinter/Mods/Gunmageddon/"+(heavy?"F120_AAA_Trailer.prefab":"F88_AA_Trailer.prefab"));Check(prefab,"Operational flak prefab exists");
             var root=UnityEngine.Object.Instantiate(prefab,stage.transform,false);var owner=root.GetComponent<GroundVehicle>();var gun=root.GetComponentInChildren<Gun>(true);var turret=root.GetComponentInChildren<Turret>(true);var info=gun.info;
-            Check(owner.definition.jsonKey=="Gunmaggedon_F88_AA"&&info.name=="F88_AA_Weapon","Unique unit and ammunition definitions bound");
+            Check(owner.definition.jsonKey==(heavy?"Gunmaggedon_F120_AA":"Gunmaggedon_F88_AA")&&info.name==(heavy?"F120_AA_Weapon":"F88_AA_Weapon"),"Unique unit and ammunition definitions bound");
             Check(gun.enabled&&turret.enabled&&!gun.Safety,"Combat prefab enabled without changing the standalone rig");
             Check(!new SerializedObject(gun).FindProperty("proximityTimer").boolValue&&!info.useWeaponDoors,"Timed fuze only and no aircraft bay-door path");
-            Check(Mathf.Abs((float)new SerializedObject(gun).FindProperty("bulletSpread").floatValue-.65f)<.0001f,"Permanent mechanical dispersion configured");
-            Check(Mathf.Abs((new SerializedObject(owner).FindProperty("suspensionTravel").floatValue-owner.definition.spawnOffset.y)*200000-owner.definition.mass*9.81f)<.1f,"Suspension preload matches F88 weight at spawn");
+            Check(Mathf.Abs((float)new SerializedObject(gun).FindProperty("bulletSpread").floatValue-(heavy?.45f:.65f))<.0001f,"Permanent mechanical dispersion configured");
+            Check(Mathf.Abs((new SerializedObject(owner).FindProperty("suspensionTravel").floatValue-owner.definition.spawnOffset.y)*(heavy?450000:200000)-owner.definition.mass*9.81f)<.1f,"Suspension preload matches trailer weight at spawn");
             Check(prefab.GetComponentsInChildren<Transform>(true).All(t=>GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject)==0),"Combat prefab has no missing scripts");
             var friendly=new GameObject("Friendly HQ").AddComponent<FactionHQ>();friendly.transform.SetParent(stage.transform,false);Teams[owner]=friendly;
             var hostile=new GameObject("Hostile HQ").AddComponent<FactionHQ>();hostile.transform.SetParent(stage.transform,false);
@@ -60,7 +62,7 @@ public static class F88FlakIntegration
             radarUnit.transform.position+=Vector3.right*.01f;Check(!(bool)Static(controller,"RadarSupports",owner,radar),"Radar beyond 300m does not support knowledge");
             radarUnit.transform.position=owner.transform.position+Vector3.right*200;Teams[radarUnit]=hostile;Check(!(bool)Static(controller,"RadarSupports",owner,radar),"Enemy radar does not cue F88");Teams[radarUnit]=friendly;
             radar.activated=false;Check(!(bool)Static(controller,"RadarSupports",owner,radar),"Inactive radar does not cue F88");radar.activated=true;
-            var solutionType=a.GetType("GunmageddonAudio.FlakBarrageSolution");var vectorType=a.GetType("GunmageddonAudio.OpticalVector");var solution=Activator.CreateInstance(solutionType,new object[]{1});
+            var solutionType=a.GetType("GunmageddonAudio.FlakBarrageSolution");var vectorType=a.GetType("GunmageddonAudio.OpticalVector");var solution=Activator.CreateInstance(solutionType,new object[]{1,heavy});
             Func<float,float,object> vec=(x,z)=>Activator.CreateInstance(vectorType,new object[]{(double)x,1600d,(double)z});
             solutionType.GetMethod("Observe").Invoke(solution,new[]{vec(0,4000),(object)(double)(Time.time-1.5),4500d,false});
             solutionType.GetMethod("Observe").Invoke(solution,new[]{vec(300,4000),(object)(double)Time.time,4500d,false});
@@ -72,13 +74,21 @@ public static class F88FlakIntegration
             gun.Fire(owner,null,Vector3.zero,firingStation,aircraft.transform.position.ToGlobalPosition());
             Check((int)Get(gun,"ticksSinceTriggerPull")==0,"Native gun accepts untargeted barrage fire command");
             var committed=Get(c,"area");Call(c,"ShotFired");Check(!(bool)Get(c,"planned")&&(int)Get(c,"shots")==1,"Actual shot advances barrage and requests a new shell point");
-            Call(c,"Prepare",Time.time);Check(Get(c,"area").Equals(committed),"Barrage area remains committed between shots");
+            if(heavy){
+                solutionType.GetMethod("Observe").Invoke(solution,new[]{vec(450,4000),(object)(double)(Time.time+.5f),4500d,false});Call(c,"Prepare",Time.time+.5f);Check(!Get(c,"area").Equals(committed),"Postwar crew revises its next-shot region with fresh observations");
+                Call(c,"SolveAim",Time.time+.5f);var beforePoint=(GlobalPosition)Get(c,"point");var fixedOffset=Get(c,"shotOffset");
+                solutionType.GetMethod("Observe").Invoke(solution,new[]{vec(1300,4000),(object)(double)(Time.time+1f),4500d,false});
+                Call(c,"SolveAim",Time.time+1f);var afterPoint=(GlobalPosition)Get(c,"point");
+                Check(Math.Abs(afterPoint.x-beforePoint.x)>100,"F120 refreshes prediction from new observations while aiming the same shot");
+                Check(Get(c,"shotOffset").Equals(fixedOffset),"Aim refresh preserves the fixed per-shot suppression offset");
+            }
+            else{Call(c,"Prepare",Time.time);Check(Get(c,"area").Equals(committed),"F88 barrage area remains committed between shots");}
             Set(c,"planned",true);local=false;Check(!(bool)controller.GetProperty("ReadyToFire",F).GetValue(c),"Remote clients cannot authorize firing");local=true;
             var sim=new GameObject("F88 bullet simulation").AddComponent<BulletSim>();sim.transform.SetParent(stage.transform,false);Set(sim,"gun",gun);Set(sim,"visualOnly",false);
             // Exercise native AddBullet prefix arguments, then real native trajectory
             // trace with its actual timed-expiry path and Harmony callbacks.
             var add=flak.GetMethod("Add",S);object[] args={sim,0f,24f,true,aircraft,null};add.Invoke(null,args);
-            Check((float)args[1]==.65f&&Mathf.Approximately((float)args[2],(float)controller.GetProperty("Fuse",F).GetValue(c))&&!(bool)args[3]&&args[4]==null,"Launch fixes spread/fuze and removes proximity target/tracer");
+            Check((float)args[1]==(heavy?.20f:.65f)&&Mathf.Approximately((float)args[2],(float)controller.GetProperty("Fuse",F).GetValue(c))&&!(bool)args[3]&&args[4]==null,"Launch fixes spread/fuze and removes proximity target/tracer");
             var b=new BulletSim.Bullet(Vector3.forward*820,null,2,true,false,null){active=true,position=new GlobalPosition(0,5000,0),velocity=Vector3.forward*820,destructTimer=.01f,explosive=true,proximityFuse=true,target=aircraft};
             b.TrajectoryTrace(null,info,owner,new ParticleEffectManager.PrefabEffect[4],1,false,.02f,false,default(GlobalPosition),Vector3.zero,1,true,b.position);
             Check(!b.active&&!b.proximityFuse&&b.target==null,"Native expiry retires shell with no target-seeking/proximity behavior");
@@ -94,6 +104,7 @@ public static class F88FlakIntegration
             flak.GetMethod("Added",S).Invoke(null,new[]{null,args[5]});Check(early.active&&damage==1,"Aircraft proximity cannot prematurely trigger timed shell");early.Remove();
             // Real serializers, not a hand-built substitute.
             var burstType=a.GetType("GunmageddonAudio.FlakBurst");var message=Activator.CreateInstance(burstType);burstType.GetField("Position",F).SetValue(message,new GlobalPosition(100,2000,300));burstType.GetField("Time",F).SetValue(message,123d);
+            burstType.GetField("Heavy",F).SetValue(message,heavy);
             var packer=typeof(Mirage.Serialization.MessagePacker);
             Func<Type,object,object> roundtrip=(type,value)=>{
                 var bytes=(byte[])packer.GetMethods().Single(m=>m.Name=="Pack"&&m.IsGenericMethodDefinition&&m.GetParameters().Length==1).MakeGenericMethod(type).Invoke(null,new[]{value});
@@ -101,13 +112,17 @@ public static class F88FlakIntegration
             };
             var copy=roundtrip(burstType,message);
             Check((double)burstType.GetField("Time",F).GetValue(copy)==123d&&((GlobalPosition)burstType.GetField("Position",F).GetValue(copy)).y==2000,"Native Mirage burst serializer round trip");
+            Check((bool)burstType.GetField("Heavy",F).GetValue(copy)==heavy,"Native Mirage burst preserves F88/F120 presentation profile");
             var poseType=a.GetType("GunmageddonAudio.FlakPose");var pose=Activator.CreateInstance(poseType);poseType.GetField("Unit",F).SetValue(pose,123u);poseType.GetField("Yaw",F).SetValue(pose,325f);poseType.GetField("Pitch",F).SetValue(pose,280f);
             var poseCopy=roundtrip(poseType,pose);Check((uint)poseType.GetField("Unit",F).GetValue(poseCopy)==123u&&(float)poseType.GetField("Pitch",F).GetValue(poseCopy)==280f,"Native Mirage gun pose serializer round trip");
+            var cueType=a.GetType("GunmageddonAudio.R230ChargeCue");var cue=Activator.CreateInstance(cueType);cueType.GetField("Unit",F).SetValue(cue,456u);cueType.GetField("Point",F).SetValue(cue,new GlobalPosition(100,50000,200));cueType.GetField("Progress",F).SetValue(cue,.75f);cueType.GetField("Active",F).SetValue(cue,true);var cueCopy=roundtrip(cueType,cue);
+            Check((uint)cueType.GetField("Unit",F).GetValue(cueCopy)==456u&&(float)cueType.GetField("Progress",F).GetValue(cueCopy)==.75f&&(bool)cueType.GetField("Active",F).GetValue(cueCopy),"Charge cue round-trip preserves owner/progress/active state");
             Static(network,"ReceiveBurst",null,message);Check(bursts==1&&damage==1,"Unconnected/host receiver cannot duplicate network burst or damage");
             h.Unpatch(effects.GetMethod("Play",S),HarmonyPatchType.Prefix,h.Id);
             stage.SetActive(true);var source=new SerializedObject(gun).FindProperty("selfDestructEffect").objectReferenceValue as GameObject;
             Static(effects,"Play",source,new GlobalPosition(0,5000,0),0f);Static(effects,"Play",source,new GlobalPosition(100,5000,0),0f);
-            var pool=(IList)effects.GetField("Pool",S).GetValue(null);Check(pool.Count==2,"Simultaneous bursts have independent particle instances");
+            var banks=(IDictionary)effects.GetField("Banks",S).GetValue(null);var bank=banks[source];
+            var pool=(IList)bank.GetType().GetField("Pool",F).GetValue(bank);Check(pool.Count==2,"Simultaneous bursts have independent particle instances");
             var first=(Component)pool[0];var second=(Component)pool[1];var originalPosition=first.transform.position;
             foreach(var ps in first.GetComponentsInChildren<ParticleSystem>(true))ps.Simulate(11,false,true,false);
             Check(first.GetComponentsInChildren<ParticleSystem>().Single(ps=>ps.name=="persistentSmoke").particleCount>0,"First puff remains alive while next burst exists");
@@ -115,9 +130,9 @@ public static class F88FlakIntegration
             first.gameObject.SetActive(false);Static(effects,"Play",source,new GlobalPosition(200,5000,0),0f);
             Check(pool.Count==2&&second.gameObject.activeSelf&&Vector3.Distance(second.transform.position,new Vector3(100,5000,0))<.01f,"Pool reuse preserves other active puffs");
             Check(damage==1,"Lingering and recycled smoke never causes ongoing damage");
-            return new{passed=true,checks,damageEvents=damage,details="F88 prefab, radar boundaries/faction, night gate, committed barrage, fixed launch errors, native timed expiry and authority"};
+            return new{passed=true,checks,damageEvents=damage,profile=heavy?"F120":"F88",details="Native prefab, radar boundaries/faction, night gate, committed barrage, fixed launch errors, timed expiry and authority"};
         }finally{h.UnpatchSelf();Static(runtime,"Shutdown");
             var registry=(IDictionary)typeof(Mirage.Serialization.MessagePacker).GetProperty("MessageTypes").GetValue(null);
-            foreach(var name in new[]{"FlakHello","FlakBurst","FlakPose"})registry.Remove(Mirage.Serialization.MessagePacker.GetId(a.GetType("GunmageddonAudio."+name)));EditorSceneManager.ClosePreviewScene(scene);Teams.Clear();datum.SetValue(null,old);datumPos.SetValue(null,oldPos);local=true;}
+            foreach(var name in new[]{"FlakHello","FlakBurst","FlakPose","R230ChargeCue","R230NuclearBurst"})registry.Remove(Mirage.Serialization.MessagePacker.GetId(a.GetType("GunmageddonAudio."+name)));EditorSceneManager.ClosePreviewScene(scene);Teams.Clear();datum.SetValue(null,old);datumPos.SetValue(null,oldPos);local=true;}
     }
 }

@@ -24,12 +24,12 @@ MonoBehaviour:
     antiMissile: 0
     antiRadar: 0
   jsonKey: Gunmaggedon_F88_AA
-  unitName: F88 Heavy Flak Trailer
+  unitName: F-88
   bogeyName: 
   description: 88mm area-suppression flak. Fires committed timed barrages along estimated
     aircraft routes; friendly radar within 300m improves observations, not gun dispersion
     or fuze precision.
-  code: AAA
+  code: F-88
   visibleRange: 6000
   iconRange: 0
   radarSize: 1

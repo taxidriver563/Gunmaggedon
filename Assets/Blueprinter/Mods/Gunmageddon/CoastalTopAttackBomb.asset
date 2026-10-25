@@ -24,11 +24,11 @@ MonoBehaviour:
     antiMissile: 0
     antiRadar: 0
   jsonKey: Gunmageddon_TopAttackBomb
-  unitName: Parachute Top-Attack Bomb
+  unitName: TA-1
   bogeyName: 
   description: Parachute-deployed coastal submunition. Spirals while scanning for
     hostile ships and fires one physical penetrator.
-  code: BOMB
+  code: TA-1
   visibleRange: 2000
   iconRange: 0
   radarSize: 0.05

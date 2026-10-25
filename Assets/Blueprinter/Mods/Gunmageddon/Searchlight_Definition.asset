@@ -24,12 +24,12 @@ MonoBehaviour:
     antiMissile: 0
     antiRadar: 0
   jsonKey: Gunmaggedon_Searchlight
-  unitName: Air Defense Searchlight Trailer
+  unitName: SL-1
   bogeyName: 
   description: Night air-defense searchlight. Sweeps for aircraft and gradually acquires
     illuminated contacts. Friendly HLT/MSV radar trucks within 300 metres provide
     coarse search cues.
-  code: SLT
+  code: SL-1
   visibleRange: 6000
   iconRange: 0
   radarSize: 1

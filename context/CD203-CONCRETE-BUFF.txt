@@ -1,0 +1,60 @@
+CD-203 concrete resistance — 2026-10-24
+
+Both standard and SPECIAL emplacements previously used one 15x8x15 unarmored
+root BoxCollider with 100 HP and armor/tolerances 0/1 for the entire emplacement.
+This treated the concrete and exposed weapon identically and filled the open
+pit with a coarse collision box.
+
+The concrete now uses its original 172-vertex mesh as a nonconvex static
+MeshCollider, with a same-object native UnitPart. The traverse, gun body and
+barrel each have an articulated local mesh-bounds BoxCollider and native
+UnitPart retaining the original unarmored damage settings. The root coarse box
+is removed so it cannot intercept hits meant for the exposed gun/open pit.
+Part references point to their own Building; native critical damage still
+disables the emplacement. Added parts carry no physical mass and do not detach
+independently. No custom damage hooks or runtime balance changes were added.
+
+Concrete armor / tolerance:
+  Pierce armor 300; pierce tolerance 6.
+  Blast armor 150; blast tolerance 4.
+  Fire armor 100; fire tolerance 10.
+  Overpressure limit 30. Native starting health remains 100.
+These are provisional game balance values, not real-world concrete specs.
+For identical incoming post-protection blast inputs, concrete takes 25% of its
+former native HP loss. Native blast armor also participates in blast protection.
+Light penetrating/fire hits are resisted; sufficiently heavy direct penetration
+still destroys the emplacement. Exposed gun parts retain armor 0/tolerances 1.
+No firing, targeting, ammunition, muzzle, recoil or material changes.
+
+Migration: GunmaggedonRuntime/tools/BuffCD203Concrete.cs. Backups:
+UnitySetupBackup/CD203/BeforeConcreteBuff/. The migration targets only
+Emplacement_203mmCG.prefab and Emplacement_203mmCG_SPECIAL.prefab in the external
+Unity project; it preserves model/LOD paths, generated meshes and materials.
+
+Validation
+CD203ConcreteIntegration passed 74 native checks covering both variants,
+same-object damage routing, native armor/HP, sublethal/lethal damage and server
+authority. Native 100 blast input: concrete loses 25 HP, exposed gun loses
+100 HP. Pierce/fire 50: concrete loses 0 HP, exposed gun loses 50 HP. Pierce
+2000 still disables the unit through every hitbox. RPC delivery replayed locally;
+live mission and multiplayer transport not certified by these isolated checks.
+Enabled three-level model LODs retain all model renderers and strictly reduced
+geometry; collision/damage stays enabled at distant detail. Original model
+budgets 1844/851/503 triangles per physical emplacement retained.
+
+Combined targeted validation passed 1,353 checks: concrete damage 74, coastal
+illumination/authority 101 and all-unit LOD regressions 1178. Exported pack
+independently verified with UnityPy: separate same-object native damage parts,
+correct armor on concrete only, root coarse box absent, actual mesh collision,
+valid renderer/mesh references and unchanged geometry reductions.
+Active user scene left clean in edit mode, with only its original F120 root.
+Native evidence: build/cd203-concrete/native-validation.json.
+Export evidence: build/cd203-concrete/export-validation.json.
+
+Installed pack 0.0.29 with Nuclear Option closed; SHA256 matches staging:
+25CF02E7A0365F793932AACC06D007D7AF5D16EB6268523A70AF127849C7B12B
+Runtime source and installed runtime 1.11.1 unchanged, hash:
+681FFEBA51843FF6C8EBEFDE2D7A3092E33E388186610AC14FE74B89A83232E3
+Previous pack .28 backed up in UnitySetupBackup/CD203/BeforeConcreteBuff/.
+Restore with game closed and keep only one active Gunmageddon pack in plugins.
+No public push/release. Live mission survivability/balance remains unverified.

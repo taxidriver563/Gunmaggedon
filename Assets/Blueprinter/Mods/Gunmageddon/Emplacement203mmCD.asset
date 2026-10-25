@@ -24,7 +24,7 @@ MonoBehaviour:
     antiMissile: 0
     antiRadar: 0
   jsonKey: Emplacement_203mmCoastalGun
-  unitName: CD-203 Coastal Defense Gun
+  unitName: CD-203
   bogeyName: 
   description: A heavily fortified 203mm coastal artillery emplacement designed to
     engage hostile naval vessels at ranges of up to 20 kilometers. Firing conventional
@@ -33,7 +33,7 @@ MonoBehaviour:
     projectiles cannot be intercepted by conventional missile defenses, though the
     emplacement requires direct line of sight and remains vulnerable to airstrikes
     and counter-battery fire.
-  code: Coastal Artillery
+  code: CD-203
   visibleRange: 6000
   iconRange: 5000
   radarSize: 1

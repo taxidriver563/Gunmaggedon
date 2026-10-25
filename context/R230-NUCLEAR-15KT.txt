@@ -1,0 +1,46 @@
+2026-10-24 R-230N 1.5kt correction installed
+User reported the0.5kt effect looked like a UFO explosion and requested the
+stock smallest1.5kt nuclear effect. Native nuclearBomb1 was inspected in Unity:
+blastYield1500000kg TNT; its airEffect is named explosion_1kt internally.
+Do not infer yield from that internal effect name.
+
+Runtime1.14.1 raises Shockwave yield to1.5kt and MushroomCloud yield1500000kg.
+Resolver now uses Encyclopedia.Lookup[nuclearBomb1].unitPrefab first, then only
+loaded Missiles with that exact key AND1.5-million-kg yield. It no longer accepts
+an arbitrary effect simply because it has Shockwave and MushroomCloud. Thus the
+UFO cannot be selected as a substitute. Missing canonical asset keeps firing
+blocked until resolution succeeds, rather than silently choosing another effect.
+The native object is borrowed at runtime; nothing is copied into the mod bundle.
+
+Weapon/definition descriptions and editor pack version updated to0.0.33, with
+backup in UnitySetupBackup/R230N/BeforeYield-1.14.1. Source LODs checked1060/610/288.
+All other R230N settings remain:100m swept proxy,1000m arming,4x warning orb/aura,
+1.5x beam width, native emission with at most10% boost, existing targeting and
+capacitor behavior. Standard R230 unchanged.
+
+F88 presentation handshake bumped4->5 because old runtime peers would otherwise
+render0.5kt for a1.5kt server burst despite sharing the same message layout.
+Matching runtimes required. No message fields changed.
+
+Validation and deployment
+Compiled56 current sources as runtime1.14.1. Final fresh Unity fixtures passed:
+nuclear28 checks (including canonical effect identity and wrong-source rejection),
+standardR23088 checks. Compiled/native idle-gun IL contract passed. Existing
+policy/targeting code unchanged; no claim of a new full-suite run.
+Exported pack0.0.33 independently loaded in Unity:258 asset names, all under
+mod/generated roots, R230N definition present, exported model LODs1060/610/288.
+Scene remains clean and stopped. Fixture uses stock Blueprinter placeholders;
+live native shader output, blast propagation, multiplayer transport and combat
+balance still need a mission test.
+
+Compiled, source-validated and installed runtime1.14.1 / pack0.0.33. Installed
+with Nuclear Option closed; staged and installed hashes matched.
+Runtime SHA256:
+C043097423B647DCB6D9BDA894A0612F34DD26E8EFDA3384DC74E1E60AFDE887
+Pack SHA256:
+B5081BA82FC59367D9B404583F5B747B5AC34D0FE425240BE493BACDFF4B8FF5
+Previous runtime1.14.0 and pack0.0.32 retained in
+UnitySetupBackup/R230N/BeforeYieldInstall-1.14.1/; previous pack removed from
+active plugins. Evidence: GunmaggedonRuntime/build/r230/yield15-1.14.1-install.json,
+yield15-1.14.1-sources.json and fresh isolated validation manifest.
+No public push or release publication.

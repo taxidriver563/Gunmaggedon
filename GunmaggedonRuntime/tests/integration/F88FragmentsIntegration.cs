@@ -33,7 +33,9 @@ public static class F88FragmentsIntegration
         return unit;
     }
     static double Amount(Unit unit){double value;return Damage.TryGetValue(unit,out value)?value:0;}
-    public static object Run()
+    public static object Run(){return RunProfile(false);}
+    public static object RunHeavy(){return RunProfile(true);}
+    static object RunProfile(bool heavy)
     {
         checks=calls=0;server=local=true;Damage.Clear();
         var loaded=Assembly.Load(File.ReadAllBytes(Environment.GetEnvironmentVariable("GUNMAGGEDON_TEST_HELPER")));
@@ -45,21 +47,21 @@ public static class F88FragmentsIntegration
         var previousScene=SceneManager.GetActiveScene();var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive);SceneManager.SetActiveScene(previousScene);var root=new GameObject("Fragment damage fixture");SceneManager.MoveGameObjectToScene(root,scene);
         // Isolate from scene assets while retaining real Unity overlap/line casts.
         root.transform.position=new Vector3(30000,30000,30000);Vector3 origin=root.transform.position;
-        Action burst=()=>{Physics.SyncTransforms();fragments.GetMethod("Burst",BindingFlags.Static|F).Invoke(null,new object[]{origin,PersistentID.None});};
+        Action burst=()=>{Physics.SyncTransforms();fragments.GetMethod(heavy?"HeavyBurst":"Burst",BindingFlags.Static|F).Invoke(null,new object[]{origin,PersistentID.None});};
         try{
             var near=Plane(root.transform,"Near aircraft",origin+Vector3.right*50);
-            var far=Plane(root.transform,"Outer aircraft",origin+new Vector3(100,30,0));
-            var outside=Plane(root.transform,"Outside aircraft",origin+Vector3.right*155);
+            var far=Plane(root.transform,"Outer aircraft",origin+new Vector3(heavy?180:100,30,0));
+            var outside=Plane(root.transform,"Outside aircraft",origin+Vector3.right*(heavy?255:155));
             var ground=Plane(root.transform,"Ground unit",origin+new Vector3(50,60,0),false);
             burst();double first=Amount(near),outer=Amount(far);
-            Check(first>0&&first<=12.15,"Native armor and RPC damage applies gradual damage to a near miss beyond old 20m radius; hp="+first+", callbacks="+calls+", colliders="+Physics.OverlapSphere(origin,140).Length);
+            Check(first>0&&first<=(heavy?22.15:12.15),"Native armor and RPC damage applies gradual damage to a near miss; hp="+first+", callbacks="+calls);
             Check(outer>0&&outer<first,"Native outer-envelope damage falls off with distance");
-            Check(Amount(outside)==0&&Amount(ground)==0,"No fragment damage outside envelope or to ground units");Check(calls<=6,"At most three native part hits per aircraft despite six exposed parts");
+            Check(Amount(outside)==0&&Amount(ground)==0,"No fragment damage outside envelope or to ground units");Check(calls<=(heavy?8:6),"Per-aircraft part-hit limit despite six exposed parts");
             burst();Check(Math.Abs(Amount(near)-2*first)<.01,"Repeated real bursts accumulate damage rather than requiring direct hits");
             Check(Math.Abs(Amount(far)-2*outer)<.01,"Repeated outer bursts also accumulate");
             Damage.Clear();calls=0;
             var firstPart=near.GetComponentsInChildren<AeroPart>()[0];for(int i=0;i<70;i++)firstPart.gameObject.AddComponent<BoxCollider>().size=Vector3.one*2;
-            burst();Check(Math.Abs(Amount(near)-first)<.15&&calls<=6,"Saturated first buffer grows and duplicate colliders do not multiply damage");
+            burst();Check(Math.Abs(Amount(near)-first)<.15&&calls<=(heavy?8:6),"Saturated first buffer grows and duplicate colliders do not multiply damage");
             Damage.Clear();calls=0;
             var wall=new GameObject("Solid fragment barrier");wall.transform.SetParent(root.transform,false);wall.transform.localPosition=new Vector3(25,0,0);wall.AddComponent<BoxCollider>().size=new Vector3(2,100,100);
             burst();Check(Amount(near)==0&&Amount(far)==0,"Solid geometry blocks fragment paths");UnityEngine.Object.DestroyImmediate(wall);

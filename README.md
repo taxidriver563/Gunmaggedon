@@ -2,19 +2,23 @@
 
 A gun-based warfare expansion for Nuclear Option, covering coastal artillery, primitive anti-aircraft guns, searchlights, and experimental ammunition.
 
-## Current release
+## Release candidate
 
-**[Alpha v0.0.26](https://github.com/taxidriver563/Gunmaggedon/releases/tag/Releases): runtime 1.10.0 + asset pack 0.0.26. Both are required.**
+**[Alpha v0.0.34](https://github.com/taxidriver563/Gunmaggedon/releases/tag/v0.0.34): runtime 1.14.2 + asset pack 0.0.34. Both are required.**
 
 - Standard 203 mm coastal gun with HE/AP ammunition, artillery arcs, colored ranging rounds, matching splashes, and low-light parachute illumination.
 - SPECIAL coastal gun with cluster, smoke, chaff, and parachute top-attack ammunition; physical slugs, discharge effects, and spent-canister separation.
 - L40 AA trailer with primitive optical correction, moving cranks, recoil, custom audio, and mild casing ejection.
 - F88 heavy flak trailer with predicted-area barrages, timed airbursts, a broad gradual fragmentation envelope, and a working breech/loading/casing sequence. Friendly radar within 300 m improves knowledge without removing gun dispersion.
-- L25 triple AA trailer with 3.5 km range, close-defense tracking, staggered barrels, independent 15-round clips, custom 25 mm audio, and one tracer every three total shots.
+- L25 triple AA trailer with 3.5 km range, close-defense tracking, staggered barrels, independent 15-round clips, custom 25 mm audio, and the denser authored tracer setting (one per shot).
 - Searchlight trailer with low-light activation, smooth aircraft tracking, rough 3–5 km engine-noise cues, 300 m radar support, and exclusive illumination claims. Coastal batteries within 2 km can request ship illumination; air defense takes priority. Beam/tracking reach extends to 13 km with a finite soft cloud cutoff.
+- F-120 heavy flak trailer with improved fire-control estimates, tighter suppression, a larger fragmentation envelope, and its upward-sliding breech.
+- R-230 precision railgun emplacement with a 5?65 km engagement envelope, threat priorities, capacitor cycles, and a visible pre-fire laser warning. R-230N adds stock 1.5 kt proximity/contact airbursts and a larger warning.
 - Three model LOD levels across all units, with reduced distant cosmetic animation. The runtime pools effects/audio and shares suitable query and bounds work without reducing targeting or scan cadence.
 
-See the [patch notes](releases/v0.0.26.md) for changes and validation limits.
+See the [patch notes](releases/v0.0.34.md) for changes and validation limits.
+
+Candidate files are prepared locally; the download link becomes available when this version is published. Multiplayer participants must use matching runtime and pack versions.
 
 ## Old Guard: what to expect
 
@@ -32,7 +36,7 @@ Old Guard brings primitive gun crews and fire control into Nuclear Option. Their
 Requires compatible BepInEx and Blueprinter. Game/dependency assemblies are not included.
 
 1. Close Nuclear Option and back up your current mod/configuration.
-2. Download `Gunmaggedon.Runtime.zip` and `Gunmageddon_0.0.26.nobp` from the [release](https://github.com/taxidriver563/Gunmaggedon/releases/tag/Releases).
+2. Download `Gunmaggedon.Runtime.zip` and `Gunmageddon_0.0.34.nobp` from the [release](https://github.com/taxidriver563/Gunmaggedon/releases/tag/v0.0.34).
 3. Extract the runtime ZIP into the game folder, merging its `BepInEx` folder. Place the `.nobp` in `BepInEx/plugins`.
 4. Remove old `GunmageddonAudio.dll` copies and keep only one Gunmaggedon runtime and the current asset pack active.
 5. Start the game. Existing settings remain in `BepInEx/config/gunmageddon.203mm.audio.cfg`.

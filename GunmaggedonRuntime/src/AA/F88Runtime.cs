@@ -20,7 +20,7 @@ namespace GunmageddonAudio
                     postfix:new HarmonyMethod(typeof(F88Runtime),nameof(Initialize)));
                 harmony.Patch(AccessTools.Method(typeof(Gun),"FixedUpdate"),prefix:new HarmonyMethod(typeof(F88Runtime),nameof(BeforeGun)));
                 F88FlakRuntime.Install(harmony);
-                logger.LogInfo("F88 predicted-area barrages, timed fragmentation and 300m radar knowledge support enabled.");
+                logger.LogInfo("F88/F120 timed heavy flak, separate fire-control profiles and 300m radar knowledge support enabled.");
             } catch(System.Exception e){harmony.UnpatchSelf();logger.LogError("F88 presentation initialization failed: "+e);}
         }
         static void Initialize(Turret __instance)
@@ -28,7 +28,7 @@ namespace GunmageddonAudio
             if(!__instance)return;
             var gun=__instance.GetComponentInChildren<Gun>(true);
             if(F88FlakRuntime.Matches(gun)&&!__instance.GetComponent<F88FlakController>())__instance.gameObject.AddComponent<F88FlakController>();
-            if(__instance.name!="F88YawPivot"||!__instance.transform.Find("PitchPivot/BreechSlidePivot")||
+            if((__instance.name!="F88YawPivot"&&__instance.name!="F120YawPivot")||!__instance.transform.Find("PitchPivot/BreechSlidePivot")||
                 __instance.GetComponent<F88TurretMotion>())return;
             Motions.Add(__instance.gameObject.AddComponent<F88TurretMotion>());
         }
@@ -88,7 +88,7 @@ namespace GunmageddonAudio
             float progress=cycle.Progress(now),smooth=Mathf.SmoothStep(0,1,progress);var phase=cycle.Phase;
             float opening=phase==F88ReloadCycle.Stage.Open?smooth:phase==F88ReloadCycle.Stage.Close?1-smooth:
                 phase>=F88ReloadCycle.Stage.Extract&&phase<=F88ReloadCycle.Stage.Insert?1:0;
-            breech.localPosition=rest.localPosition+Vector3.right*(.36f*opening);
+            breech.localPosition=rest.localPosition+(yaw.name=="F120YawPivot"?Vector3.up*.38f:Vector3.right*.36f)*opening;
             caseVisual.localPosition=Vector3.Lerp(caseSeated.localPosition,caseClear.localPosition,smooth);
             caseVisual.gameObject.SetActive(phase==F88ReloadCycle.Stage.Extract);
             liveVisual.localPosition=Vector3.Lerp(liveStart.localPosition,liveSeat.localPosition,smooth);

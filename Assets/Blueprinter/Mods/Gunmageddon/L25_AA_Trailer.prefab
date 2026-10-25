@@ -8534,7 +8534,7 @@ MonoBehaviour:
   Safety: 0
   tracerColor: {r: 31.999996, g: 27.22612, b: 0.5026168, a: 1}
   guidedProjectile: {fileID: 0}
-  tracerRatio: 3
+  tracerRatio: 1
   tracerSize: 1
   bulletSelfDestruct: 14
   bulletSpread: 0.18
@@ -11266,7 +11266,7 @@ MonoBehaviour:
   Safety: 0
   tracerColor: {r: 31.999996, g: 27.22612, b: 0.5026168, a: 1}
   guidedProjectile: {fileID: 0}
-  tracerRatio: 3
+  tracerRatio: 1
   tracerSize: 1
   bulletSelfDestruct: 14
   bulletSpread: 0.18
@@ -17541,7 +17541,7 @@ MonoBehaviour:
   Safety: 0
   tracerColor: {r: 31.999996, g: 27.22612, b: 0.5026168, a: 1}
   guidedProjectile: {fileID: 0}
-  tracerRatio: 3
+  tracerRatio: 1
   tracerSize: 1
   bulletSelfDestruct: 14
   bulletSpread: 0.18

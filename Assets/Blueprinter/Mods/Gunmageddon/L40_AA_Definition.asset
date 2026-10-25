@@ -24,11 +24,11 @@ MonoBehaviour:
     antiMissile: 0
     antiRadar: 0
   jsonKey: Gunmaggedon_L40_AA
-  unitName: L40 AA Trailer
+  unitName: L-40
   bogeyName: 
   description: Towable 40mm anti-aircraft gun with manual traverse and elevation
     cranks.
-  code: AAA
+  code: L-40
   visibleRange: 6000
   iconRange: 0
   radarSize: 1

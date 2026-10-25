@@ -9,7 +9,7 @@ using UnityEngine;
 namespace GunmageddonAudio
 {
     // Keep the original plugin ID so BepInEx retains existing configuration.
-    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.10.0")]
+    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.14.2")]
     public sealed class Plugin : BaseUnityPlugin
     {
         internal static Plugin Instance;
@@ -49,6 +49,7 @@ namespace GunmageddonAudio
                 L40Runtime.Install(Logger);
                 L25Runtime.Install(Logger);
                 F88Runtime.Install(Logger);
+                R230Runtime.Install(harmony);
                 SearchlightRuntime.Install(Logger);
                 Logger.LogInfo("203mm firing and impact audio: travel delay and distance variants enabled.");
             }
@@ -61,6 +62,7 @@ namespace GunmageddonAudio
             SpecialPayloadNetwork.Shutdown();
             SearchlightRuntime.Shutdown();
             F88Runtime.Shutdown();
+            R230Runtime.Shutdown();
             L25Runtime.Shutdown();
             L40Runtime.Shutdown();
             harmony?.UnpatchSelf();

@@ -1,3 +1,5 @@
+Current release candidate1.14.2 / pack0.0.34: user's interval1 is preserved in the preview and spawnable trailer. Runtime now honors authored intervals instead of forcing1:3; interval1 gives every-shot tracers. See RELEASE-PREPARATION-0.0.34.txt. Earlier1:3 records below are historical.
+
 L25 tracer cadence and custom firing sound - Runtime 1.9.6 / pack 0.0.25
 
 Final user preference: one tracer every THREE actual shots across the mount.

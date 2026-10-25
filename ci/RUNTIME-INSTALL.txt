@@ -1,7 +1,7 @@
 Gunmaggedon Runtime
 
 This package contains only the runtime helper. Install the compatible
-Gunmageddon_0.0.26.nobp asset pack separately; it is not rebuilt by this job.
+Gunmageddon_{{ASSET_PACK_VERSION}}.nobp asset pack separately; it is not rebuilt by this job.
 
 Close Nuclear Option. Move old GunmageddonAudio.dll copies outside the game's
 BepInEx/plugins folder, then copy this ZIP's BepInEx folder into the game folder.

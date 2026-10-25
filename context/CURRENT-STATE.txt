@@ -1,19 +1,14 @@
-Current alpha: v0.0.26 | runtime 1.10.0 | Blueprinter asset pack 0.0.26
+Release candidate0.0.34 - runtime1.14.2
 
-See ../README.md and ../releases/v0.0.26.md for features and installation.
-F88 heavy flak and L25 triple AA trailers join the coastal guns, L40 and
-searchlight. All units have three physical-model LOD levels; long-range effects
-are managed separately. See LOD-POLICY.txt and UNIT-LOD-RETROFIT.txt.
+Prepared locally, not pushed or published. Includes F120/R230/R230N and the
+1.5kt nuclear correction; see releases/v0.0.34.md. This preparation carries the
+authored denser L25 tracer setting to the spawnable trailer and removes the
+forced1:3 runtime override. R230N warning, yield and other gameplay unchanged.
 
-Runtime optimization implementation/evidence: RUNTIME-OPTIMIZATION.txt.
-All 14 standalone suites passed locally; ten Unity groups passed 1,568 checks.
-The staged L25 preview-rig tracer mismatch is a separate known failure; the
-operational trailer's 444 checks passed with its intended one-in-three ratio.
-
-Known limitations:
-- Custom mission hitch/unhitch is disabled pending vehicle-integration repair.
-- Remote searchlight clients use local sweeps instead of host target pointing.
-- Live multiplayer missions, balance and representative combat FPS need testing.
-- Native allocations are unavailable; editor/synthetic benchmarks are not
-  mission FPS evidence. Separate stage combat comparisons were not run.
-- Dazzler occlusion uses opaque depth; transparent glass does not block it.
+All19 Unity fixture groups pass3596 checks. All16 standalone suites pass locally
+(15 Unity Mono, optimization suite under installed .NET6). The exact pinned
+SDK10 hosted workflow/provenance remains unverified. Current source compiles
+against the pinned private-reference archive. No raw audio/game DLLs/skills
+are included in public source; private audio is restored only by maintainers
+when rebuilding the asset pack. Live mission blast/render/multiplayer checks
+remain outstanding. Historical installed-state entries below are superseded.

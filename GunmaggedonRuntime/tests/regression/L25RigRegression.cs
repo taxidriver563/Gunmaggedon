@@ -76,7 +76,7 @@ public static class L25RigRegression
    runtime.GetMethod("Install",S).Invoke(null,new object[]{new ManualLogSource("L25 fixture")});
    const string dir="Assets/Blueprinter/Mods/Gunmageddon/";
    var prefab=AssetDatabase.LoadAssetAtPath<GameObject>(dir+"L25_Turret_Rig.prefab");Check(prefab,"Saved L25 rig exists");
-   var root=UnityEngine.Object.Instantiate(prefab,stage.transform,false);var turret=root.GetComponentInChildren<Turret>(true);var gun=root.GetComponentInChildren<Gun>(true);var pitch=gun.transform.parent;var guns=new[]{"Left","Middle","Right"}.Select(n=>pitch.Find("Feed"+n).GetComponent<Gun>()).ToArray();var yaw=turret.transform;
+   var root=UnityEngine.Object.Instantiate(prefab,stage.transform,false);var turret=root.GetComponentInChildren<Turret>(true);var gun=root.GetComponentInChildren<Gun>(true);var pitch=gun.transform.parent;var guns=new[]{"Left","Middle","Right"}.Select(n=>pitch.Find("Feed"+n).GetComponent<Gun>()).ToArray();var yaw=turret.transform;var authoredRatios=guns.Select(g=>(int)Get(g,"tracerRatio")).ToArray();Check(authoredRatios.Distinct().Count()==1,"Authored feed tracer intervals agree");
    Check(!root.GetComponent<Unit>()&&guns.All(g=>!g.enabled&&g.Safety)&&!turret.enabled,"Rig is mechanically staged without a spawnable/combat unit");
    Check(!gun.attachedUnit&&(int)Get(gun,"ammo")==0&&(int)Get(gun,"magazines")==0,"No borrowed owner or live ammunition");
    Check((Transform)Get(gun,"recoilTransform")==null&&(float)Get(gun,"recoilTravel")==0,"Shared native recoil cannot move all three barrels together");
@@ -120,8 +120,8 @@ public static class L25RigRegression
    // Mix feed order to represent unavailable barrels. Native tracer flags must
    // follow actual mount shots, including interrupted/recovered shots above.
    for(int i=0;i<45;i++)Call(guns[i%7==0?2:i%3],"SpawnBullet",0f);
-   for(int i=0;i<Tracers.Count;i++)Check(Tracers[i]==((i+1)%3==0),"Exactly every third successful native mount shot is a tracer: "+(i+1));
-   Check(guns.All(g=>(int)Get(g,"tracerRatio")==3),"All feeds agree with the shared one-in-three tracer phase");
+   for(int i=0;i<Tracers.Count;i++)Check(Tracers[i]==((i+1)%Mathf.Max(1,authoredRatios[0])==0),"Authored shared tracer interval honored on successful shot "+(i+1));
+   Check(guns.Select(g=>(int)Get(g,"tracerRatio")).SequenceEqual(authoredRatios),"Runtime preserves authored tracer settings");foreach(int interval in new[]{1,2,3}){foreach(var feed in guns)Set(feed,"tracerRatio",interval);Set(motion,"tracerPhase",0);Tracers.Clear();for(int i=0;i<18;i++)Call(guns[i%5==0?2:i%3],"SpawnBullet",0f);for(int i=0;i<Tracers.Count;i++)Check(Tracers[i]==((i+1)%interval==0),"Mixed feeds honor interval "+interval+" shot "+(i+1));}for(int i=0;i<3;i++)Set(guns[i],"tracerRatio",authoredRatios[i]);
    h.Unpatch(AccessTools.Method(typeof(Gun),"ShotSound"),HarmonyPatchType.Prefix,h.Id);prefix(typeof(AudioSource).GetMethod("PlayOneShot",new[]{typeof(AudioClip)}),"Audio");Set(unit,"displayDetail",1f);
    var custom=AssetDatabase.LoadAssetAtPath<AudioClip>(dir+"25mm_Autocannon_Fire.mp3");custom.LoadAudioData();var samples=new float[custom.samples*custom.channels];Check(custom.GetData(samples,0)&&samples.Any(v=>Mathf.Abs(v)>.001f),"Custom 25mm clip decodes non-silent audio");
    foreach(var g in guns){int before=audioCalls;Call(g,"ShotSound");Check(audioCalls==before+1&&playedClip==custom,"Native shot sound plays the supplied 25mm clip on "+g.name);}

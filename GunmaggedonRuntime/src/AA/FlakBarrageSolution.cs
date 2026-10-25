@@ -18,40 +18,64 @@ namespace GunmageddonAudio
     {
         public const double GunSpreadDegrees=.65,FuseErrorSeconds=.18,CommitSeconds=12,ForgetSeconds=6;
         readonly Random observations,pattern,mechanics;
+        readonly bool advanced;
+        public const double AdvancedSpreadDegrees=.20,AdvancedFuseErrorSeconds=.04,AdvancedCommitSeconds=4;
+        public double SpreadDegrees {get{return advanced?AdvancedSpreadDegrees:GunSpreadDegrees;}}
+        public double FusePrecision {get{return advanced?AdvancedFuseErrorSeconds:FuseErrorSeconds;}}
+        public double Commitment {get{return advanced?AdvancedCommitSeconds:CommitSeconds;}}
         OpticalVector velocityPosition;double velocityAt;int velocitySamples;
+        readonly OpticalVector[] measuredPositions=new OpticalVector[16];
+        readonly double[] measuredTimes=new double[16];int measuredCount,measuredNext;
         public OpticalVector Position {get;private set;}
         public OpticalVector Velocity {get;private set;}
         public double LastSeen {get;private set;}
         public int Samples {get;private set;}
         public bool HasTrack {get{return velocitySamples>0;}}
-        public FlakBarrageSolution(int seed){observations=new Random(seed);pattern=new Random(seed^14867);mechanics=new Random(seed^739391);}
+        public FlakBarrageSolution(int seed):this(seed,false){}
+        public FlakBarrageSolution(int seed,bool postwar){advanced=postwar;observations=new Random(seed);pattern=new Random(seed^14867);mechanics=new Random(seed^739391);}
         static double Signed(Random r){return r.NextDouble()*2-1;}
         public void Observe(OpticalVector position,double now,double range,bool radar)
         {
-            double error=radar?15+range*.004:45+range*.012;
+            double error=advanced?(radar?4+range*.001:8+range*.002):(radar?15+range*.004:45+range*.012);
             var measured=position+new OpticalVector(Signed(observations)*error,Signed(observations)*error*.5,Signed(observations)*error);
+            if(advanced){ObserveAdvanced(measured,now);return;}
             if(Samples==0){velocityPosition=measured;velocityAt=now;}
-            else if(now-velocityAt>=1.2) {
+            else if(now-velocityAt>=(advanced?.9:1.2)) {
                 var velocity=OpticalVector.Limit((measured-velocityPosition)*(1/(now-velocityAt)),600);
-                Velocity=velocitySamples++==0?velocity:Velocity*(radar?.5:.75)+velocity*(radar?.5:.25);
+                double response=advanced?(radar?.65:.45):(radar?.5:.25);
+                Velocity=velocitySamples++==0?velocity:Velocity*(1-response)+velocity*response;
                 velocityPosition=measured;velocityAt=now;
             }
             Position=measured;LastSeen=now;Samples++;
         }
-        public bool CanContinue(double now){return HasTrack&&now-LastSeen<=ForgetSeconds;}
+        void ObserveAdvanced(OpticalVector measured,double now)
+        {
+            measuredPositions[measuredNext]=measured;measuredTimes[measuredNext]=now;
+            measuredNext=(measuredNext+1)%measuredPositions.Length;measuredCount=Math.Min(measuredCount+1,measuredPositions.Length);
+            // Fit only recent observations. Longer baselines reject optical noise
+            // without deriving velocity from the aircraft's true physics state.
+            var sum=new OpticalVector();double timeSum=0,oldest=now;int count=0;
+            for(int i=0;i<measuredCount;i++)if(now-measuredTimes[i]<=3){double t=measuredTimes[i]-now;sum+=measuredPositions[i];timeSum+=t;oldest=Math.Min(oldest,measuredTimes[i]);count++;}
+            var mean=sum*(1.0/count);double meanTime=timeSum/count,variance=0;var covariance=new OpticalVector();
+            for(int i=0;i<measuredCount;i++)if(now-measuredTimes[i]<=3){double dt=measuredTimes[i]-now-meanTime;variance+=dt*dt;covariance+=(measuredPositions[i]-mean)*dt;}
+            if(now-oldest>=.9&&variance>1e-6){Velocity=OpticalVector.Limit(covariance*(1/variance),600);velocitySamples++;Position=mean-Velocity*meanTime;}
+            else Position=measured;
+            LastSeen=now;Samples++;
+        }
+        public bool CanContinue(double now){return HasTrack&&now-LastSeen<=(advanced?3:ForgetSeconds);}
         public FlakBarrageArea Commit(double now)
-        {return new FlakBarrageArea{Position=Position,Velocity=Velocity,SampleAt=LastSeen,Started=now,Uncertainty=40+Math.Max(0,now-LastSeen)*30};}
+        {return new FlakBarrageArea{Position=Position,Velocity=Velocity,SampleAt=LastSeen,Started=now,Uncertainty=(advanced?12:40)+Math.Max(0,now-LastSeen)*(advanced?10:30)};}
         public FlakShotPlan Plan(FlakBarrageArea area,double now,double flight,int sector,int sectors)
         {
             double age=Math.Max(0,now-area.SampleAt);
             var center=area.Position+area.Velocity*(age+flight);
             double angle=sector*2*Math.PI/Math.Max(1,sectors);
-            double horizontal=160+area.Uncertainty+age*12;
+            double horizontal=(advanced?32:160)+area.Uncertainty+age*(advanced?4:12);
             // Adjacent guns cover overlapping sectors, rather than identical points.
             var sectorOffset=sectors>1?new OpticalVector(Math.Cos(angle)*horizontal*.45,0,Math.Sin(angle)*horizontal*.45):new OpticalVector();
             double theta=pattern.NextDouble()*2*Math.PI,r=Math.Sqrt(pattern.NextDouble())*horizontal*.8;
-            var point=center+sectorOffset+new OpticalVector(Math.Cos(theta)*r,Signed(pattern)*100,Math.Sin(theta)*r);
-            return new FlakShotPlan{Point=point,FuseError=Signed(mechanics)*FuseErrorSeconds};
+            var point=center+sectorOffset+new OpticalVector(Math.Cos(theta)*r,Signed(pattern)*(advanced?20:100),Math.Sin(theta)*r);
+            return new FlakShotPlan{Point=point,FuseError=Signed(mechanics)*FusePrecision};
         }
         // Solve the native gravity-first, quadratic-drag trajectory to a FIXED
         // area point, not an intercept against a live aircraft transform.

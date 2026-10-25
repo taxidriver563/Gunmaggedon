@@ -48,6 +48,7 @@ namespace GunmageddonAudio
     {
         static readonly FieldInfo CurrentStation=AccessTools.Field(typeof(Turret),"currentWeaponStation");
         static readonly FieldInfo TracerSeed=AccessTools.Field(typeof(Gun),"tracerSeed");
+        static readonly FieldInfo TracerRatio=AccessTools.Field(typeof(Gun),"tracerRatio");
         static readonly FieldInfo Muzzles=AccessTools.Field(typeof(Gun),"muzzles");
         static readonly FieldInfo Spread=AccessTools.Field(typeof(Gun),"bulletSpread");
         static readonly FieldInfo Loaded=AccessTools.Field(typeof(Gun),"bulletsLoaded"),Reload=AccessTools.Field(typeof(Gun),"timeUntilReload"),Ammo=AccessTools.Field(typeof(Gun),"ammo"),Queued=AccessTools.Field(typeof(Gun),"queuedBullets"),Trigger=AccessTools.Field(typeof(Gun),"ticksSinceTriggerPull"),Last=AccessTools.Field(typeof(Gun),"lastFired"),Interval=AccessTools.Field(typeof(Gun),"fireInterval");
@@ -88,13 +89,14 @@ namespace GunmageddonAudio
         internal void PrepareShot(Gun gun)
         {
             // Native SpawnBullet increments first, then checks seed > ratio.
-            // A shared phase gives one tracer every three actual mount shots,
-            // independent of which feed fires or is currently reloading.
-            TracerSeed.SetValue(gun,tracerPhase==2?3:0);
+            // Honor the authored shot interval while sharing one phase across
+            // feeds. Zero/one means every shot; three keeps the historical 1:3.
+            int ratio=(int)TracerRatio.GetValue(gun),interval=Mathf.Max(1,ratio);
+            TracerSeed.SetValue(gun,(tracerPhase%interval)==interval-1?Mathf.Max(0,ratio):0);
             if(Target)Spread.SetValue(gun,(float)L25TrackingSolution.Spread(RangeTo(gun)));
         }
         internal void ShotFired(Gun gun)
-        {int i=System.Array.IndexOf(guns,gun);if(i<0)return;if(detail==null||detail.Animate){recoil[i]=1;barrels[i].localPosition=rest[i]-Vector3.forward*.12f;}next=(i+1)%3;tracerPhase=(tracerPhase+1)%3;nextShot=Time.time+.1f;}
+        {int i=System.Array.IndexOf(guns,gun);if(i<0)return;if(detail==null||detail.Animate){recoil[i]=1;barrels[i].localPosition=rest[i]-Vector3.forward*.12f;}next=(i+1)%3;tracerPhase=tracerPhase==int.MaxValue?0:tracerPhase+1;nextShot=Time.time+.1f;}
         public int RoundsInClip(int barrel){return barrel>=0&&barrel<3&&guns[barrel]?(int)Loaded.GetValue(guns[barrel]):0;}
         public float ReloadSeconds(int barrel){return barrel>=0&&barrel<3&&guns[barrel]?Mathf.Max(0,(float)Reload.GetValue(guns[barrel])):0;}
         internal void StepRecoil(float dt){for(int i=0;i<3;i++){recoil[i]=Mathf.MoveTowards(recoil[i],0,Mathf.Max(0,dt)*7);barrels[i].localPosition=rest[i]-Vector3.forward*(.12f*recoil[i]);}}

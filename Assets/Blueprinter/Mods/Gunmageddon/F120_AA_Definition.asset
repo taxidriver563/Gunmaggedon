@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -2031789569, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
+  m_Name: F120_AA_Definition
+  m_EditorClassIdentifier:
+  typeIdentity:
+    surface: 1
+    air: 0
+    missile: 0
+    radar: 0
+    strategic: 0
+  roleIdentity:
+    antiSurface: 0
+    antiAir: 1
+    antiMissile: 0
+    antiRadar: 0
+  jsonKey: Gunmaggedon_F120_AA
+  unitName: F-120
+  bogeyName:
+  description: Postwar Old Guard 120mm heavy AA. Improved visual fire control revises
+    estimated aerial firing regions quickly; nearby radar improves knowledge. Large
+    timed-fragment bursts remain inaccurate against evasive aircraft.
+  code: F-120
+  visibleRange: 6000
+  iconRange: 0
+  radarSize: 1
+  friendlyIcon: {fileID: 21300000, guid: 9945349b6ce28054ab058d5d5284b856, type: 2}
+  hostileIcon: {fileID: 21300000, guid: cfd693fdefd9cb64da4e6520dd58af1e, type: 2}
+  mapIcon: {fileID: 21300000, guid: 96747beaa3cc0aa4cb5f5377d15b4eed, type: 2}
+  mapOrient: 1
+  IsObstacle: 1
+  iconSize: 1
+  mapIconSize: 1
+  captureCapacity: 0
+  captureStrength: 0
+  captureDefense: 0
+  length: 14
+  width: 10.3
+  height: 5.3
+  value: 10.5
+  mass: 12000
+  manpower: 0
+  armorTier: 1
+  damageTolerance: 0
+  CanSlingLoad: 1
+  unitPrefab: {fileID: 2855330152830753912, guid: e0d6a77bd05098f41a561fc74a6ed78b,
+    type: 3}
+  spawnOffset: {x: 0, y: 0.04, z: 0}
+  disabled: 0
+  isEventContent: 0
+  dontAutomaticallyAddToEncyclopedia: 0
+  minEditorHeight: 0
+  maxEditorHeight: 10000
+  vehicleType: 6

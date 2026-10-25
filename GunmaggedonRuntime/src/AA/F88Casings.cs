@@ -8,9 +8,9 @@ namespace GunmageddonAudio
         internal static void Eject(GameObject source,Transform pose,Unit owner)
         {
             if(!source||!Datum.origin)return;
-            F88CasingProp free=null,oldest=null;
-            for(int i=Pool.Count-1;i>=0;i--){var p=Pool[i];if(!p){Pool.RemoveAt(i);continue;}if(!p.gameObject.activeSelf)free=p;if(!oldest||p.RetireAt<oldest.RetireAt)oldest=p;}
-            if(!free){if(Pool.Count>=64)free=oldest;else{var go=Object.Instantiate(source,Datum.origin,false);go.SetActive(false);go.name="F88 spent casing";free=go.AddComponent<F88CasingProp>();free.Initialize();Pool.Add(free);}}
+            F88CasingProp free=null,oldest=null;int matching=0;
+            for(int i=Pool.Count-1;i>=0;i--){var p=Pool[i];if(!p){Pool.RemoveAt(i);continue;}if(p.Template!=source)continue;matching++;if(!p.gameObject.activeSelf)free=p;if(!oldest||p.RetireAt<oldest.RetireAt)oldest=p;}
+            if(!free){if(matching>=64)free=oldest;else{var go=Object.Instantiate(source,Datum.origin,false);go.SetActive(false);go.name="Heavy flak spent casing";free=go.AddComponent<F88CasingProp>();free.Template=source;free.Initialize();Pool.Add(free);}}
             free.Begin(pose,owner);
         }
         internal static void Shutdown(){foreach(var p in Pool)if(p){if(Application.isPlaying)Object.Destroy(p.gameObject);else Object.DestroyImmediate(p.gameObject);}Pool.Clear();}
@@ -18,6 +18,7 @@ namespace GunmageddonAudio
     public sealed class F88CasingProp:MonoBehaviour
     {
         Rigidbody body;Collider shell;Collider[] ignored;internal float RetireAt;
+        internal GameObject Template;
         internal void Initialize(){body=GetComponent<Rigidbody>();shell=GetComponent<Collider>();}
         internal void Begin(Transform pose,Unit owner)
         {

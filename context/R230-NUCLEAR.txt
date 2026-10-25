@@ -1,0 +1,83 @@
+Current: runtime1.14.1 / pack0.0.33; R-230N now1.5kt and uses the canonical stock bomb effect. See R230-NUCLEAR-15KT.txt. Earlier0.5kt implementation records below are historical.
+
+R-230N nuclear Stratopenetrator
+2026-10-24
+
+User requested a separate R230 version with 0.5-kiloton proximity bursts and a
+much larger warning. Confirmed0.5kt (500000kg TNT), not0.5kg.
+
+Assets: R230N_Emplacement.prefab, R230N_Definition.asset, R230N_Railgun.asset in
+Assets/Blueprinter/Mods/Gunmageddon. Designation R-230N, keyGunmaggedon_R230N,
+weaponR230N_Railgun. SetupR230Nuclear.cs clones the configured reference prefab
+without changing the scene. Standard three source assets hash-match backups.
+The inherited LODGroup has1060/610/288 triangles. Hitbox owner references are
+checked. No new model or extracted game asset is included.
+
+Runtime: R230NuclearRuntime.cs hooks native BulletSim flight; standard R230
+remains kinetic. Host captures target/source once. Each native trajectory step
+checks the swept relative segment against a100m proxy sphere, accounting for
+current target velocity; no staggered checks. Native impact bounds the segment.
+Proxy/contact bursts arm after1000m travelled; expiry alone does not detonate.
+An explicit spent flag prevents repeated/reentrant detonation. Native blast and
+pierce settings are0 for this variant, avoiding duplicate generic damage.
+Nuclear damage follows the game's native Shockwave component. Borrow a native
+Missile warhead airEffect containing Shockwave and MushroomCloud, instantiate
+under Datum.origin, assign native Shockwave yield0.5kt/source and cloud yield
+500000kg before Start. CanFire waits for that native template to resolve.
+Native effects are referenced at runtime only, not bundled in the mod. Mission
+teardown clears flight/template/effect references through OptimizationRuntime.
+
+Warning: orb and aura radius4x standard, beam width1.5x. Same native laser
+texture/shader and at most10% emission boost; no return to the excessive4-8
+emission. Effects remain charge-lifetime managed outside model LODs. Warning
+profile derives from each unit definition on host/client. Existing65km max,
+5km min, target priorities, acquisition, two-second warning, three-cell bank
+and10s recharge remain unchanged. No recoil.
+Native property blocks now initialize in Initialize rather than a MonoBehaviour
+field initializer, fixing constructor exceptions observed in the editor log.
+
+Transport: F88FlakNetwork protocol4 adds a reliable R230NuclearBurst point/owner
+message; only authenticated matching peers receive it. Native host simulation
+originates bursts; remote bullet copies cannot originate nuclear flights.
+Client effect follows the native warhead's local shockwave path. If the owner
+has despawned on a client, attribution falls back to PersistentID.None there;
+host shot attribution retains its captured source. Matching runtimes required.
+
+Validation completed
+Compiled runtime1.14.0 (56 sources), fresh isolated native fixtures and Mono
+R230 policy suite38430 assertions. Idle-gun IL contract passed. Final Unity
+checks: R230N26, standard R23088. Native warning Render exercised with initialized
+property blocks, normal10% emission, enlarged aura, and hide/cleanup checks.
+The export was independently loaded and inspected:258 asset paths, all under
+mod/generated roots; manifest version0.0.32, R230N definition present, exported
+LOD triangle counts1060/610/288. Use Mesh.GetIndexCount on exported meshes:
+imported FBX meshes disable CPU triangle readback in built bundles.
+The standard prefab/definition/weapon source files remain byte-identical to
+BeforeSetup backups, including after export. Scene remains clean, stopped, and
+unchanged. Native fixtures use stock Blueprinter placeholder references; actual
+in-game shader output, shockwave damage propagation, multiplayer transport and
+combat balance still need mission testing. No FPS claims.
+
+Deployment completed
+Compiled, source-validated and installed runtime1.14.0 / asset pack0.0.32.
+Runtime SHA256:
+4E397BA12CB53789C9BF4B87FB8B0135E628736305C48B17148BBCCDAB7BE2AE
+Pack SHA256:
+3DEFFD830724737BC68E3196FA6D6175AC6FCDD788F95934ADB7FC6569F061D6
+Game was closed; installed hashes match staged artifacts. Previous runtime1.13.4
+and pack0.0.31 preserved in UnitySetupBackup/R230N/BeforeInstall-1.14.0/; old pack
+removed from active plugin directory. Editor modinfo now0.0.32; it is excluded
+from the bundle (patch manifest supplies the runtime pack version).
+Source identity and evidence: GunmaggedonRuntime/build/r230/nuclear-1.14.0-sources.json,
+nuclear-1.14.0-install.json, nuclear-1.14.0-validation.json, plus the unique isolated
+validation manifest. Setup backups: UnitySetupBackup/R230N/BeforeSetup/.
+No public checkout modification, GitHub push or release publication.
+
+Unity access note
+The configured Unity MCP was connected; root tool routing did not expose it.
+The existing endpoint was discovered from local Codex configuration and queried
+directly using MCP initialize/tools-list/tools-call; no new editor bridge or
+plugin was installed. Tool schemas were read before execution. Its export took
+several minutes saving assets; the initial HTTP response timed out, but the
+completed artifact and editor log independently confirmed success. Temporary
+client requests under build/r230 are validation records, not project dependencies.

@@ -1,3 +1,5 @@
+RELEASE-PREPARATION-0.0.34.txt Candidate1.14.2 / pack0.0.34: tracer, validation, CI/source preparation and remaining mission checks.
+
 Gunmaggedon public development documentation
 
 Current alpha: v0.0.26 / runtime 1.10.0 / asset pack 0.0.26.
