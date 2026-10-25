@@ -9,7 +9,7 @@ using UnityEngine;
 namespace GunmageddonAudio
 {
     // Keep the original plugin ID so BepInEx retains existing configuration.
-    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.14.2")]
+    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.14.5")]
     public sealed class Plugin : BaseUnityPlugin
     {
         internal static Plugin Instance;
@@ -51,6 +51,9 @@ namespace GunmageddonAudio
                 F88Runtime.Install(Logger);
                 R230Runtime.Install(harmony);
                 SearchlightRuntime.Install(Logger);
+#if GUNMAGGEDON_DIAGNOSTICS
+                CoastalFireDiagnostics.Install(harmony);
+#endif
                 Logger.LogInfo("203mm firing and impact audio: travel delay and distance variants enabled.");
             }
             catch (Exception e) { harmony.UnpatchSelf(); Logger.LogError(e); }
@@ -58,6 +61,9 @@ namespace GunmageddonAudio
 
         private void OnDestroy()
         {
+#if GUNMAGGEDON_DIAGNOSTICS
+            CoastalFireDiagnostics.Clear();
+#endif
             OptimizationRuntime.Clear();
             SpecialPayloadNetwork.Shutdown();
             SearchlightRuntime.Shutdown();
@@ -75,7 +81,14 @@ namespace GunmageddonAudio
             if (Instance == this) Instance = null;
         }
 
-        private void Update() { OptimizationRuntime.Tick(); SpecialPayloadNetwork.Tick(); F88FlakNetwork.Tick(); }
+        private void Update() { OptimizationRuntime.Tick(); SpecialPayloadNetwork.Tick(); F88FlakNetwork.Tick();
+#if GUNMAGGEDON_DIAGNOSTICS
+            CoastalFireDiagnostics.Tick();
+#endif
+        }
+#if GUNMAGGEDON_DIAGNOSTICS
+        internal void LoggerForCoastalDiagnostics(string message) { Logger.LogInfo("CD203 firing trace: " + message); }
+#endif
         private void LateUpdate() { TrailService.Tick(); }
 
         private static bool GunSound(Component __instance)

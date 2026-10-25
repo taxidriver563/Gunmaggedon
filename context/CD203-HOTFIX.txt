@@ -1,0 +1,17 @@
+Runtime1.14.5 / compatible asset pack0.0.34
+
+Separate gun hitboxes blocked native firing clearance and optical acquisition.
+CoastalArtillery scopes clearance to the actual muzzle for supported203mm guns.
+Native Building setup assigns hitboxes to Statics; at20-25deg the new body hid
+ships from the7.14m scanner. At detector initialization raise its existing
+scan point to at least17.5m in owner coordinates, above the complete current
+gun pitch envelope. Preserve horizontal offset and higher existing scanners;
+never move the owner/root. Future model revisions must recheck this envelope.
+Native range/cadence, visibility/factions, external obstruction, concrete armor,
+exposed-part damage, ammunition and LODs remain. Higher optics necessarily
+change the physical LOS vantage point; terrain checks are not bypassed.
+
+Targeted Unity checks: scanner382, clearance91, concrete74. Both variants,
+36 scanner poses each; native DetectionRequest command/result, with contact
+broadcast intercepted in the fixture. Live mission/multiplayer remain pending.
+Development-only CoastalFireDiagnostics is excluded by normal release CI.

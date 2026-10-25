@@ -24,3 +24,5 @@ SEARCHLIGHT-CLOUDS.txt    Development cloud-density beam fading and validation.
 SEARCHLIGHT-CLOUD-CUTOFF.txt  Hard cloud intersection cutoff, replacing the faint tail.
 
 RUNTIME-RENAME.txt        Gunmaggedon.Runtime helper identity, install migration and settings compatibility.
+
+CD203-HOTFIX.txt Runtime1.14.5 muzzle/scanner self-obstruction fixes.

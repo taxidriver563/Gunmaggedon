@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System;
+using System.Reflection.Emit;
 using System.Linq;
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -40,6 +42,14 @@ namespace GunmageddonAudio
             var bindings=RemovalBuffer<AimSolver>.Rent();try{foreach(var pair in Bindings)if(pair.Key==null||!pair.Value.Owner||!pair.Value.Gun)bindings.Add(pair.Key);foreach(var key in bindings)Bindings.Remove(key);}finally{RemovalBuffer<AimSolver>.Return(bindings);}
         }
         internal static float PreferredElevation { get { return elevation == null ? 23f : elevation.Value; } }
+        internal const float OpticalScanHeight = 17.5f;
+#if GUNMAGGEDON_DIAGNOSTICS
+        internal static string DiagnosticPlan(Gun gun)
+        {
+            Plan plan;
+            return Plans.TryGetValue(gun, out plan) ? "reachable=" + plan.Reachable + "/age=" + (Time.time - plan.Created).ToString("F1") : "none";
+        }
+#endif
 
         internal static void Install(Harmony harmony, ConfigFile config)
         {
@@ -47,6 +57,75 @@ namespace GunmageddonAudio
                 "Preferred combat elevation, between 20 and 25 degrees. Very close targets use a shallower safe arc; illumination shells can aim higher.", new AcceptableValueRange<float>(20f, 25f)));
             harmony.Patch(AccessTools.Method(typeof(AimSolver), "GetAimVector"),
                 prefix: new HarmonyMethod(typeof(CoastalArtillery), nameof(Aim)));
+            harmony.Patch(AccessTools.Method(typeof(Turret), "FixedUpdate"),
+                transpiler: new HarmonyMethod(typeof(CoastalArtillery), nameof(MuzzleClearance)));
+            harmony.Patch(AccessTools.Method(typeof(TargetDetector), "TargetDetector_OnInitialize"),
+                prefix: new HarmonyMethod(typeof(CoastalArtillery), nameof(ClearScanner)));
+        }
+
+        private static void ClearScanner(TargetDetector __instance)
+        {
+            var owner = __instance.GetAttachedUnit();
+            if (!(owner is Building)) return;
+            bool coastal = false;
+            GunBuffer.Clear();
+            try
+            {
+                owner.GetComponentsInChildren<Gun>(true, GunBuffer);
+                foreach (var gun in GunBuffer)
+                    if (IsSupported(gun) && gun.attachedUnit == owner) { coastal = true; break; }
+            }
+            finally { GunBuffer.Clear(); }
+            if (!coastal) return;
+            var scanner = __instance.GetScanPoint();
+            if (!scanner || scanner == owner.transform || !scanner.IsChildOf(owner.transform)) return;
+            // Building initialization places all hitboxes on the native Statics
+            // layer. At combat elevation the gun body crosses the old 7.14m
+            // scan origin's view. Keep optics above the complete pitch envelope,
+            // including vertical aim; retain native range, cadence and LOS jobs.
+            var position = owner.transform.InverseTransformPoint(scanner.position);
+            position.y = Mathf.Max(position.y, OpticalScanHeight);
+            scanner.position = owner.transform.TransformPoint(position);
+        }
+
+        // The stock check starts at the pitch pivot, inside our articulated gun.
+        // Preserve the native firing gates; change only this clearance segment.
+        private static IEnumerable<CodeInstruction> MuzzleClearance(IEnumerable<CodeInstruction> instructions)
+        {
+            var linecast = AccessTools.Method(typeof(Physics), "Linecast", new[] {
+                typeof(Vector3), typeof(Vector3), typeof(RaycastHit).MakeByRefType(), typeof(int) });
+            var replacement = AccessTools.Method(typeof(CoastalArtillery), nameof(CheckClearance));
+            int replaced = 0;
+            foreach (var instruction in instructions)
+            {
+                if (instruction.Calls(linecast))
+                {
+                    var owner = new CodeInstruction(OpCodes.Ldarg_0);
+                    owner.labels.AddRange(instruction.labels); instruction.labels.Clear();
+                    owner.blocks.AddRange(instruction.blocks); instruction.blocks.Clear();
+                    yield return owner;
+                    instruction.opcode = OpCodes.Call; instruction.operand = replacement;
+                    replaced++;
+                }
+                yield return instruction;
+            }
+            if (replaced != 1) throw new InvalidOperationException("Native turret clearance contract changed; expected one Linecast.");
+        }
+
+        private static bool CheckClearance(Vector3 start, Vector3 end, out RaycastHit hit, int mask, Turret turret)
+        {
+            var gun = turret ? turret.GetWeapon() as Gun : null;
+            if (!IsSupported(gun)) return Physics.Linecast(start, end, out hit, mask);
+            var muzzles = Muzzles.GetValue(gun) as Transform[];
+            if (muzzles == null || muzzles.Length == 0 || !muzzles[0])
+                return Physics.Linecast(start, end, out hit, mask);
+            var muzzle = muzzles[0];
+            float length = Vector3.Distance(start, end);
+            bool blocked = muzzle.gameObject.scene.GetPhysicsScene().Raycast(muzzle.position, muzzle.forward,
+                out hit, length, mask, QueryTriggerInteraction.UseGlobal);
+            // Native code compares this distance with the range from the pivot.
+            if (blocked) hit.distance += Vector3.Distance(start, muzzle.position);
+            return blocked;
         }
 
         internal static bool IsSupported(Gun gun)

@@ -117,6 +117,16 @@ namespace GunmageddonAudio
             return Guns.TryGetValue(gun, out state) && state.Target == target && state.Solution.Established &&
                 HorizontalDistance(state.SolutionTargetPosition.ToLocalPosition(), target.transform.position) <= (resetMovement == null ? 350f : resetMovement.Value);
         }
+#if GUNMAGGEDON_DIAGNOSTICS
+        internal static string DiagnosticState(Gun gun)
+        {
+            GunState state;
+            if (!Guns.TryGetValue(gun, out state)) return "no state";
+            int waiting = 0;
+            foreach (var shot in Shots.Values) if (shot.State == state && shot.Spotting && shot.Generation == state.Solution.Generation) waiting++;
+            return "shots=" + state.Solution.ShotsFired + "/observed=" + state.Solution.LastObservedShot + "/established=" + state.Solution.Established + "/waiting=" + waiting;
+        }
+#endif
 
         private static bool ObserveWithCustomSolver(Turret __instance)
         {
