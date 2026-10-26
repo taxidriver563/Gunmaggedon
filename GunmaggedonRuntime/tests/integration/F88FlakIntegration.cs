@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
-public static class F88FlakIntegration
+public static partial class F88FlakIntegration
 {
     const BindingFlags F=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic,S=BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic;
     static int checks,damage,bursts;static bool local=true,dark=true;
@@ -31,14 +31,14 @@ public static class F88FlakIntegration
     public static object RunHeavy(){return RunProfile(true);}
     public static object RunColdStart(){return RunProfile(false,true);}
     public static object RunHeavyColdStart(){return RunProfile(true,true);}
-    static object RunProfile(bool heavy,bool coldStart=false)
+    static object RunProfile(bool heavy,bool coldStart=false,bool groundFire=false)
     {
         checks=damage=bursts=0;local=true;var repo=Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT");
         var loaded=Assembly.Load(File.ReadAllBytes(Environment.GetEnvironmentVariable("GUNMAGGEDON_TEST_HELPER")??Path.Combine(repo,"GunmaggedonRuntime/build/1.9.2/Gunmaggedon.Runtime.dll")));
         var a=AppDomain.CurrentDomain.GetAssemblies().First(x=>x.ManifestModule.ModuleVersionId==loaded.ManifestModule.ModuleVersionId);
         var runtime=a.GetType("GunmageddonAudio.F88Runtime");var flak=a.GetType("GunmageddonAudio.F88FlakRuntime");var controller=a.GetType("GunmageddonAudio.F88FlakController");var effects=a.GetType("GunmageddonAudio.F88FlakEffects");var network=a.GetType("GunmageddonAudio.F88FlakNetwork");
         var h=new Harmony("gunmaggedon.f88.flak.fixture");Action<MethodInfo,string> prefix=(m,n)=>h.Patch(m,new HarmonyMethod(typeof(F88FlakIntegration).GetMethod(n)));
-        var previousScene=SceneManager.GetActiveScene();var scene=coldStart?EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive):EditorSceneManager.NewPreviewScene();SceneManager.SetActiveScene(previousScene);var stage=new GameObject("F88 barrage fixture");stage.SetActive(false);SceneManager.MoveGameObjectToScene(stage,scene);
+        var previousScene=SceneManager.GetActiveScene();var scene=coldStart||groundFire?EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive):EditorSceneManager.NewPreviewScene();SceneManager.SetActiveScene(previousScene);var stage=new GameObject("F88 barrage fixture");stage.SetActive(false);SceneManager.MoveGameObjectToScene(stage,scene);
         var datum=typeof(Datum).GetField("<origin>k__BackingField",S);var datumPos=typeof(Datum).GetField("<originPosition>k__BackingField",S);var old=datum.GetValue(null);var oldPos=datumPos.GetValue(null);
         try {
             datum.SetValue(null,stage.transform);datumPos.SetValue(null,Vector3.zero);Static(a.GetType("GunmageddonAudio.SharedWorldQueries"),"Clear");
@@ -56,6 +56,7 @@ public static class F88FlakIntegration
             var hostile=new GameObject("Hostile HQ").AddComponent<FactionHQ>();hostile.transform.SetParent(stage.transform,false);
             Static(runtime,"Initialize",turret);var c=turret.GetComponent(controller);Check(c,"Native initialization attaches barrage controller");Call(c,"Awake");Call(turret.GetComponent(a.GetType("GunmageddonAudio.F88TurretMotion")),"Awake");
             Check(!(bool)controller.GetProperty("ReadyToFire",F).GetValue(c),"No firing before any observations");
+            if(groundFire)return RunGroundScenario(a,c,owner,gun,turret,stage,hostile,friendly,h,heavy);
             var aircraft=new GameObject("Observed aircraft").AddComponent<Aircraft>();aircraft.transform.SetParent(stage.transform,false);aircraft.transform.position=new Vector3(0,1600,4000);Teams[aircraft]=hostile;
             prefix(a.GetType("GunmageddonAudio.CoastalIllumination").GetMethod("IsLowLight",S),"Dark");
             Check(!(bool)Call(c,"OpticalContact",aircraft),"Dark unilluminated aircraft cannot supply optical observations");
@@ -175,7 +176,7 @@ public static class F88FlakIntegration
             return new{passed=true,checks,damageEvents=damage,profile=heavy?"F120":"F88",details="Native prefab, radar boundaries/faction, night gate, committed barrage, fixed launch errors, timed expiry and authority"};
         }finally{h.UnpatchSelf();Static(runtime,"Shutdown");
             var registry=(IDictionary)typeof(Mirage.Serialization.MessagePacker).GetProperty("MessageTypes").GetValue(null);
-            foreach(var name in new[]{"FlakHello","FlakBurst","FlakPose","R230ChargeCue","R230NuclearBurst"})registry.Remove(Mirage.Serialization.MessagePacker.GetId(a.GetType("GunmageddonAudio."+name)));if(coldStart)EditorSceneManager.CloseScene(scene,true);else EditorSceneManager.ClosePreviewScene(scene);Static(a.GetType("GunmageddonAudio.SharedWorldQueries"),"Clear");Teams.Clear();OpticalCandidates.Clear();dark=true;datum.SetValue(null,old);datumPos.SetValue(null,oldPos);local=true;}
+            foreach(var name in new[]{"FlakHello","FlakBurst","FlakPose","R230ChargeCue","R230NuclearBurst","R230PlayerAlertCue","FlakAPImpact"})registry.Remove(Mirage.Serialization.MessagePacker.GetId(a.GetType("GunmageddonAudio."+name)));if(coldStart||groundFire)EditorSceneManager.CloseScene(scene,true);else EditorSceneManager.ClosePreviewScene(scene);Static(a.GetType("GunmageddonAudio.SharedWorldQueries"),"Clear");Teams.Clear();OpticalCandidates.Clear();dark=true;datum.SetValue(null,old);datumPos.SetValue(null,oldPos);local=true;}
     }
 }
 

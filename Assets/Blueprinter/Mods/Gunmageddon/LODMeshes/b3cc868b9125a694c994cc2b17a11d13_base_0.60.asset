@@ -6,7 +6,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: b3cc868b9125a694c994cc2b17a11d13_base_0.60
+  m_Name: base_LOD1
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2

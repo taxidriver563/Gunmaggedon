@@ -57,7 +57,7 @@ public static class SetupF88
         foreach(var names in new[]{new[]{"elevationcrank","PitchCrankPivot"},new[]{"yawcrank","YawCrankPivot"}}) {
             var part=model.transform.Find(names[0]);var crank=Pivot(names[1],yaw,part.position);part.SetParent(crank,true);
         }
-
+        
         var muzzle=Pivot("Muzzle",recoil,root.transform.TransformPoint(new Vector3(0,2.985f,8.25f)));
         // Copy native component settings, not the L40's meshes or host unit.
         var source=AssetDatabase.LoadAssetAtPath<GameObject>(Dir+"L40_AA_Trailer.prefab");

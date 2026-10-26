@@ -13,7 +13,7 @@ public static class RevampCarriageIntegration
     const string PathName=Dir+"Revamp_Carriage_Rig.prefab";
     static int checks;
     static void Check(bool ok,string text){checks++;if(!ok)throw new Exception(text);}
-    static string Workspace {get{return Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT")??"C:/Users/keena/OneDrive/Documents/Gunmaggedon";}}
+    static string Workspace {get{return Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT")??(System.Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT") ?? throw new System.InvalidOperationException("Set GUNMAGGEDON_ROOT before running editor tools or fixtures."));}}
     static RevampCarriageMotion Create(GameObject asset,Scene scene,Vector3 position)
     {
         var holder=new GameObject("Inactive fixture staging");holder.SetActive(false);SceneManager.MoveGameObjectToScene(holder,scene);

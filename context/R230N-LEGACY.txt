@@ -1,0 +1,79 @@
+R-230N-L legacy nuclear railgun variant
+2026-10-25 | runtime1.19.0 / pack0.0.38 installed | protocol7 unchanged
+
+User requested an additional variant with pre-nerf behavior and current visuals.
+Added designation R-230N-L (legacy), unique definition Gunmaggedon_R230NL,
+weapon R230NL_Railgun and prefab R230NL_Emplacement.prefab. All three new assets
+are under the existing external Unity mod folder. Existing R230/R230N untouched
+as assets; balanced runtime behavior remains separately guarded.
+
+Legacy behavior restored from saved pre-balance1.17.0source snapshot:
+- No new five-second LOS reaction gate and no extra five-second live-tracking
+  phase; retains original0.75second aligned target acquisition.
+- Continuous accelerated intercept aiming through the two-second charge.
+  No fixed point commitment or planned-point-only fuze.
+- Swept100m moving-target proximity check with target position and velocity
+  captured independently each native trajectory step. Native terrain impacts
+  still bound the traversed segment;1km arming and1.5kt canonical nuclear effect.
+- Original three-cell bank with ten-second full-bank recharge after third shot.
+  Native ammo/reload still gates actual cadence. Velocity15000m/s,5-65km range,
+  threat priorities, visibility/factions, authority and no-recoil setup retained.
+- Current glassy pressure rings, enlarged nuclear warning beam/orb and custom
+  player HUD/audio bank shared with balanced N. No copied stock game effects.
+This is the pre-commitment balancing profile, not a rollback of historic bug
+fixes or every older R230 targeting/range change. Does not add AI evasion.
+
+Implementation
+R230Runtime.Legacy uses strict weapon + owner-definition pair. NuclearShot
+recognizes both nuclear identities for flight/presentation hooks. Only legacy
+bypasses the new reaction gate, balanced one-cell capacitor and fixed-point
+requirement. Flight stores profile/target or committed GlobalPosition per shot;
+legacy uses moving target sweep, balanced remains fixed. No global configuration
+or message layout changes. Current player warning source validation accepts the
+new definition key. Existing protocol7 cue codecs are reused.
+SetupR230Legacy.cs clones configured N prefab, weapon and definition without
+rerunning initial setup helpers. Remaps weapon stations/unitPrefab, resets new
+native prefab hash as in original nuclear setup; preserves all internal hitbox
+owner references. Guard refuses existing destination assets. Inactive audio
+bank inherited; no new clips or private raw audio included. Export modinfo backup:
+UnitySetupBackup/R230NL/BeforePack38/modinfo.json.
+
+Mandatory LODs retained and exported:1060/610/288triangles, enabled three levels,
+all model renderers managed. Same muzzle/turret bounds and setup as reference.
+Long-range warning/ring effects retain separately managed lifetimes and are not
+physical model renderers. No imported mesh or material changes.
+
+Validation
+62production sources compiled1.19.0; SDK10.0.402 passes38442R230policy assertions
+and774alert-policy checks. Seven targeted native groups passed225checks:
+  legacy controller6: actual new prefab, immediate aim/no reaction gate, two-sec
+    native Fire request without commitment, cell debit and live aim updates;
+  legacy nuclear30: new identity/damage-hitbox ownership, canonical1.5kt native
+    effect, moving-target sweep/miss, authority, retirement, LODs, current warning
+    and ring renderer; renderer parent intentionally inactive here;
+  actual ring simulation/render22: lifetime, bulk capacity, custom origin space,
+    remote native path, teardown/restart and controlled GPU output;
+  balanced nuclear controller19 and fixed-point nuclear29: preserved behavior;
+  standard R23089: native fire/spawn, reaction/LOS/authority and model LODs;
+  player warning30: custom PCM, audio properties, HUD layout and native codec.
+A new legacy ring-count assertion initially failed because its isolated nuclear
+fixture intentionally keeps its whole parent inactive. Replaced that assertion
+with renderer/material identity; the active-stage ring fixture separately proves
+actual particle emission/simulation/render. No production fix was needed.
+
+Export0.0.38 completed through native Blueprinter.ModBuilder. It took several
+minutes; no duplicate build started. A desktop inspection attempt could not
+activate Unity; no click/input or user-scene modification was performed. Export
+then completed normally. Pack independently loaded/audited273assets,9existing
+custom AudioClips, no_donotship assets, all three railgun LODs/audio banks,
+new definition/prefab/weapon references and damage owner wiring. Original scene
+remains clean and stopped. No public Git push or release publication.
+Live mission spawn, multiplayer transport and legacy balance still need testing.
+
+Compiled/source-validated/export-audited/installed1.19.0 + pack0.0.38.
+Game closed; installed hashes match staging. Previous runtime1.18.2 and
+pack0.0.37 retained in UnitySetupBackup/R230NL/BeforeInstall-1.19.0/;
+only0.0.38 remains active. Hashes/install/source and results:
+GunmaggedonRuntime/build/r230-legacy/.
+RuntimeSHA2561A323950BCE2341E9B9F965CFB2320228DE27978F693E50D7725455BA8501EF5
+PackSHA256FE16588476FDE096236DACC28611BB0FFA7DE09761F902AF11BBFB4EC4350BFB

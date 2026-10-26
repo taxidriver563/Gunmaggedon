@@ -1,0 +1,105 @@
+DP-127 modern dual-purpose guided127mm emplacement
+2026-10-25 | installed runtime1.21.0 / asset pack0.0.39 | protocol8 unchanged
+
+User requested a modern destroyer naval gun on concrete, advanced FCS,
+15km land/naval guided rounds and guided proximity rounds against aircraft.
+Designation DP-127; key Gunmaggedon_DP127; weapon DP127_Guided.
+External Unity assets: DP127_Emplacement.prefab,DP127_Definition.asset,
+DP127_Guided.asset under Assets/Blueprinter/Mods/Gunmageddon/.
+
+Model and rig
+- Original four imported meshes/materials preserved. Identity wrappers provide
+  yaw at(0,.655,0), pitch at(0,2.576,.754), recoil at(0,2.576,2.942).
+  Muzzle(0,2.576,8.28) follows the barrel; native.4m recoil only moves barrel.
+  Traverse40deg/s, elevation35deg/s, -10..85deg. No breech/crank parts authored.
+- Native Building/UnitPart setup; four separate collider/part owners cover the
+  concrete,housing,cradle,barrel. Critical damage reaches the building.
+  Concrete armor300/200, tolerances6/5; exposed gun70/50,tolerances2/2.
+  Concrete is authored down toY-7 and intentionally buried; spawn offset zero.
+- FireControlSensor at(0,5.5,0), above housing. Native LOS uses static layer6;
+  unit colliders retain native unit/default layer0. External terrain still blocks.
+- Three enabled model LODs:540/332/294 triangles, screen fractions
+  .045/.012/.0005; size28 and reference(0,1,0) cover articulated sweep.
+  All model renderers/materials accounted. Native recoil/muzzle and FCS remain
+  active independently of LOD. No separate purely cosmetic mechanism exists.
+  Short native muzzle effects are runtime children and intentionally outside
+  model LOD ownership; their existing native lifetime controls visibility.
+- Original model retained inactive in the editor scene alongside configured
+  prefab. Original scene backup: UnitySetupBackup/DP127/BeforeSetup/.
+  Editor-only backup prefab/scenes are outside the mod asset folder.
+
+Behavior
+- Broad candidates shared with existing query service every.25sec. Exact hostile,
+  alive,active,300..15000m slant range, native optical LOS(magnification100) and
+  smoke checks apply. Targets:Aircraft,Ship,GroundVehicle,Building; no missiles.
+- Nearby aircraft(up to8km) strongly prioritized; range,closing speed,value,
+  ship role and held-target preference score remaining opportunities.
+- Current observed rigidbody velocity leads ballistic aim, refreshed10Hz;
+  native gun/drag/gravity nominal solution, no old-guard ranging error.
+  At least1.25sec acquisition and three solutions, loaded magazine, clear safety
+  and alignment within.35deg required. Target change/loss resets acquisition.
+  This is advanced own optics, not dependent on radar-truck support.
+- Native127mm guided MissileDefinition Shell_127mm_guided borrowed via
+  Blueprinter remap;850m/s, native10kg warhead/1500pierce, native canards,
+  torque,mass and aerodynamic curves unchanged.22rpm, five ready rounds plus
+  200 reserve, native five-second magazine reload. No durability cheat.
+- Gun.Fire does not forward its target to SpawnMissile. Explicitly latch the
+  detected target into native proximityFuseTarget and rebind at actual spawn.
+  Accepted target survives an acquisition reset until consumed by spawn;
+  disabled source/target cannot launch. Client cannot create a second projectile.
+- Per-instance OpticalSeekerShell config: AA proxy on,maxTargetSpeed1200,
+  search radius250; surface proxy off,maxSpeed120,radius100. Native MWS enabled.
+  Seed native target/knownPos/knownVel from verified gun observation when HQ has
+  no precise contact. Native seeker thereafter tracks and applies guidance.
+  IMPORTANT: OpticalSeekerShell does not wire its inherited proxy flag to the
+  missile. Explicit Missile.SetProxyFuse(target.transform,target.rb) binds the
+  native swept closest-approach fuze for AA. Surface uses native impact fuse.
+- Finite native aero preserves maneuver limits and PD interception. Full-flight
+  hard-turn dodgeability/accuracy and live damage still require mission tests;
+  do not infer those from particle playback or an isolated factory capture.
+- Server creates missiles; native missile replication owns flight/damage.
+  Existing authenticated pose message covers DP127 too. Client native fire
+  presents sound/flash/recoil but suppresses fallback BulletSim/duplicate missile.
+  Updated runtime and asset pack needed on participating peers.
+
+Presentation and asset origin
+- Native firing clips/mixer/projectile use supported main-asset remaps.
+- Blueprinter rejected direct native prefab ParticleSystem subasset references.
+  Serialized muzzleParticles is deliberately empty. Runtime resolves native
+  Gun127mm_Guided_Naval from Encyclopedia.ships(prefabs, even with no live ship),
+  with loaded-gun fallback/retry, and clones its emitters under this muzzle once.
+  Emitters reused on subsequent shots; no game particle prefab/geometry/audio
+  source copied into the export. Cache released with last controller/shutdown.
+  Nine existing custom clips retained; no new raw audio or game DLL added.
+
+Entrypoints and validation
+- tools/SetupDP127.cs: initial-only helper, refuses existing destinations;
+  inspected SetupUnitLODs.ConfigureCarriage reused. Do not rerun over prefab.
+- src/AA/DP127Runtime.cs and DP127Policy.cs; Plugin install/shutdown;
+  F88FlakNetwork existing pose receive extended without changing wire layout.
+- tests/integration/DP127Integration.cs:32 checks; native optical LOS/obstruction,factions,
+  range,air priority,acquisition/authority, actual native Gun.SpawnBullet factory
+  handoff, owned muzzle emitters, native seeker update/proxy predicate and
+  unchanged native shared projectile/finite aero. Transport is stubbed;
+  full missile flight,impact damage and multiplayer are not certified here.
+- Isolated fixture checkpoints its own scene before use, restores singleton
+  facades/patches and closes only its saved temporary scene. User scene preserved.
+- UnitLODIntegration:1755 checks, all units/rigs, reduced geometry/materials,
+  actual near/far rendering and distance-independent F88 reload.
+- F88/F120 AP39+39 and CD203 scanner382 checks passed. Four SDK suites:
+  DP127policy8,FlakGround14,FlakBarrage4030,R230Solution38442 assertions.
+  Two railgun visual fixtures could not resolve native laser resources in editor;
+  their visuals remain unverified, not counted as passes.
+- Evidence: GunmaggedonRuntime/build/dp127/; unique isolated build manifest under
+  build/validation/isolated/current.json. Production build in build/1.21.0/.
+
+Compiled1.21.0; validated32 DP127 native checks and the checks listed above.
+Exported0.0.39:287 assets,16 enabled/reduced LOD groups,nine custom clips,
+seven DP native-reference patches; no_donotship or editor-backup assets.
+Installed1.21.0 /0.0.39 with game closed; installed hashes match staging.
+Rollback1.20.0 /0.0.38: UnitySetupBackup/DP127/BeforeInstall-1.21.0/.
+Runtime SHA256 B97CC6AD554B3D6FA59FE497217312BB6D4BD842D8DA2A1AFEF51EFB36C71798
+Pack SHA256 E09922C0A5D33AC892DD9DD2F8A71C7F0CB67796AB03F82AA73CC5542F20B069
+Source identity and compiled/validated/installed evidence: build/dp127/.
+Live flight/impact damage,dodgeability,balance and MP remain unverified.
+No public GitHub push/release requested.

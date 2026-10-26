@@ -7356,7 +7356,8 @@ MonoBehaviour:
   frictionCoef: 1
   holdAtPlayerCommandedDestination: 1
   navigateToObjectives: 0
-  wreckage: {fileID: 0}
+  wreckage: {fileID: 7784133260008515611, guid: e13cdde16577818408e2cb9277ac0e89,
+    type: 3}
   parachuteSystem: {fileID: 0}
   unitCommand: {fileID: 6676230740280691079}
   wheels:

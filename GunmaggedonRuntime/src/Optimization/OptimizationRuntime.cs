@@ -21,7 +21,7 @@ namespace GunmageddonAudio
         }
         internal static void Clear()
         {
-            IncendiaryCanisterRuntime.Clear();R230NuclearRuntime.Shutdown();ClusterVisualPools.Clear();TrailService.Clear();TravellingAudio.Clear();SharedWorldQueries.Clear();SharedShipBounds.Clear();if(Plugin.Instance)Plugin.Instance.ResetAudioBanks();mission=null;nextMaintenance=0;
+            F88FlakRuntime.ClearFlights();C127Rounds.Clear();R230PlayerAlert.Clear();IncendiaryCanisterRuntime.Clear();R230NuclearRuntime.Shutdown();ClusterVisualPools.Clear();TrailService.Clear();TravellingAudio.Clear();SharedWorldQueries.Clear();SharedShipBounds.Clear();if(Plugin.Instance)Plugin.Instance.ResetAudioBanks();mission=null;nextMaintenance=0;
         }
     }
 }

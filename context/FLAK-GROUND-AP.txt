@@ -1,0 +1,122 @@
+F-88 / F-120 secondary ground AP capability
+2026-10-25 | runtime1.20.0 installed | existing pack0.0.38 | network protocol8
+
+Scope and behavior
+Regular F88 and F120 now engage visible hostile GroundVehicles and Buildings
+with direct-fire AP when no active eligible aerial engagement takes priority.
+Ships and parked low-altitude aircraft do not become ground targets. F120S keeps
+its special incendiary loadout; GroundEnabled explicitly excludes it.
+New behavior is automatic and uses each gun's existing ammunition reserve,
+single-round loading, breech/casing/recoil sequence and native station. There is
+no extra magazine, free ammunition or user configuration. No new unit/prefab.
+
+Ground limits/provisional mod balance (not historical weapon specifications):
+                     F88            F120
+Maximum slant range  4000m          6000m
+Minimum slant range  100m           100m
+Native AP penetration2400           4200
+Launch spread        .18degrees     .10degrees
+Observation interval .4sec          .25sec
+Aim solve interval   .2sec          .2sec
+AP expiry            30sec          30sec
+Native muzzle velocity, mass, gravity and quadratic drag are retained. Penetration
+values are native pierceDamage inputs, not direct HP damage. Armor/geometry and
+flight-speed-squared loss still determine the result; no guaranteed tank kill.
+
+Selection and evidence
+Uses the existing half-second SharedWorldQueries candidate snapshot. Broad grid
+membership never supplies detection evidence. Ground targets require exact
+range, same existing hostile-HQ checks, active/non-disabled state, own native
+LOS and smoke checks. Night/low-light uses the existing clock gate and requires
+existing flare illumination; these guns do not launch new flares themselves.
+Ground aim height uses45percent of definition height (minimum1m). Motion lead
+comes from observed global-coordinate positions, not target Rigidbody velocity.
+Requires multiple samples over at least.35sec; motion capped120m/s and expires
+at1sec without new observations. Prediction includes observation age and actual
+shell flight using the existing gravity/drag trajectory solver. Minimum3aim
+iterations and native alignment/readiness still gate fire. Pose/traverse rates
+remain identical to the corresponding AA profile; elevation stays -5..85deg.
+
+Eligible detected aircraft, and supported F120 Piledrivers, preempt ground fire.
+Existing valid lost-contact AA continuation is retained before ground fallback.
+Dead/invalid old targets no longer block selection until their stale track ages
+out. Friendlies in the same HQ cannot be selected; this is not a guarantee that
+a friendly moving into the physical projectile path can never be struck.
+Ground shots require stationary operational trailer and server authority; they
+stop on lost immediate optical evidence rather than firing at an unseen memory.
+
+Native ammunition/damage and lifecycle
+F88GroundFire.cs is a partial of the existing F88 controller; FlakGroundPolicy
+provides range/dispersion and sampled velocity. F88FlakRuntime.AllowFire latches
+APQueued at accepted native Fire, before native SpawnBullet. Later air selection
+cannot turn an already queued/launched AP round into flak. Each authoritative
+AP round owns a WeaponInfo clone with zero blast/airburst fields and calibrated
+penetration. The original shared flak profile is never mutated. Native tracing
+uses this profile by reference, clears explosive/proximity state, and handles
+collision, armor and speed loss. Native Fire/SpawnBullet and actual UnitPart
+penetration/HP damage were exercised independently of muzzle effects.
+AP expiry never calls BlastFrag, F88Fragments or incendiary carrier logic.
+Ricocheting active rounds retain their profile. Retirement, failed/unbound
+launch, exceptions, mission reset and shutdown release cloned profiles and
+references. Launched authority is retained if the source disappears; authority
+handoff to a nonserver suppresses damage. The destruction case validates trace
+profile/visualOnly routing, not a separate full mission posthumous-kill test.
+OptimizationRuntime.Clear now clears F88 native flight ownership too.
+
+Impact presentation
+Reuses the compact AP spark helper/stock impact audio and preserves water slot2.
+Native Bullet.Trace calls its effect slots directly, so ground AP supplies a
+single harmless no-render/no-audio native PrefabEffect wrapper for suppressed
+HE slots instead of null references. The wrapper has no particles/lights/model
+renderers and is destroyed on mission reset. Land/armor gets a compact one-shot
+spark; there is no extra damaging cloud. Existing traveling audio handles delay.
+The older coastal AP effect-slot code is not changed by this feature pass.
+New FlakAPImpact message carries global position, velocity, source and server
+clock. Client presentation validates finite values, known valid source when
+present and age -1..3sec. Missing destroyed source can still show sparks without
+borrowed source audio. Message has no damage path. Handshake7->8 excludes older
+runtimes from custom presentation to prevent unknown-message handling. Matching
+runtime1.20.0 peers required. Native codec tested; live MP transport not certified.
+Native remote bullet visuals still originate from the base gun; exact client
+impact mixing/deduplication under network latency remains a mission check.
+
+Validation/evidence
+64current production sources compiled in separate1.20.0staging. Five SDK10.0.402
+suites passed69510assertions: ground14, barrage4030, F12033313, reload31806,
+optimization347. Synthetic timing output from optimization runner is not an FPS
+claim for this gameplay feature.
+Thirteen targeted Unity groups passed3069checks across the pass:
+ ground F8839 + F12039: candidate/evidence/faction/night/range, actual static LOS
+   obstruction, moving observations/ballistic plan, native Fire/SpawnBullet,
+   immutable AP/water routing, native projectile impact and damage to an actual
+   F120 trailer UnitPart, no expiry flak, failed launch cleanup, source loss,
+   server guard, air priority, buildings, F120S exclusion and mission cleanup;
+ aerial F8836/F12045 and cold optical21/21: retained flak/detection behavior;
+ F88rig38, reload53, F120rig1003: mechanics/native recoil/secured reload;
+ F120incendiary24: existing192native fragment hits and native fire channels;
+ R230player warning30: protocol8 codec coexistence and custom HUD/audio;
+ optimization23: existing pools/trails/bounds native checks;
+ all-unit LOD1697: all current units/rigs, cheaper geometry/materials, actual
+   near/far rendering/cosmetic gating and distant F88 mechanical clock.
+Final ground groups were rerun after the final two-line source-loss/receiver
+fallback tweak. Unchanged-branch AA/rig/LOD checks use the earlier validation
+builds from the same pass; manifests/results are retained under build/validation.
+Early fixture failures were missing standalone native network/GameAssets facades
+and an incorrect special-prefab path; fixtures now supply only absent transport
+and asset-singleton state while actual LOS/ballistics/damage code executes.
+RPC damage is replayed locally into native ApplyDamage; no live mission transport.
+
+No Unity scene/prefab/material changes or pack export were needed. The current
+asset pack already contains the models, sound/effect references and native gun
+setup. Weapon encyclopedia base entries still describe the normal AA loadout;
+AP is runtime-selected. All existing mandatory LODs retained, all-unit transitions
+passed, and scene remained clean/stopped with no leftover test scenes. Loading
+visuals and gameplay muzzles retain existing near/far separation. No public push.
+Live mission balance against MBTs, night illumination, moving terrain targets,
+multiplayer presentation and long-duration mission cleanup remain unverified.
+
+Installed1.20.0 / unchanged pack0.0.38 with game closed, hashes matched staging.
+Previous1.19.0: UnitySetupBackup/FlakGround/BeforeAP-1.20.0/.
+Runtime SHA2567D72D8F5B8FA5C6B124573BE442F339D98A18751FBC610274A1FE8558F64FABC
+Evidence: GunmaggedonRuntime/build/flak-ground/{install.json,
+source-identity.json,validation-results.json}. Pack hash unchanged FE165884... .

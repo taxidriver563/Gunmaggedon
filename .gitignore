@@ -136,3 +136,10 @@ id_ed25519
 /Assets/Blueprinter/Mods/Gunmageddon/**/*.wav
 /Assets/Blueprinter/Mods/Gunmageddon/**/*.ogg
 /PrivateAudio/
+
+# Project-local workflows remain private.
+/.agents/
+
+# Local Python helper caches.
+__pycache__/
+*.pyc

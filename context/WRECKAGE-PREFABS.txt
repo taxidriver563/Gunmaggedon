@@ -1,0 +1,104 @@
+Shared wreckage presentation - 2026-10-25
+
+Installed pack0.0.41. Runtime1.22.0 and protocol9 unchanged; no C# runtime
+source or installed DLL changes. No GitHub push/release publication.
+
+Fifteen new wrecks assigned to the native wreckage fields:
+ C-127, C-127A/B/C, C-127T, DP-127;
+ F-88, F-120, F-120S, L-25, L-40, SL-1;
+ R-230, R-230N, R-230N-L.
+Existing CD-203/CD-203S authored wreck references remain untouched.
+TA-1 is a munition with existing spent-canister behavior, not a platform wreck.
+
+Assets: Assets/Blueprinter/Mods/Gunmageddon/Wreckage/.
+Source scene remains dirty/unsaved; original edits preserved. A Wreckage Preview
+group contains fifteen instances in five-column rows, starting at Z75.
+Pre-migration prefab and scene copies:
+Assets/BlueprinterSetupBackups/Wreckage/.
+
+Texture reuse / shader
+One shared128x128 mipmapped repeating soot texture and one custom URP shader,
+Gunmaggedon/WreckScorch. Twenty-five lightweight material variants retain each
+original material's paint texture, normal texture and base UV mapping. No new
+per-unit wreck texture sets. Scorch is multiplied into the original paint in
+the existing forward material pass, with ordinary shadow/depth passes; no
+extra overlaid mesh/double-draw or z-fighting layer.
+Dark charcoal tint, mottled soot, metallic.05, smoothness.07, no emission.
+Concrete uses a lighter tint than metal. Transparent/glowing parts become
+opaque charred surfaces. Reuses only the user's existing geometry/textures.
+The initial stock URP detail-map approach hit the16sampler limit in some
+variants. It was replaced, not shipped. The custom shader samples paint,
+normal and shared soot, supports main/additional lighting, fog, screen-space
+shadows and Forward+; compiled/exported successfully for the current editor.
+Live game quality-setting/platform coverage is not certified.
+
+Models / lifecycle
+Static snapshots reuse original near-detail meshes, with drooped barrels,
+slight traverse offsets and removed cranks/loading props. Casemate guns stay
+within a shallow droop to retain port clearance. Concrete bodies remain
+standing; these are burnt-out wrecks, not newly modeled rubble/destruction.
+No Gun, Turret, UnitPart, Unit, NetworkIdentity, Animation, Animator, light,
+particle or sound components on the new wrecks. Wrecks cannot target/fire.
+All fifteen have enabled three-level LODGroups with cheaper distant meshes.
+All model renderers are included. Static wreck presentation needs no cosmetic
+animation updates. Live unit LODs, transforms, materials and weapons preserved.
+
+Six trailer wrecks use native Wreckage with positive mass and root compound
+BoxColliders. No Rigidbody at rest; native collision handling can add one.
+Native mission decay/obstacle behavior is retained. Box bounds are generated
+after Physics.SyncTransforms, so the dead barrel pose matches the hitboxes.
+Nine initially stale boxes were corrected; subsequent fit check found zero
+differences across all six trailers (7/13/13/10/6/6boxes respectively).
+Nine building wrecks retain static collision, including real casemate ports.
+Native Building.UnitDisabled owns their swap and repair-removal lifecycle.
+
+Validation / evidence
+- WreckageIntegration:3131checks, including actual native Building.UnitDisabled
+  and GroundVehicle.SpawnWreckage handoff for all15assignments. Base unit death
+  callbacks, global mission state and grid lookup were isolated with fixtures;
+  this is not a live mission death/repair certification.
+- ValidateWreckSources:2745checks against pre-migration prefab copies. Intact
+  poses, component types, material references, ammo, rate and reload unchanged;
+  original paint/normal asset references and UV scale reused by wreck materials.
+- Isolated rendered intact-versus-wreck comparison, including soft-shadow
+  rendering; no custom shader compiler messages after the render.
+- Export audit2042checks:435assets,37LODGroups,15new references/prefabs,
+  one supported compiled wreck shader and one new texture; existing nine
+  imported custom AudioClips retained. No game dependency bodies, DLLs, source
+  or backup/staging folders bundled.
+- Final collision-corrected pack146567249bytes versus146380717bytes for.40:
+  +186532bytes (about182KiB), not an FPS or runtime-memory benchmark.
+- Installed with game closed, SHA256 checked; runtime DLL unchanged.
+
+Pack SHA256
+781D5E2C02C0F2783CBA7695467698AE7597D3E8CBBC99009632C9720D3A4489
+Runtime SHA256
+5C25B88AB84CDDB888C3D2A694E5F4C7164548D3C9D103C1C48D1E4FE0A35DAE
+Rollback: UnitySetupBackup/Wreckage/BeforeInstall-0.0.41/Gunmageddon_0.0.40.nobp.
+Evidence: GunmaggedonRuntime/build/wreckage/{setup,validation,
+source-validation,collision-fit,export-audit,install}.json;
+UnitySetupBackup/Wreckage/Preview.png.
+
+Remaining mission checks: live collision-driven bump/settling/decay, building
+repair cleanup, extended wreck density, all in-game shader/quality variants,
+and multiplayer destruction/cleanup. No performance improvement claimed.
+
+Durable workflow
+tools/SetupWreckage.cs + prepare-wreckage-helper.ps1: guarded initial creation;
+requires pre-existing unit prefabs and refuses an existing Wreckage folder.
+Includes a checked-in tools/WreckScorch.shader source, copied into the mod.
+Do not rerun initial migration over configured assets. Use targeted updates.
+tools/RefreshWreckCollision.cs: only trailer wreck compound box poses.
+tools/ValidateWreckSources.cs: one-time comparison requiring migration backups.
+tests/integration/WreckageIntegration.cs: current native handoff/asset checks.
+tools/RenderWreckage.cs, AuditWreckageExport.cs, InstallWreckage.ps1.
+
+2026-10-25 release follow-up: runtime 1.22.1 / pack 0.0.42 / protocol 10
+is now installed. A scoped runtime correction fixes native local-Z-versus-Y
+sleep checks on the six owned trailer wrecks and completes off-grid removal
+with duplicate protection. Native collision impulses/mass/ordinary decay stay
+unchanged. The shared shader pass is UniversalForwardOnly for compatibility.
+42 lifecycle fixture checks pass, with native disintegration work substituted
+by a counted stub; live collision/VFX/decay still requires a mission check.
+All 37 exported LODGroups and 15 generated wreck assignments remain valid.
+Latest hashes, rollback and evidence: RELEASE-BUG-SQUASH-0.0.42.txt.

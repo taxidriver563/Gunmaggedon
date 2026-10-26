@@ -9,7 +9,7 @@ using UnityEngine;
 namespace GunmageddonAudio
 {
     // Keep the original plugin ID so BepInEx retains existing configuration.
-    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.15.3")]
+    [BepInPlugin("gunmageddon.203mm.audio", "Gunmaggedon Runtime", "1.22.1")]
     public sealed class Plugin : BaseUnityPlugin
     {
         internal static Plugin Instance;
@@ -49,7 +49,7 @@ namespace GunmageddonAudio
                 L40Runtime.Install(Logger);
                 L25Runtime.Install(Logger);
                 F88Runtime.Install(Logger);
-                R230Runtime.Install(harmony);
+                R230PlayerAlert.Enable();R230Runtime.Install(harmony);DP127Runtime.Install(harmony);C127Runtime.Install(harmony);WreckageRuntime.Install(harmony);
                 SearchlightRuntime.Install(Logger);
 #if GUNMAGGEDON_DIAGNOSTICS
                 CoastalFireDiagnostics.Install(harmony);
@@ -64,11 +64,11 @@ namespace GunmageddonAudio
 #if GUNMAGGEDON_DIAGNOSTICS
             CoastalFireDiagnostics.Clear();
 #endif
-            OptimizationRuntime.Clear();
+            R230PlayerAlert.Shutdown();OptimizationRuntime.Clear();
             SpecialPayloadNetwork.Shutdown();
             SearchlightRuntime.Shutdown();
             F88Runtime.Shutdown();
-            R230Runtime.Shutdown();
+            R230Runtime.Shutdown();DP127Runtime.Shutdown();C127Runtime.Shutdown();WreckageRuntime.Shutdown();
             L25Runtime.Shutdown();
             L40Runtime.Shutdown();
             harmony?.UnpatchSelf();
@@ -81,7 +81,7 @@ namespace GunmageddonAudio
             if (Instance == this) Instance = null;
         }
 
-        private void Update() { OptimizationRuntime.Tick(); SpecialPayloadNetwork.Tick(); F88FlakNetwork.Tick();
+        private void Update() { OptimizationRuntime.Tick(); WreckageRuntime.Tick(); SpecialPayloadNetwork.Tick(); F88FlakNetwork.Tick(); R230PlayerAlert.Tick();
 #if GUNMAGGEDON_DIAGNOSTICS
             CoastalFireDiagnostics.Tick();
 #endif
@@ -94,7 +94,7 @@ namespace GunmageddonAudio
 
         private static bool GunSound(Component __instance)
         {
-            if (!Instance || !__instance || !CoastalArtillery.IsSupported(__instance as Gun)) return true;
+            if (!Instance || !__instance || !(CoastalArtillery.IsSupported(__instance as Gun)||C127Runtime.Matches(__instance as Gun))) return true;
             var sources = Instance.Bank(__instance.gameObject, true);
             if (sources.Empty) return true;
             Instance.Queue(__instance.transform, sources, "fire");

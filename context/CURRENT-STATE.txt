@@ -1,14 +1,22 @@
-Release candidate0.0.34 - runtime1.14.2
+Alpha v0.0.42 release candidate
 
-Prepared locally, not pushed or published. Includes F120/R230/R230N and the
-1.5kt nuclear correction; see releases/v0.0.34.md. This preparation carries the
-authored denser L25 tracer setting to the spawnable trailer and removes the
-forced1:3 runtime override. R230N warning, yield and other gameplay unchanged.
+Runtime 1.22.1 / asset pack 0.0.42 / network protocol 10.
+Both downloads are required. All multiplayer participants need matching versions.
+This branch prepares an unpublished release; the main branch is unchanged.
 
-All19 Unity fixture groups pass3596 checks. All16 standalone suites pass locally
-(15 Unity Mono, optimization suite under installed .NET6). The exact pinned
-SDK10 hosted workflow/provenance remains unverified. Current source compiles
-against the pinned private-reference archive. No raw audio/game DLLs/skills
-are included in public source; private audio is restored only by maintainers
-when rebuilding the asset pack. Live mission blast/render/multiplayer checks
-remain outstanding. Historical installed-state entries below are superseded.
+Changes since v0.0.36: stateful railgun player warnings, balanced R-230N point
+commitment and visible pressure rings, separate R-230N-L, F-88/F-120 ground AP,
+DP-127 guided dual-purpose gun, five C-127 variants and fifteen platform wrecks.
+Owned wreck lifecycle, remote C-127 firing/reload and impact debris fixes included.
+See ../releases/v0.0.42.md and the individual feature documents.
+
+Validation: 21 standalone SDK suites, 35 isolated Unity/native fixture groups
+(9,567 checks), exported asset/LOD checks. These do not certify sustained live
+missions, collision-driven decay/repair, actual multiplayer transport or FPS.
+The exact release commit is built separately by GitHub Actions; its artifact
+metadata identifies the source and compiler. Private references are excluded.
+
+Source audio is private. Nine .mp3.meta files preserve the import GUIDs; the
+nine original MP3 bodies are restored only by maintainers rebuilding the pack.
+Native assets resolve through Blueprinter's game references, requiring the game.
+The C-127 production animation clips are self-contained in the mod folder.

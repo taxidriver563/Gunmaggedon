@@ -7,9 +7,12 @@ namespace GunmageddonAudio
     internal static class R230Runtime
     {
         internal const string Key="Gunmaggedon_R230",Weapon="R230_Railgun";
+        internal const string LegacyKey="Gunmaggedon_R230NL",LegacyWeapon="R230NL_Railgun";
         internal const string NuclearKey="Gunmaggedon_R230N",NuclearWeapon="R230N_Railgun";
         static readonly List<R230Controller> Controllers=new List<R230Controller>();
-        internal static bool Nuclear(Gun g){return g&&g.info&&g.info.name==NuclearWeapon&&g.attachedUnit&&g.attachedUnit.definition&&g.attachedUnit.definition.jsonKey==NuclearKey;}
+        internal static bool Legacy(Gun g){return g&&NuclearShot(g.info,g.attachedUnit)&&g.info.name==LegacyWeapon;}
+        internal static bool NuclearShot(WeaponInfo info,Unit owner){return info&&owner&&owner.definition&&(info.name==NuclearWeapon&&owner.definition.jsonKey==NuclearKey||info.name==LegacyWeapon&&owner.definition.jsonKey==LegacyKey);}
+        internal static bool Nuclear(Gun g){return g&&NuclearShot(g.info,g.attachedUnit);}
         internal static bool Matches(Gun g){return Nuclear(g)||g&&g.info&&g.info.name==Weapon&&g.attachedUnit&&g.attachedUnit.definition&&g.attachedUnit.definition.jsonKey==Key;}
         internal static void Install(Harmony h)
         {
@@ -19,7 +22,9 @@ namespace GunmageddonAudio
             h.Patch(AccessTools.Method(typeof(Gun),"SpawnBullet"),postfix:new HarmonyMethod(typeof(R230Runtime),nameof(Fired)));
             R230NuclearRuntime.Install(h);
         }
-        static void Initialize(Turret __instance){var g=__instance.GetComponentInChildren<Gun>(true);if(Matches(g)&&!__instance.GetComponent<R230Controller>())Controllers.Add(__instance.gameObject.AddComponent<R230Controller>());}
+        static void Initialize(Turret __instance){var g=__instance.GetComponentInChildren<Gun>(true);
+            if(Nuclear(g)&&!Legacy(g)&&Application.isPlaying)g.attachedUnit.definition.description="Nuclear Stratopenetrator: 1.5-kiloton airbursts at a committed warning point. Five-second initial reaction, five seconds live tracking, then a three-second fixed firing solution; one shot followed by a 20-second capacitor recharge. 5-65km engagement envelope.";
+            if(Matches(g)&&!__instance.GetComponent<R230Controller>())Controllers.Add(__instance.gameObject.AddComponent<R230Controller>());}
         static bool Native(Turret __instance){return !__instance.GetComponent<R230Controller>();}
         internal static void DisableRecoil(Gun gun)
         {
@@ -36,30 +41,45 @@ namespace GunmageddonAudio
     {
         static readonly FieldInfo Muzzles=AccessTools.Field(typeof(Gun),"muzzles"),Disabled=AccessTools.Field(typeof(Turret),"disabled"),Stowed=AccessTools.Field(typeof(Turret),"stowed");
         readonly List<Unit> candidates=new List<Unit>();
+        readonly R230Reaction reaction=new R230Reaction();
         readonly R230Acquisition acquisition=new R230Acquisition();
-        readonly R230Capacitor capacitor=new R230Capacitor();R230Warning warning;
+        R230Capacitor capacitor=new R230Capacitor();R230Warning warning;
         static readonly FieldInfo Loaded=AccessTools.Field(typeof(Gun),"bulletsLoaded"),Reload=AccessTools.Field(typeof(Gun),"timeUntilReload");
         bool warned;float nextWarning;
+        RailgunAlertState alertState;Aircraft alertTarget;float nextAlert;uint alertSequence;
         Turret turret;Gun gun;Unit owner,target;Transform pitch,muzzle;WeaponStation station;
         float nextScan,nextPose,remoteYaw,remotePitch;bool remote,solution;Vector3 direction;GlobalPosition aimPoint;
+        float trackingStarted=float.NaN;
+        bool committed;GlobalPosition committedPoint;
+        internal bool TryCommittedPoint(out GlobalPosition point){point=committedPoint;return committed;}
         Unit motionTarget;Vector3 previousVelocity,targetAcceleration;float motionAt;
         internal Unit Selected {get{return target;}}
         bool Aligned {get{return Vector3.Dot(muzzle.forward,direction)>0&&Vector3.Cross(muzzle.forward,direction).sqrMagnitude<4.87e-9f;}}
-        internal bool CanFire {get{return solution&&acquisition.Ready&&capacitor.Ready(Time.time)&&NativeReady&&Operational&&Eligible(target)&&Visible(target)&&Aligned&&(!R230Runtime.Nuclear(gun)||R230NuclearRuntime.ResolveTemplate());}}
+        internal bool CanFire {get{return solution&&(R230Runtime.Legacy(gun)||reaction.Ready)&&acquisition.Ready&&capacitor.Ready(Time.time)&&NativeReady&&Operational&&Eligible(target)&&(committed||Visible(target))&&Aligned&&(!R230Runtime.Nuclear(gun)||(R230Runtime.Legacy(gun)||committed)&&R230NuclearRuntime.ResolveTemplate());}}
         // Native Gun.Fire enables an idle gun; enabled is not a readiness gate.
         bool NativeReady {get{return gun&&!gun.Safety&&(int)Loaded.GetValue(gun)>0&&(float)Reload.GetValue(gun)<=0;}}
-        bool WarningReady {get{if(!gun||gun.Safety)return false;float reload=(float)Reload.GetValue(gun);return NativeReady||reload>0&&reload<=R230Capacitor.ChargeSeconds;}}
+        bool WarningReady {get{if(!gun||gun.Safety)return false;float reload=(float)Reload.GetValue(gun);return NativeReady||reload>0&&reload<=capacitor.ChargeDuration;}}
         void Cue(bool active)
         {
             if(active){if(!warning){warning=gameObject.AddComponent<R230Warning>();warning.Initialize(muzzle);warning.SetNuclear(R230Runtime.Nuclear(gun));}warning.Show(aimPoint,(float)capacitor.Progress(Time.time));}
             else if(warning)warning.Hide();
             if(owner&&owner.LocalSim&&owner.IsServer&&(active!=warned||active&&Time.time>=nextWarning)){warned=active;nextWarning=Time.time+.1f;F88FlakNetwork.Warning(owner,aimPoint,(float)capacitor.Progress(Time.time),active);}
         }
-        void CancelCharge(){capacitor.Cancel();Cue(false);}
-        internal void ShotFired(){capacitor.Shot(Time.time);Cue(false);}
+        void Alert(RailgunAlertState state,float progress=0)
+        {
+            if(!owner||!owner.LocalSim||!owner.IsServer)return;
+            var aircraft=state==RailgunAlertState.Off?null:target as Aircraft;
+            if(!aircraft)state=RailgunAlertState.Off;
+            if(state==alertState&&aircraft==alertTarget&&(state==RailgunAlertState.Off||Time.unscaledTime<nextAlert))return;
+            alertState=state;alertTarget=aircraft;nextAlert=Time.unscaledTime+.2f;alertSequence++;
+            R230PlayerAlert.Report(owner,aircraft,state,progress,alertSequence);
+            F88FlakNetwork.PlayerAlert(owner,aircraft,state,progress,alertSequence);
+        }
+        void CancelCharge(){trackingStarted=float.NaN;committed=false;committedPoint=default(GlobalPosition);capacitor.Cancel();Cue(false);Alert(RailgunAlertState.Off);}
+        internal void ShotFired(){capacitor.Shot(Time.time);trackingStarted=float.NaN;committed=false;committedPoint=default(GlobalPosition);Cue(false);Alert(RailgunAlertState.Off);}
         internal void RemoteWarning(GlobalPosition point,float progress,bool active){if(owner&&owner.LocalSim)return;if(active){if(!warning){warning=gameObject.AddComponent<R230Warning>();warning.Initialize(muzzle);warning.SetNuclear(R230Runtime.Nuclear(gun));}warning.Show(point,progress);}else if(warning)warning.Hide();}
         bool Operational {get{return owner&&owner.LocalSim&&owner.IsServer&&!owner.Networkdisabled&&owner.NetworkHQ&&!((bool)Disabled.GetValue(turret))&&!((bool)Stowed.GetValue(turret));}}
-        void Awake(){turret=GetComponent<Turret>();gun=GetComponentInChildren<Gun>(true);owner=gun?gun.attachedUnit:null;pitch=gun?gun.transform:null;var ms=gun?Muzzles.GetValue(gun) as Transform[]:null;muzzle=ms!=null&&ms.Length>0?ms[0]:null;if(!owner||!muzzle){enabled=false;return;}AccessTools.Field(typeof(Gun),"tracerSize").SetValue(gun,R230Solution.TracerSize);AccessTools.Field(typeof(Turret),"traverseRate").SetValue(turret,R230Solution.TraverseRate);R230Runtime.DisableRecoil(gun);}
+        void Awake(){turret=GetComponent<Turret>();gun=GetComponentInChildren<Gun>(true);owner=gun?gun.attachedUnit:null;pitch=gun?gun.transform:null;var ms=gun?Muzzles.GetValue(gun) as Transform[]:null;muzzle=ms!=null&&ms.Length>0?ms[0]:null;if(!owner||!muzzle){enabled=false;return;}if(R230Runtime.Nuclear(gun)&&!R230Runtime.Legacy(gun))capacitor=new R230Capacitor(1,R230Capacitor.NuclearChargeSeconds,R230Capacitor.NuclearRechargeSeconds);AccessTools.Field(typeof(Gun),"tracerSize").SetValue(gun,R230Solution.TracerSize);AccessTools.Field(typeof(Turret),"traverseRate").SetValue(turret,R230Solution.TraverseRate);R230Runtime.DisableRecoil(gun);}
         bool Eligible(Unit u){return u&&u!=owner&&!u.Networkdisabled&&u.gameObject.activeInHierarchy&&u.definition&&(u is Aircraft||u is Missile&&R230Solution.Piledriver(u.definition.jsonKey))&&u.NetworkHQ&&u.NetworkHQ!=owner.NetworkHQ;}
         bool Visible(Unit u){return u&&R230Solution.InRangeSquared((u.transform.position-muzzle.position).sqrMagnitude)&&u.LineOfSight(muzzle.position,(float)R230Solution.OpticalMagnification)&&!ShellObscurants.SmokeBlocks(muzzle.position,u.transform.position);}
         static Vector3 Velocity(Unit u){return u.rb?u.rb.velocity:Vector3.zero;}
@@ -88,25 +108,48 @@ namespace GunmageddonAudio
         {
             if(!owner)return;
             if(!owner.LocalSim){if(remote){transform.localRotation=Quaternion.RotateTowards(transform.localRotation,Quaternion.Euler(0,remoteYaw,0),R230Solution.TraverseRate*Time.fixedDeltaTime);pitch.localRotation=Quaternion.RotateTowards(pitch.localRotation,Quaternion.Euler(remotePitch,0,0),30*Time.fixedDeltaTime);}return;}
-            solution=false;if(!Operational){acquisition.Reset();CancelCharge();return;}
-            if(Time.time>=nextScan){nextScan=Time.time+.2f;SharedWorldQueries.Units(owner.GlobalPosition(),65020,candidates);var selected=Select(candidates);if(selected!=target){acquisition.Reset();CancelCharge();}target=selected;candidates.Clear();}
-            if(!Eligible(target)||!Visible(target)){target=null;motionTarget=null;acquisition.Reset();CancelCharge();return;}
-            var p=target.transform.position-muzzle.position;var v=Velocity(target);OpticalVector aim;double flight;
-            var acceleration=Acceleration(target,v,Time.fixedTime);
+            solution=false;if(!Operational){reaction.Reset();acquisition.Reset();CancelCharge();return;}
+            if(!committed&&Time.time>=nextScan){nextScan=Time.time+.2f;SharedWorldQueries.Units(owner.GlobalPosition(),65020,candidates);var selected=Select(candidates);if(selected!=target){reaction.Reset();acquisition.Reset();CancelCharge();}target=selected;candidates.Clear();}
+            if(!Eligible(target)||!committed&&!Visible(target)){target=null;motionTarget=null;reaction.Reset();acquisition.Reset();CancelCharge();return;}
+            // Notice first; no aiming, warning, charging or firing until this
+            // target has remained eligible and visible for five seconds.
+            if(!R230Runtime.Legacy(gun)&&!committed&&!reaction.Track(target.GetInstanceID(),true,Time.time)){acquisition.Reset();CancelCharge();return;}
+            bool nuclear=R230Runtime.Nuclear(gun)&&!R230Runtime.Legacy(gun);
+            var observed=target.transform.position;var observedVelocity=Velocity(target);
+            var observedAcceleration=Acceleration(target,observedVelocity,Time.fixedTime);
+            float delay=nuclear&&!committed?(float)capacitor.ChargeDuration:0;
+            var p=committed?committedPoint.ToLocalPosition()-muzzle.position:observed-muzzle.position+observedVelocity*delay+observedAcceleration*(.5f*delay*delay);
+            var v=committed?Vector3.zero:observedVelocity+observedAcceleration*delay;OpticalVector aim;double flight;
+            var acceleration=committed?Vector3.zero:observedAcceleration;
             if(!R230Solution.InterceptAccelerated(new OpticalVector(p.x,p.y,p.z),new OpticalVector(v.x,v.y,v.z),new OpticalVector(acceleration.x,acceleration.y,acceleration.z),gun.info.muzzleVelocity,9.81*gun.info.gravMult,Time.fixedDeltaTime,out aim,out flight)){acquisition.Reset();CancelCharge();return;}
-            direction=new Vector3((float)aim.X,(float)aim.Y,(float)aim.Z);aimPoint=(muzzle.position+direction*(float)(flight*gun.info.muzzleVelocity)).ToGlobalPosition();
+            direction=new Vector3((float)aim.X,(float)aim.Y,(float)aim.Z);
+            float lead=(float)flight+delay;
+            aimPoint=committed?committedPoint:nuclear?(observed+observedVelocity*lead+observedAcceleration*(.5f*lead*lead)).ToGlobalPosition():(muzzle.position+direction*(float)(flight*gun.info.muzzleVelocity)).ToGlobalPosition();
+            if(nuclear&&!R230Solution.InRangeSquared((aimPoint.ToLocalPosition()-muzzle.position).sqrMagnitude)){acquisition.Reset();CancelCharge();return;}
             var local=transform.parent.InverseTransformDirection(direction);float yaw=Mathf.Atan2(local.x,local.z)*Mathf.Rad2Deg,elevation=Mathf.Atan2(local.y,new Vector2(local.x,local.z).magnitude)*Mathf.Rad2Deg;
             if(elevation< -5||elevation>90){acquisition.Reset();CancelCharge();return;}
             transform.localRotation=Quaternion.RotateTowards(transform.localRotation,Quaternion.Euler(0,yaw,0),R230Solution.TraverseRate*Time.fixedDeltaTime);pitch.localRotation=Quaternion.RotateTowards(pitch.localRotation,Quaternion.Euler(-elevation,0,0),30*Time.fixedDeltaTime);solution=true;
-            acquisition.Track(target.GetInstanceID(),Aligned,Time.time);
+            if(!committed)acquisition.Track(target.GetInstanceID(),Aligned,Time.time);
             if(Time.time>=nextPose){nextPose=Time.time+.1f;F88FlakNetwork.Pose(owner,transform.localEulerAngles.y,pitch.localEulerAngles.x);}
             if(station==null){foreach(var s in turret.GetWeaponStations())if(s!=null){station=s;break;}if(station!=null&&!station.HasTurret())station.AssignTurret(turret);}
             if(station==null){CancelCharge();return;}station.AccountAmmo();station.AssessAmmo();
-            capacitor.Tick(target.GetInstanceID(),acquisition.Ready&&Aligned&&WarningReady&&station.Ammo>0,Time.time);Cue(capacitor.Charging);
+            bool trackingReady=true;
+            if(nuclear&&!committed){
+                bool canTrack=acquisition.Ready&&WarningReady&&station.Ammo>0&&capacitor.CanPrepare(Time.time);
+                if(!canTrack)trackingStarted=float.NaN;
+                else if(float.IsNaN(trackingStarted))trackingStarted=Time.time;
+                trackingReady=canTrack&&Time.time-trackingStarted>=R230Capacitor.NuclearTrackingSeconds;
+            }
+            capacitor.Tick(target.GetInstanceID(),trackingReady&&(committed||acquisition.Ready&&Aligned)&&WarningReady&&station.Ammo>0,Time.time);
+            if(nuclear&&capacitor.Charging&&!committed){committedPoint=aimPoint;committed=true;}
+            if(!capacitor.Charging){committed=false;committedPoint=default(GlobalPosition);}
+            Cue(capacitor.Charging||nuclear&&!float.IsNaN(trackingStarted));
+            double alertProgress=R230AlertPolicy.WarningProgress(capacitor.Progress(Time.time),capacitor.ChargeDuration);
+            Alert(station.Ammo>0?R230AlertPolicy.State(capacitor.Charging,alertProgress):RailgunAlertState.Off,(float)alertProgress);
             if(CanFire&&station.Ammo>0)gun.Fire(owner,target,v,station,aimPoint);
         }
         internal void RemotePose(float yaw,float pitchAngle){remote=true;remoteYaw=yaw;remotePitch=pitchAngle;}
-        void OnDisable(){CancelCharge();}
+        void OnDisable(){reaction.Reset();acquisition.Reset();CancelCharge();}
         void OnDestroy(){CancelCharge();if(warning){if(Application.isPlaying)Object.Destroy(warning);else Object.DestroyImmediate(warning);}R230Runtime.Unregister(this);}
     }
 }

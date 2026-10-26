@@ -46,15 +46,16 @@ public static class R230NuclearIntegration
             h.Patch(typeof(Unit).GetProperty("LocalSim").GetGetMethod(),prefix:new HarmonyMethod(typeof(R230NuclearIntegration).GetMethod("Local")));
             h.Patch(typeof(Mirage.NetworkBehaviour).GetProperty("IsServer").GetGetMethod(),prefix:new HarmonyMethod(typeof(R230NuclearIntegration).GetMethod("Server")));
             authority=false;var add=new object[]{sim,null};type.GetMethod("Add",S).Invoke(null,add);Check(add[1]==null,"Remote simulation cannot originate nuclear flights");authority=true;
+            var uncommitted=new object[]{sim,null};type.GetMethod("Add",S).Invoke(null,uncommitted);Check(uncommitted[1]==null,"Uncommitted shots cannot originate nuclear flights");
             var flights=(IDictionary)type.GetField("Flights",S).GetValue(null);var effects=(IList)type.GetField("Effects",S).GetValue(null);
             Action<float,bool> shot=(height,expect)=>
             {
-                targetObject.transform.position=new Vector3(500,height,0);gun.transform.position=new Vector3(-10000,0,0);
-                var state=new object[]{sim,null};type.GetMethod("Add",S).Invoke(null,state);Check(state[1]!=null,"Authoritative shot captured");
+                Set(controller,"committed",true);Set(controller,"committedPoint",new Vector3(500,height,0).ToGlobalPosition());targetObject.transform.position=new Vector3(500,height==50?5000:0,0);gun.transform.position=new Vector3(-10000,0,0);
+                var state=new object[]{sim,null};type.GetMethod("Add",S).Invoke(null,state);Check(state[1]!=null,"Authoritative committed shot captured");Set(controller,"committedPoint",new Vector3(500,20000,0).ToGlobalPosition());
                 var bullet=new BulletSim.Bullet(Vector3.right*15000,null,1,true,false,null){position=Vector3.zero.ToGlobalPosition(),velocity=Vector3.right*15000,active=true,destructTimer=10};
                 var before=new object[]{bullet,gun.info,owner,null};type.GetMethod("Before",S).Invoke(null,before);type.GetMethod("Added",S).Invoke(null,new object[]{null,state[1]});Check(flights.Count==1,"Native flight associated exactly once");
                 bullet.position=new Vector3(1000,0,0).ToGlobalPosition();int count=effects.Count;type.GetMethod("After",S).Invoke(null,new[]{(object)bullet,1f/15,before[3]});
-                Check((effects.Count==count+1)==expect,"Swept proximity result matches moving target: expected="+expect+" effects="+count+"->"+effects.Count+" flightTarget="+(Get(Get(state[1],"Flight"),"Target")!=null)+" disabled="+target.Networkdisabled);
+                Check((effects.Count==count+1)==expect,"Fixed planned-point proximity ignores aircraft evasion: expected="+expect+" effects="+count+"->"+effects.Count);
                 if(expect){Check(!bullet.active&&flights.Count==0&&bullet.position.ToLocalPosition().x>400&&bullet.position.ToLocalPosition().x<600,"Proxy bursts inside travelled segment and retires once");var effect=(GameObject)effects[effects.Count-1];Check(Mathf.Approximately((float)Get(effect.GetComponentInChildren<Shockwave>(true),"yieldKilotons"),1.5f),"Native shockwave configured to1.5kt");Check(Mathf.Approximately((float)Get(effect.GetComponentInChildren<MushroomCloud>(true),"yield"),1500000f),"Native cloud configured to1500000kg TNT");}
                 if(expect){int emitted=effects.Count;type.GetMethod("After",S).Invoke(null,new[]{(object)bullet,1f/15,before[3]});Check(effects.Count==emitted,"Duplicate callback cannot detonate a spent shot again");}
                 type.GetMethod("Remove",S).Invoke(null,new object[]{bullet});
@@ -71,12 +72,12 @@ public static class R230NuclearIntegration
             var nativeWarning=(MeshRenderer)Get(warning,"nativeBeam");Check(nativeWarning&&nativeWarning.enabled&&!((LineRenderer)Get(warning,"beam")).enabled,"Native warning render path uses initialized property blocks");
             var properties=new MaterialPropertyBlock();nativeWarning.GetPropertyBlock(properties);Check(Mathf.Approximately(properties.GetFloat("_Emissive"),(float)Get(warning,"nativeEmission")*1.10f),"Bigger warning preserves modest native emission");
             warning.GetType().GetMethod("Hide",F).Invoke(warning,null);Check(!nativeWarning.enabled&&!((MeshRenderer)Get(warning,"auraGlow")).enabled,"Bigger native warning and aura hide together");warning.GetType().GetMethod("OnDestroy",F).Invoke(warning,null);UnityEngine.Object.DestroyImmediate(warning);
-            return new{passed=true,checks,triangles,details="Native prefab, stock effect/yield parameters, swept crossing/miss, authority, retirement, separate standard gun; blast propagation/render/transport need mission verification"};
+            return new{passed=true,checks,triangles,details="Native prefab, stock effect/yield parameters, committed-point crossing/miss despite aircraft movement, authority, retirement, separate standard gun; blast propagation/render/transport need mission verification"};
         }
         finally
         {
             var effects=(IList)type.GetField("Effects",S).GetValue(null);foreach(GameObject effect in effects)if(effect)UnityEngine.Object.DestroyImmediate(effect);type.GetMethod("Shutdown",S).Invoke(null,null);
-            var registry=(IDictionary)typeof(Mirage.Serialization.MessagePacker).GetProperty("MessageTypes").GetValue(null);foreach(var name in new[]{"FlakHello","FlakBurst","FlakPose","R230ChargeCue","R230NuclearBurst"})registry.Remove(Mirage.Serialization.MessagePacker.GetId(a.GetType("GunmageddonAudio."+name)));
+            var registry=(IDictionary)typeof(Mirage.Serialization.MessagePacker).GetProperty("MessageTypes").GetValue(null);foreach(var name in new[]{"FlakHello","FlakBurst","FlakPose","R230ChargeCue","R230NuclearBurst","R230PlayerAlertCue","FlakAPImpact"})registry.Remove(Mirage.Serialization.MessagePacker.GetId(a.GetType("GunmageddonAudio."+name)));
             h.UnpatchSelf();EditorSceneManager.ClosePreviewScene(scene);origin.SetValue(null,old);position.SetValue(null,oldPosition);authority=true;
         }
     }

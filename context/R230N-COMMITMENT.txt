@@ -1,0 +1,151 @@
+2026-10-25 | runtime1.18.2 installed | unchanged pack0.0.37/protocol7
+Both R230 and R230N now have a five-second reaction gate from selection of an
+eligible target with LOS. No aiming transforms, warning beam/orb, targeted player
+alert, capacitor charge or Fire authorization occur before that gate completes.
+Source operational checks, range/faction/visibility and0.2sec candidate scans
+remain. A changed target, lost LOS/eligibility, disabled source or disabled
+controller resets reaction and requires another five continuous seconds.
+An established valid target retains completed reaction between shots. The delay
+is per acquired target, not a forced pause for every shot. Existing0.75second
+aligned-acquisition stage remains AFTER reaction. R230N then retains five seconds
+live warning-point tracking and three seconds committed charge; neither is
+absorbed into the new reaction delay. Existing nuclear point fuze,20sec recharge,
+velocity, damage and glassy rings unchanged. Standard charge/bank unchanged.
+
+Implementation: R230Reaction policy in R230Solution.cs; controller early gate
+before solving/pose/cues and independent CanFire guard. Native metadata string
+for nuclear unit updated at play-mode initialization; no prefab/pack edits.
+Three fresh native groups passed138checks: ordinaryR23089 (including no instant
+pose/warning plus subsequent native fire/spawn), nuclear commitment19 (reaction
+then live tracking then fixed solution and native Fire request), HUD/audio30.
+SDK10.0.402 existing workspace runner:38442solution/reaction assertions and774
+alert-policy checks passed, including inclusive5sec boundary, target switch,
+LOS loss/reacquisition, zero target and retained readiness. Both model LODs
+1060/610/288audited unchanged through native fixtures. No scene/prefab save.
+Unity was clean/stopped at inspection; fixtures isolated and clean up themselves.
+Live mission timing and multiplayer transport remain unverified.
+
+Compiled/source-validated/installed runtime1.18.2, pack0.0.37 unchanged.
+Game closed; installed binary hash matches staging. Hash/rollback recorded in
+GunmaggedonRuntime/build/r230-reaction/install.json. Previous1.18.1 retained at
+UnitySetupBackup/R230/BeforeReaction-1.18.2/. Evidence/native results and source
+identity: GunmaggedonRuntime/build/r230-reaction/. No public push/publication.
+
+2026-10-25 | runtime1.18.1 installed | unchanged pack0.0.37 / protocol7
+R-230N now visibly tracks the live predicted point for five additional seconds
+before freezing it. Then the existing three-second committed charge runs.
+Tracking begins with acquired target, weapon/ammo readiness and capacitor
+preparation eligibility. It does not spend a cell or start charge; the beam/orb
+follow the updating point and player audio remains in Tracking state. Target
+switch, lost validity/readiness or cancellation resets that tracking interval.
+After commitment, previous fixed-point fuze and firing behavior remain.
+20sec recharge timer unchanged; the extra tracking stage can extend the minimum
+shot interval (ideal repeat cycle now25sec because preparation starts at17sec,
+five tracking seconds then three committed seconds). Initial ready engagement
+adds five seconds before the existing three-second charge. Alignment can add
+further delay. Muzzle velocity,1.5kt yield, rings and ordinary R230 unchanged.
+
+Final1.18.1 staged/installed hash recorded in build/r230n-tracking/install.json.
+Game closed during install; rollback1.18.0 retained in
+UnitySetupBackup/R230N/BeforeTracking-1.18.1/.
+Three fresh native groups passed136checks: commitment18 (live point movement,
+five-second boundary, later fixed point and native firing/recharge/cancellation),
+HUD/audio30, ordinaryR23088 (including native fire/spawn and model LODs).
+SDK10.0.402:38437solution/capacitor assertions and774alert-policy checks pass.
+Unity scene clean/stopped; no prefab save or pack export/publication. Current
+model LODs1060/610/288unchanged; warning presentation remains independent.
+Live mission timing/MP are not certified. Evidence/source hashes:
+GunmaggedonRuntime/build/r230n-tracking/.
+
+R-230N committed nuclear firing solution and glassy pressure rings
+2026-10-25 | runtime1.18.0 installed | asset pack0.0.37 unchanged | protocol7
+
+User selected the first three balancing proposals: commit the predicted burst
+point, make the fuze respect that location, and use a single-shot capacitor.
+No muzzle-velocity, blast-yield, damage or ordinary R230 balance changes.
+
+Nuclear controller behavior
+- After target acquisition/alignment/readiness, begins a three-second charge and
+  freezes the predicted burst point. Prediction includes aircraft movement over
+  both the charge delay and projectile travel, so predictable flight is still
+  dangerous. The warning orb and laser continue marking that fixed location.
+- During commitment, solves ballistics toward that same GlobalPosition rather
+  than chasing current aircraft motion. Defers target selection scans until the
+  commitment ends. Alignment can still gate discharge; it cannot drag the point
+  or repeatedly restart the committed charge as the aircraft maneuvers.
+- Source operational/readiness/ammunition gates remain. Target destruction or
+  invalid faction/lifecycle cancels charge; no cell is spent on cancellation.
+  Smoke/target LOS are acquisition evidence; after commitment the shot stays
+  at the planned point even if the target moves away. Native terrain collision
+  still bounds the actual projectile trajectory.
+- AddBullet snapshots the committed GlobalPosition into authoritative Flight.
+  No valid commitment means no nuclear Flight can originate. Subsequent target
+  motion or changes to the controller point cannot move a launched round's fuze.
+- Armed round triggers against a100m sphere around the planned point using swept
+  segment checks. It no longer checks moving-target proximity. Native armed
+  physical impacts still detonate; no steering/homing has been introduced.
+- Nuclear capacity1, three-second charge,20-second recharge after every actual
+  SpawnBullet. Charging may overlap only the final three seconds of recharge;
+  it cannot fire before the full20seconds. Missed/cancelled acquisition later
+  still requires its own full charge. Duplicate native debit is rejected.
+- Ordinary R230 retains3cells,2sec charge,10sec bank refill. Shared capacitor
+  constructor defaults preserve that policy. Native muzzle velocity15000m/s and
+  R230N1.5kt stock shockwave unchanged.
+- Alert progress maps onto the existing receiver cadence so sustained imminent
+  audio remains restricted to the last0.5sec even with the nuclear3sec charge.
+  No network shape/protocol change. Compatible peers still render server-owned
+  bursts; clients need current runtime for updated ring presentation.
+- Runtime native initialization updates the R230N's in-memory mod description
+  to explain commitment and one-shot recharge. Packed editor description retains
+  its old wording until next pack rebuild. Editor validation doesn't dirty it.
+
+Visual changes
+Rings now use a generated rounded torus with curved normals, transparent lit
+URP material, high smoothness(.98), mild reflective metallic response(.12) and
+restrained emission. Faces are clearer, with bright inner/outer rims for a
+polished/glass-like appearance. No true scene-refraction/distortion pass.
+Launch diameter1120m, flight diameter840m at full expansion (twice prior size);
+start scale12percent, lifetime1.5sec, interval0.14sec. Higher opacity and thicker
+cross-section make them substantially easier to see. Rings remain detached and
+stationary after emission, with zero additional lights/colliders/damage/audio.
+One shared particle renderer grows active capacity as needed. All generated
+resources/cursors clear on mission teardown/shutdown; no new asset copies.
+Model LODs remain1060/610/288 on both railguns. Long-range ring effects are an
+explicit presentation exception independent of physical model LOD/culling.
+
+Validation
+Compiled62production sources to separate1.18.0staging. SDK10.0.402 workspace
+runner passed38437R230 solution/capacitor assertions and774alert-policy checks.
+Fresh isolated Unity namespace groups passed184checks total:
+  commitment15: actual prefab/controller readiness, three-second charge,
+    future-position lead, evasion/scan cannot drag warning, native Fire request,
+    discharge debit and20sec recharge/cancellation gates;
+  nuclear29: canonical1.5kt stock effect, snapshot survives controller mutation,
+    far-evaded aircraft still yields planned-point burst, aircraft beside a
+    missed point cannot pull the fuze back, no uncommitted/remote authority;
+  rings22: lit shader/curved torus/doubled size, lifetime/origin storage/catch-up,
+    remote native flight path, capacity180/no drops, teardown/restart and render;
+  ordinaryR23088: native fire/spawn path, policies/LOS/authority and model LODs;
+  player warning30: PCM/state audio properties, HUD layout and Mirage codec.
+Controlled GPU render shows8547visible pixels vs initial1.17.0metric1076under
+same camera/background (.3sec particle age). This is a visibility metric, not
+an FPS or mission benchmark. Preview saved in build/r230n-balance/.
+Historical build/pressure-rings/preview.png was overwritten by the updated
+regression before the output was moved; the original1076metric remains in its
+historical report. Do not treat the old preview as an untouched baseline image.
+The full current-build runner's pre-existing names/type count mismatch was
+corrected while registering the new fixture; targeted groups were run directly.
+Final metadata-only runtime-description edit compiled after these native groups;
+its Application.isPlaying branch was not executed in editor validation.
+
+Unity scene remained clean and stopped. No scene/prefab save or public push.
+Live mission escape distance, cockpit experience, rendering against actual
+weather/terrain and multiplayer transport remain unverified. No claim that the
+nuclear round is now easy to evade, or that native AI learns to dodge it.
+
+Compiled/source-validated/installed runtime1.18.0, unchanged pack0.0.37.
+Game closed; installed hash matches staged:
+671A82A4402615B443819ADBFC46938CB3A4975C1F50C271F3E4498EC2F98D50
+Rollback1.17.0: UnitySetupBackup/R230N/BeforeCommitment-1.18.0/.
+Evidence: GunmaggedonRuntime/build/r230n-balance/{install.json,
+source-identity.json,validation-results.json,glassy-rings-preview.png}.

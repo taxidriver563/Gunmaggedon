@@ -15,11 +15,17 @@ namespace GunmageddonAudio
         static readonly Dictionary<Gun,F88FlakController> Guns=new Dictionary<Gun,F88FlakController>();
         static readonly Dictionary<BulletSim.Bullet,Flight> Flights=new Dictionary<BulletSim.Bullet,Flight>();
         static readonly FieldInfo SimGun=AccessTools.Field(typeof(BulletSim),"gun"),SimVisual=AccessTools.Field(typeof(BulletSim),"visualOnly");
-        sealed class Flight {internal bool Authority,Heavy,Incendiary;internal PersistentID Source;internal float Blast;}
+        sealed class Flight {internal bool Authority,Heavy,Incendiary,ImpactShown,Bound,AP;internal PersistentID Source;internal float Blast;internal WeaponInfo APInfo;internal ParticleEffectManager.PrefabEffect[] APEffects;internal GameObject ImpactAudio;internal uint NetId;}
         sealed class Pending {internal Pending Previous;internal Flight Flight;internal Unit Owner;internal WeaponInfo Info;}
         [ThreadStatic]static Pending pending;
         internal static GameObject EffectPrefab;
         internal static GameObject HeavyEffectPrefab;
+        static GameObject quietImpactObject;static ParticleEffectManager.PrefabEffect quietImpact;
+        static ParticleEffectManager.PrefabEffect QuietImpact(){
+            if(quietImpactObject)return quietImpact;
+            quietImpactObject=new GameObject("Flak AP native impact placeholder");quietImpactObject.transform.SetParent(Datum.origin,false);quietImpactObject.SetActive(false);
+            quietImpact=new ParticleEffectManager.PrefabEffect(quietImpactObject,null);return quietImpact;
+        }
         internal static bool Heavy(Gun g){return g&&g.info&&(g.info.name==HeavyWeapon||IncendiaryCanisterRuntime.Matches(g));}
         internal static bool Matches(Gun g){return g&&g.info&&g.attachedUnit&&g.attachedUnit.definition&&
             (g.info.name==Weapon&&g.attachedUnit.definition.jsonKey==Key||g.info.name==HeavyWeapon&&g.attachedUnit.definition.jsonKey==HeavyKey||IncendiaryCanisterRuntime.Matches(g));}
@@ -37,28 +43,56 @@ namespace GunmageddonAudio
         internal static void Unregister(F88FlakController c,Gun gun){Controllers.Remove(c);if(!ReferenceEquals(gun,null))Guns.Remove(gun);}
         static bool NativeTurret(Turret __instance){return !__instance.GetComponent<F88FlakController>();}
         static bool AllowFire(Gun __instance)
-        {if(!Matches(__instance)||!__instance.attachedUnit.LocalSim)return true;F88FlakController c;return F88Runtime.MechanicallyReady(__instance)&&Flights.Count<512&&Guns.TryGetValue(__instance,out c)&&c.ReadyToFire;}
+        {if(!Matches(__instance)||!__instance.attachedUnit.LocalSim)return true;F88FlakController c;
+            if(!F88Runtime.MechanicallyReady(__instance)||Flights.Count>=512||!Guns.TryGetValue(__instance,out c)||!c.ReadyToFire)return false;
+            c.CueRound();return true;}
         static void Fired(Gun __instance){F88Runtime.Shot(__instance);F88FlakController c;if(Guns.TryGetValue(__instance,out c)&&__instance.attachedUnit.LocalSim)c.ShotFired();}
         static void Add(BulletSim __instance,ref float __2,ref float __3,ref bool __4,ref Unit __8,out Pending __state)
         {
             __state=null;var gun=SimGun.GetValue(__instance) as Gun;if(!Matches(gun))return;
             __2=(float)(Heavy(gun)?FlakBarrageSolution.AdvancedSpreadDegrees:FlakBarrageSolution.GunSpreadDegrees);__8=null;__4=false;
+            OptimizationRuntime.EnsureMission();
             bool visual=(bool)SimVisual.GetValue(__instance);F88FlakController c;
+            bool queued=!visual&&gun.attachedUnit.LocalSim&&Guns.TryGetValue(gun,out c)&&c.APQueued&&c.GroundEnabled;
+            bool ap=queued&&gun.attachedUnit.IsServer;
             if(!visual&&gun.attachedUnit.LocalSim&&Guns.TryGetValue(gun,out c))__3=c.Fuse;
+            WeaponInfo profile=null;
+            if(ap){
+                __2=(float)FlakGroundPolicy.Spread(Heavy(gun));__3=(float)FlakGroundPolicy.Lifetime;
+                profile=UnityEngine.Object.Instantiate(gun.info);profile.name=Heavy(gun)?"F120 Direct AP":"F88 Direct AP";
+                profile.weaponName=Heavy(gun)?"120mm AP":"88mm AP";profile.shortName="AP";
+                profile.pierceDamage=(float)FlakGroundPolicy.Penetration(Heavy(gun));profile.blastDamage=0;profile.airburstHeight=0;
+            }
+            var identity=gun.attachedUnit.GetComponent<Mirage.NetworkIdentity>();
             __state=new Pending{Previous=pending,Owner=gun.attachedUnit,Info=gun.info,
-                Flight=new Flight{Authority=!visual&&gun.attachedUnit.LocalSim&&(!IncendiaryCanisterRuntime.Matches(gun)||gun.attachedUnit.IsServer),Source=gun.attachedUnit.persistentID,Blast=gun.info.blastDamage,Heavy=Heavy(gun),Incendiary=IncendiaryCanisterRuntime.Matches(gun)}};
+                Flight=new Flight{AP=queued,APInfo=profile,ImpactAudio=ap?ArmorPiercingShells.ImpactAudio(gun):null,NetId=identity?identity.NetId:0,Authority=!visual&&gun.attachedUnit.LocalSim&&(!queued||gun.attachedUnit.IsServer)&&(!IncendiaryCanisterRuntime.Matches(gun)||gun.attachedUnit.IsServer),Source=gun.attachedUnit.persistentID,Blast=gun.info.blastDamage,Heavy=Heavy(gun),Incendiary=IncendiaryCanisterRuntime.Matches(gun)}};
             pending=__state;
         }
-        static Exception Added(Exception __exception,Pending __state){if(__state!=null)pending=__state.Previous;return __exception;}
-        static void TraceStart(BulletSim.Bullet __instance,WeaponInfo info,Unit owner)
+        static Exception Added(Exception __exception,Pending __state){
+            if(__state!=null){pending=__state.Previous;if(__exception!=null){
+                var remove=RemovalBuffer<BulletSim.Bullet>.Rent();try{foreach(var pair in Flights)if(ReferenceEquals(pair.Value,__state.Flight))remove.Add(pair.Key);foreach(var bullet in remove)Flights.Remove(bullet);}finally{RemovalBuffer<BulletSim.Bullet>.Return(remove);}
+                Release(__state.Flight);
+            }else if(!__state.Flight.Bound)Release(__state.Flight);}return __exception;
+        }
+        static void TraceStart(BulletSim.Bullet __instance,ref WeaponInfo info,Unit owner,ref ParticleEffectManager.PrefabEffect[] impactEffects,ref bool visualOnly)
         {
             if(!info||(info.name!=Weapon&&info.name!=HeavyWeapon&&info.name!=IncendiaryCanisterRuntime.Weapon))return;
             __instance.proximityFuse=false;__instance.target=null;__instance.explosive=false;
-            if(pending!=null&&pending.Info==info&&pending.Owner==owner&&!Flights.ContainsKey(__instance))Flights[__instance]=pending.Flight;
+            if(pending!=null&&pending.Info==info&&pending.Owner==owner&&!Flights.ContainsKey(__instance)){Flights[__instance]=pending.Flight;pending.Flight.Bound=true;}
+            Flight f;if(!Flights.TryGetValue(__instance,out f)||!f.AP)return;
+            if(f.APInfo)info=f.APInfo;else visualOnly=true;
+            if(!f.Authority||owner&&!owner.IsServer)visualOnly=true;
+            if(f.APEffects==null){var quiet=QuietImpact();f.APEffects=new[]{quiet,quiet,quiet,quiet};if(impactEffects!=null&&impactEffects.Length>2&&impactEffects[2]!=null)f.APEffects[2]=impactEffects[2];}
+            impactEffects=f.APEffects;
         }
         static void TraceEnd(BulletSim.Bullet __instance)
         {
-            Flight f;if(!Flights.TryGetValue(__instance,out f)||__instance.active)return;
+            Flight f;if(!Flights.TryGetValue(__instance,out f))return;
+            if(f.AP){
+                if(__instance.impacted&&!f.ImpactShown){f.ImpactShown=true;if(f.Authority&&__instance.position.ToLocalPosition().y>Datum.LocalSeaY+.1f){ArmorPiercingShells.Impact(__instance.position.ToLocalPosition(),__instance.velocity,f.ImpactAudio);F88FlakNetwork.APImpact(__instance.position,__instance.velocity,f.NetId);}}
+                if(!__instance.active){Flights.Remove(__instance);Release(f);}return;
+            }
+            if(__instance.active)return;
             Flights.Remove(__instance);
             if(!f.Authority||__instance.impacted||__instance.destructTimer>0)return;
             if(f.Incendiary){IncendiaryCanisterRuntime.Burst(__instance.position,__instance.velocity,f.Source);return;}
@@ -74,15 +108,17 @@ namespace GunmageddonAudio
             F88FlakEffects.Play(heavy?HeavyEffectPrefab:EffectPrefab,position);
             F88FlakNetwork.BurstProfile(position,heavy);
         }
-        static void Remove(BulletSim.Bullet __instance){Flights.Remove(__instance);}
+        static void Release(Flight f){if(f.APInfo)RuntimePool<Transform>.Remove(f.APInfo);f.APInfo=null;f.APEffects=null;f.ImpactAudio=null;}
+        static void Remove(BulletSim.Bullet __instance){Flight f;if(Flights.TryGetValue(__instance,out f)){Flights.Remove(__instance);Release(f);}}
+        internal static void ClearFlights(){foreach(var f in Flights.Values)Release(f);Flights.Clear();for(var p=pending;p!=null;p=p.Previous)Release(p.Flight);pending=null;if(quietImpactObject)RuntimePool<Transform>.Remove(quietImpactObject);quietImpactObject=null;quietImpact=null;}
         internal static void Shutdown()
         {
             foreach(var c in Controllers.ToArray())if(c)UnityEngine.Object.Destroy(c);
-            Controllers.Clear();Guns.Clear();Flights.Clear();pending=null;EffectPrefab=HeavyEffectPrefab=null;IncendiaryCanisterRuntime.Shutdown();F88FlakNetwork.Shutdown();F88FlakEffects.Shutdown();F88Fragments.Clear();
+            Controllers.Clear();Guns.Clear();ClearFlights();EffectPrefab=HeavyEffectPrefab=null;IncendiaryCanisterRuntime.Shutdown();F88FlakNetwork.Shutdown();F88FlakEffects.Shutdown();F88Fragments.Clear();
         }
     }
 
-    public sealed class F88FlakController : MonoBehaviour
+    public sealed partial class F88FlakController : MonoBehaviour
     {
         static readonly FieldInfo Muzzles=AccessTools.Field(typeof(Gun),"muzzles"),TurretDisabled=AccessTools.Field(typeof(Turret),"disabled"),Stowed=AccessTools.Field(typeof(Turret),"stowed"),Reload=AccessTools.Field(typeof(Gun),"timeUntilReload");
         readonly List<Unit> contacts=new List<Unit>();readonly List<Radar> radars=new List<Radar>();
@@ -93,7 +129,7 @@ namespace GunmageddonAudio
         internal bool Advanced {get{return F88FlakRuntime.Heavy(gun);}}
         float MaximumRange {get{return Advanced?20000:12000;}}
         float Commitment {get{return (float)(Advanced?FlakBarrageSolution.AdvancedCommitSeconds:FlakBarrageSolution.CommitSeconds);}}
-        internal bool ReadyToFire {get{return planned&&aimSamples>=3&&Operational&&track!=null&&track.CanContinue(Time.time);}}
+        internal bool ReadyToFire {get{return GroundMode?GroundReady:planned&&aimSamples>=3&&Operational&&track!=null&&track.CanContinue(Time.time);}}
         internal float Fuse {get{return fuse;}}
         bool Operational {get{return owner&&owner.LocalSim&&!owner.Networkdisabled&&owner.gameObject.activeInHierarchy&&!((bool)TurretDisabled.GetValue(turret))&&!((bool)Stowed.GetValue(turret))&&(!owner.rb||owner.rb.velocity.sqrMagnitude<4);}}
         void Awake()
@@ -117,7 +153,7 @@ namespace GunmageddonAudio
             return !ShellObscurants.SmokeBlocks(muzzle.position,aircraft.transform.position)&&aircraft.LineOfSight(muzzle.position,10f);
         }
         internal static bool TargetKind(Unit u,bool advanced){return u&&(u is Aircraft||advanced&&u is Missile&&u.definition&&R230Solution.Piledriver(u.definition.jsonKey));}
-        bool Eligible(Unit u){return TargetKind(u,Advanced)&&!u.Networkdisabled&&u.gameObject.activeInHierarchy&&u.NetworkHQ&&u.NetworkHQ!=owner.NetworkHQ;}
+        bool Eligible(Unit u){return (TargetKind(u,Advanced)||GroundEnabled&&GroundKind(u))&&!u.Networkdisabled&&u.gameObject.activeInHierarchy&&u.NetworkHQ&&u.NetworkHQ!=owner.NetworkHQ;}
         void FindRadar()
         {
             SharedWorldQueries.Radars(owner.GlobalPosition(),300,radars);
@@ -128,18 +164,23 @@ namespace GunmageddonAudio
             // Broad identity is not detection evidence. Own verified optics can
             // acquire without waiting for a precise faction tracking entry.
             SharedWorldQueries.Units(muzzle.position.ToGlobalPosition(),MaximumRange,contacts);
-            Unit best=null;float distance=float.MaxValue;
+            Unit best=null,ground=null;float distance=float.MaxValue,groundDistance=float.MaxValue;
             foreach(var u in contacts) {
                 if(!Eligible(u))continue;
+                if(GroundKind(u)){
+                    if(!GroundVisible(u))continue;float gd=(u.transform.position-muzzle.position).sqrMagnitude*(u==target?.8f:1);
+                    if(gd<groundDistance){groundDistance=gd;ground=u;}continue;
+                }
                 GlobalPosition known;bool radar;if(!TryObservation(u,out known,out radar))continue;
                 var p=known.ToLocalPosition();float d=(p-muzzle.position).sqrMagnitude;
                 if(p.y<Datum.LocalSeaY+(Advanced?250:350)||p.y>Datum.LocalSeaY+(Advanced?20000:9000)||d<(Advanced?600*600:800*800)||d>MaximumRange*MaximumRange)continue;
                 if(u==target){best=u;break;}if(d<distance){distance=d;best=u;}
             }
             contacts.Clear();
-            if(best!=target&&(!target||track==null||!track.CanContinue(now))) {
-                target=best;planned=false;shots=0;area=default(FlakBarrageArea);nextObservation=0;
-                track=target?new FlakBarrageSolution(GetInstanceID()^target.GetInstanceID(),Advanced,target is Missile?6000:600):null;
+            if(!best&&(!target||!Eligible(target)||GroundMode||track==null||!track.CanContinue(now)))best=ground;
+            if(best!=target&&(GroundMode||!target||!Eligible(target)||track==null||!track.CanContinue(now))) {
+                target=best;groundTrack.Reset();planned=false;aimSamples=0;shots=0;area=default(FlakBarrageArea);nextObservation=0;
+                track=target&&!GroundMode?new FlakBarrageSolution(GetInstanceID()^target.GetInstanceID(),Advanced,target is Missile?6000:600):null;
             }
         }
         bool TryObservation(Unit u,out GlobalPosition observed,out bool radar)
@@ -152,6 +193,7 @@ namespace GunmageddonAudio
         }
         void Observe(float now)
         {
+            if(GroundMode){ObserveGround(now);return;}
             if(!Eligible(target)||track==null)return;
             bool radar;GlobalPosition known;
             if(!TryObservation(target,out known,out radar))return;
@@ -209,6 +251,7 @@ namespace GunmageddonAudio
             if(now>=nextRadar){nextRadar=now+1;FindRadar();}
             if(now>=nextContacts){nextContacts=now+.5f;ChooseContact(now);}
             if(now>=nextObservation){nextObservation=now+(Advanced?.2f:.35f);Observe(now);}
+            if(GroundMode){StepGround(now);return;}
             if(track==null||!track.CanContinue(now)||!Eligible(target)){planned=false;return;}
             if(planned&&now-area.Started>=Commitment)planned=false;
             if(!planned) {
@@ -226,7 +269,7 @@ namespace GunmageddonAudio
             var station=ReadyStation();if(station==null||station.Ammo<=0)return;
             gun.Fire(owner,null,Vector3.zero,station,point);
         }
-        internal void ShotFired(){planned=false;shots++;}
+        internal void ShotFired(){APQueued=false;planned=false;shots++;}
         internal void RemotePose(float yaw,float pitchAngle){remoteYaw=yaw;remotePitch=pitchAngle;remotePose=true;}
         void OnDestroy(){F88FlakRuntime.Unregister(this,gun);}
     }

@@ -38,6 +38,19 @@ namespace GunmageddonAudio
             direction=offset*(1/offset.Length);flight=t;return true;
         }
     }
+    public sealed class R230Reaction
+    {
+        public const double Delay=5;
+        int target;double noticed=double.NaN;public bool Ready{get;private set;}
+        public void Reset(){target=0;noticed=double.NaN;Ready=false;}
+        public bool Track(int id,bool visible,double now)
+        {
+            if(id==0||!visible){Reset();return false;}
+            if(target!=id){Reset();target=id;noticed=now;}
+            if(!Ready)Ready=now-noticed>=Delay;
+            return Ready;
+        }
+    }
     public sealed class R230Acquisition
     {
         public const double Delay=.75;

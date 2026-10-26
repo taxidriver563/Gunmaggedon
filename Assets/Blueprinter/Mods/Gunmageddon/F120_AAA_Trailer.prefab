@@ -2205,8 +2205,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -2231,7 +2231,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -2847,8 +2847,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -2873,7 +2873,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -3114,8 +3114,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -3140,7 +3140,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -3766,8 +3766,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 680085626, guid: 35c838180ffa3b627a4ee1e66ae78cec, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   SpawnSettings:
     SendPosition: 1
     SendRotation: 1
@@ -3789,14 +3789,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -1012890734, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   SyncSettings:
     From: 2
     To: 3
     Timing: 0
     Interval: 0.1
-  MapUniqueName:
+  MapUniqueName: 
   MapHQ: {fileID: 0}
   MapAirbase: {fileID: 0}
   weaponStations: []
@@ -3822,7 +3822,8 @@ MonoBehaviour:
   frictionCoef: 1
   holdAtPlayerCommandedDestination: 1
   navigateToObjectives: 0
-  wreckage: {fileID: 0}
+  wreckage: {fileID: 5254294178717384153, guid: 5d7d5dfb54924a440ac072a48eb074f9,
+    type: 3}
   parachuteSystem: {fileID: 0}
   unitCommand: {fileID: 7616951287743227752}
   wheels:
@@ -3848,8 +3849,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -3874,7 +3875,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -3892,8 +3893,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 663991296, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   SyncSettings:
     From: 2
     To: 3
@@ -3911,8 +3912,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1352390588, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   SyncSettings:
     From: 2
     To: 3
@@ -3928,8 +3929,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 975773361, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   systems:
   - {fileID: 0}
 --- !u!111 &7243714124155352194
@@ -4282,8 +4283,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -4308,7 +4309,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -4677,8 +4678,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -4703,7 +4704,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -5088,8 +5089,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -5114,7 +5115,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -7197,8 +7198,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -7223,7 +7224,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -10449,8 +10450,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -10475,7 +10476,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -11295,8 +11296,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -11321,7 +11322,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -11662,8 +11663,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -11688,7 +11689,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -12191,8 +12192,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -12217,7 +12218,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: a1c88c6991e088541920729ac09c53b1, type: 3}
     threshold: 0
@@ -14951,8 +14952,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1662383224, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 1864317678828530793}
   info: {fileID: 11400000, guid: 7888156443d76014089ef6ee037180a0, type: 2}
   ammo: 80
@@ -15204,8 +15205,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -15230,7 +15231,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: a1c88c6991e088541920729ac09c53b1, type: 3}
     threshold: 0
@@ -15696,8 +15697,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -15722,7 +15723,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: 8504639868290d241a775bc52fc13c8b, type: 3}
     threshold: -100
@@ -16648,8 +16649,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 576076454, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 1864317678828530793}
   targetAcquisitionMode: 1
   fireControl: {fileID: 0}
@@ -16706,8 +16707,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 1864317678828530793}
@@ -16732,7 +16733,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects:
   - prefab: {fileID: 1709254077376921, guid: a1c88c6991e088541920729ac09c53b1, type: 3}
     threshold: 0
@@ -16750,8 +16751,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1761350240, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 1864317678828530793}
   scanner: {fileID: 4173852263832323011}
   part: {fileID: 3144730002065756511}

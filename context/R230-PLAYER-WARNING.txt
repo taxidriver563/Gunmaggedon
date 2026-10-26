@@ -1,0 +1,178 @@
+2026-10-25 backing alignment fix -runtime1.16.3 / pack0.0.37 unchanged
+User screenshot showed Railgun [CHARGE] overflowing the backing. Native layout
+could constrain the wrapper width despite preferred width. The backing is now
+an independently sized first-child Image, ahead of the text child. FitRow uses
+Text.preferredWidth/Height plus matching8px horizontal/3px vertical padding,
+updates min/preferred layout dimensions and gives label/backing matching fixed
+content sizes independently of wrapper width. Recalculate on state/count change;
+no per-frame measurement. No changes to current typography, colors or audio.
+Clear/hide still affects the complete wrapper and children.
+
+Fresh native warning fixture30 checks passes, including TRACK/CHARGE/FIRE x12
+captions, correct padding and a deliberately80-unit-wide wrapper while backing
+retains enough width for all glyphs. Existing native audio/state/codec/cancel/
+cleanup checks and controlled GPU rendering pass. Mission HUD retest still needed.
+Installed with game closed, staged/installed SHA256 match:
+A97A1B8498B9D9AA4253DC0F6A5A70E919B392F73DC390A33B34955F42915EE8
+Rollback:UnitySetupBackup/R230/BeforeWarningFit-1.16.3/.
+Evidence:build/railgun-alert/alignment-test-result.json,alignment-install.json.
+No asset pack, original MP3, scene/prefab, LOD or GitHub changes.
+
+2026-10-25 warning backing -runtime1.16.2 / pack0.0.37 unchanged
+Added a padded dark Image parent behind the existing threat-row text. Borrows
+sprite/type/color from a dark native warning ancestor when available; fallback
+black72% opacity. Background/text have raycastTarget=false. Existing text font,
+material, colors, wording and sound/state/network behavior unchanged. Row/Image
+and child text activate, hide and destroy together on cancel, aircraft change,
+expiry and shutdown. Explicit preferred/fallback row width supports native
+layout groups that do not control child widths (render test caught width0).
+No asset/prefab/LOD changes.
+
+Fresh native warning fixture24 checks passes, including background appearance
+against a gray rendered scene, padding, input passthrough, native-style text,
+existing pulse/cancel/aggregation/codec/cleanup tests. Render reviewed770 red
+pixels with visible black backing. Live mission appearance remains unverified.
+Installed with game closed and binary hash match:
+D128A690FF4CF98A689EB456F16C703DBC252AB891565E15B2598F54F71659B8
+Rollback:UnitySetupBackup/R230/BeforeWarningBacking-1.16.2/.
+Evidence:build/railgun-alert/backing-test-result.json,backing-install.json,
+player-warning-preview.png. GitHub/draft and private MP3s unchanged.
+
+2026-10-25 HUD styling correction -runtime1.16.1 / unchanged pack0.0.37
+User reported the generic centered banner looked out of place. Native UI/code
+inspection found ThreatList owns its warning rows and ThreatItem.text is a legacy
+Unity Text with native warning font, sizing/material/alignment. It uses active
+ThemeManager colors Warning/Alert and Alert+AllClear*sin(realtime*20) pulse.
+
+Replaced the top-center25px banner/outline with a compact row inside the actual
+CombatHUD.threatList layout. Borrow only ThreatItem prefab text properties, not
+its scripts/events; no fake missile registration. Labels Railgun [TRACK],
+Railgun [CHARGE], Railgun [FIRE] and existing xN count follow native warning naming.
+Tracking uses active Warning color, charging Alert, imminent native alert pulse.
+No custom hardcoded production banner position or font-size override. No Outline.
+A LayoutElement fits the row into the existing threat list; disabled native
+ThreatList MonoBehaviour does not disable its child UI. Missing native HUD/list
+waits for binding instead of showing a floating fallback banner. Framework font
+fallback supports LegacyRuntime.ttf and older Arial.ttf for isolated fixtures;
+normal play borrows the installed game's font and material. No native fonts or
+other game assets copied into the mod. Audio, state timing, networking and AI
+unchanged; model LODs/pack unchanged.
+
+Fresh isolated native warning21 checks pass, including supplied warning font/
+size/alignment inheritance and compact LayoutElement without banner outline.
+Controlled render reviewed (638 red pixels) at a stable alert pulse phase. The
+fixture uses a representative warning Text because full native CombatHUD is
+not present in this editor; exact in-game theme/font/list placement still needs
+mission confirmation. The final one-line borrowed-material assignment compiled
+after this run. No claim of full native HUD screenshot certification.
+
+Installed with game closed, previous1.16.0 retained at
+UnitySetupBackup/R230/BeforeHudStyle-1.16.1/. Staged/installed SHA256 match:
+1F53A27A8C7A95DD02B935823FFA6B7295E8103FDF17039C2257C993BD47DFEA
+Evidence:build/railgun-alert/hud-style-{result,test-result,install}.json,
+player-warning-preview.png. User scene unchanged. GitHub/draft unchanged.
+
+Initial implementation follows (old labels/placement superseded above).
+
+R-230 player warning states and private audio -2026-10-25
+
+Requested: a stateful railgun-exclusive player warning with custom MP3s, not an
+instant continuous missile alarm. Implemented runtime1.16.0 / pack0.0.37 on both
+R-230 and R-230N. Local build61 production sources. No GitHub/draft changes.
+
+States follow the authoritative R230Controller:
+- Tracking: valid selected aircraft, reachable aim/firing preparation with ammo;
+ one slow dual-tone pair every2.4sec, first pair delayed.35sec after entry.
+ Two .18sec notes at pitches.92/1.12 separated by.28sec.
+- Charging: actual capacitor.Charging, pulse intervals shorten.65 ->.24sec
+ as the existing2sec capacitor lead advances. Distinct RG_Charging tone.
+- Imminent: final.5sec (progress>=.75 for current2sec lead), looping sustained
+ RG_Firing tone at higher AudioSource priority. Native charge timing unchanged.
+- Clear on actual native SpawnBullet discharge callback, cancellation, target
+ change, loss of eligibility/LOS, player aircraft change/death, timeout or mission
+ teardown. Interrupted charge returns to tracking when preparation remains valid.
+ Multiple guns share one local voice/HUD status; highest urgency wins, xN count.
+ Cancelling one gun does not silence another valid higher-priority threat.
+
+Player presentation
+New R230PlayerAlert resolves GameManager.GetLocalAircraft; other/AI aircraft do
+not get local UI/audio. A custom Text/Outline child in the existing CombatHUD
+canvas shows RAILGUN TRACKING / RAILGUN CHARGING / RAILGUN: FIRE IMMINENT, amber
+through flashing red. Never invokes native missile-warning events, spawns dummy
+missiles or edits AI logic. Native MWS remains independent. AI evasion remains
+outside this feature. No native cockpit light behavior is claimed.
+One reusable2D receiver AudioSource, no sound propagation/doppler: this is an
+instrument alert, not a distant emitter sound. Native threat-warning mixer group
+borrowed when available. Tracking/charging/imminent priority64/32/8 and volume
+.45/.60/.75. Ordinary world gun audio/travelling-audio scheduler unchanged.
+Provided MP3s have long quiet lead-ins; originals untouched. Runtime derives
+.18sec pulses/.40sec sustained loop from each clip's strongest20ms RMS window,
+uses soft8ms edges and bounded normalization. All three use real provided PCM.
+Clips are owned runtime objects, destroyed on mission/plugin teardown. No
+per-source audio-source pileup; no delayed Destroy callbacks or pooled leases.
+
+Transport
+New R230PlayerAlertCue carries source/target NetIds,state,progress,sequence and
+server timestamp over existing authenticated, version-matched flak peers.
+Handshake7 (was6): matching updated runtimes required for network presentation.
+Authority remains server only; clients do not choose targets, charge or fire.
+State transitions plus.2sec heartbeats; stale/out-of-order sequences rejected.
+Packets older than.8sec or over1sec future rejected; accepted packet age counts
+against the.8sec presentation lease. No indefinite alarm after missing clear.
+Ledger uses source instance keys after native identity resolution and retains
+short cancellation tombstones, highest urgency and per-target selection.
+Menu/player loss stops presentation; mission origin clear releases everything.
+Plugin shutdown suppression prevents delayed source-destruction callbacks from
+repopulating an alert after shutdown.
+
+Assets/privacy
+SetupR230PlayerAlertAudio.cs creates an inactive native-only three-AudioSource
+bank prefab, linked to both railgun prefabs. No production script components,
+new game references, game art or game sounds were copied into the pack.
+RG_Tracking.mp3, RG_Charging.mp3, RG_Firing.mp3 source files+original .meta backed
+up and SHA256 verified under PrivateAudio/R230Warnings/. PrivateAudio ignores
+its contents. Original imported files remain in private non-Git Unity project;
+public checkout ignore rules exclude all three raw paths (check-ignore verified).
+They have NOT been copied, staged or pushed to public source. Existing six audio
+sources remain private too. Packed AudioClip resources are playable and can be
+extracted; this is source privacy, not encryption or a rights guarantee.
+User's active Unity scene remained dirty/unsaved in edit mode. Prefab/modinfo
+pre-change backups under UnitySetupBackup/R230/BeforePlayerAlert-1.16.0/.
+No body/model/material/physics or renderer changes. Enabled three model LODs
+remain1060/610/288 triangles on both units; all model renderers accounted for.
+Audio bank has no renderers. Local UI/audio is managed independently of model
+LOD so distant/culled railguns still warn their targeted player.
+
+Validation
+All18 standalone SDK10.0.402 suites pass. New773 policy assertions cover states,
+actual capacitor threshold, cadence, source aggregation, player filtering,
+cancellation, lost heartbeat, invalid inputs, timestamp freshness, sequence wrap
+and stale messages. Existing38430 railgun/ballistics/capacitor checks unchanged.
+Fresh isolated Unity player-warning fixture19 checks passes: real custom PCM,
+short clip generation, native AudioSource properties and both tracking pitches,
+charging pulse/critical loop states, custom HUD render, x2 aggregation, discharge/
+cancel, stale cue, target/player change, cleanup and actual Mirage codec.
+Controlled960x640 render inspected:2491 red pixels, clear ASCII warning text.
+Other targeted native groups pass: F88 flak36,F120 flak45, cold optical21+21,
+incendiary24; six groups166 total checks. Smoke/damage/native firing unaffected.
+Exported bundle independently audited:270 mod/generated assets, exactly9 custom
+clips (six previous plus three provided), valid inactive bank references on
+both units, no _donotship assets, enabled reduced LODs and renderer membership.
+No claim of audible mission mix, full cockpit placement across every aircraft,
+real network latency, live multiplayer or FPS improvement. Existing R230 native
+LaserCone editor-template limitation remains outside this custom HUD fixture;
+unchanged beam rendering not recertified here.
+
+Compiled/validated/installed1.16.0 +.37 with game closed; staged/installed hashes:
+Runtime 0F617B22E7512304EFB4E859B3913E2BDF3A84B8EF28D3E7C1B617EAA36E49F6
+Pack E2FBB6068C32D07CDBC713DA79F3F5E963888E5F27BDF95DF03DD4E8F4573641
+Rollback1.15.3/.36:UnitySetupBackup/R230/BeforePlayerAlert-1.16.0/Installed/.
+Evidence:GunmaggedonRuntime/build/railgun-alert/{install.json,
+integration-final-result.json,combined-result.json,export-audit-result.json,
+player-warning-preview.png,source-1.16.0.json}. Existing GitHub draft0.0.36 is
+still1.15.3/.36 and has not been updated or published by this task.
+
+Mission checks: targeted player only; slow tracking while turret acquires,
+accelerating charging then sustained last-half-second, immediate stop on shot/
+retarget/occlusion, two simultaneous railguns, cockpit/external-camera sound
+levels, pause/death/aircraft switch, host/client matching1.16.0 builds.

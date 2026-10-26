@@ -1,6 +1,6 @@
 Gunmaggedon Runtime
 
-Current helper: 1.8.4. Compatible installed asset pack: 0.0.18.
+Current compiled, validated and installed versions: ../context/CURRENT-STATE.txt.
 Workspace documentation: ../context/README.txt
 History: ../context/CHANGELOG.txt
 
@@ -8,11 +8,11 @@ Runtime code is under src/, grouped by feature. Namespaces and runtime logic
 are unchanged by the folder reorganization. Tests and tools are separate.
 
 From this workspace's root:
-  powershell -NoProfile -ExecutionPolicy Bypass -File GunmaggedonRuntime/build.ps1
-  powershell -NoProfile -ExecutionPolicy Bypass -File GunmaggedonRuntime/tests/run-unit-tests.ps1
+  powershell -NoProfile -ExecutionPolicy Bypass -File GunmaggedonRuntime/build.ps1 -OutputDirectory GunmaggedonRuntime/build/validation/layout
+  powershell -NoProfile -ExecutionPolicy Bypass -File ci/test.ps1
 
 build.ps1 compiles only src/**/*.cs, including nested feature folders.
-It writes build/1.8.4/Gunmaggedon.Runtime.dll; it does not install the DLL.
+Its default build path is historical; it does not install the DLL.
 Use -OutputDirectory <path> for a separate validation build.
 
 Unity integration fixtures: tests/integration/

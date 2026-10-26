@@ -9,7 +9,7 @@ public static class SetupRevampCarriage
 {
     public const string Dir="Assets/Blueprinter/Mods/Gunmageddon/";
     public const string Prefab=Dir+"Revamp_Carriage_Rig.prefab";
-    static string Workspace {get{return Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT")??"C:/Users/keena/OneDrive/Documents/Gunmaggedon";}}
+    static string Workspace {get{return Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT")??(System.Environment.GetEnvironmentVariable("GUNMAGGEDON_ROOT") ?? throw new System.InvalidOperationException("Set GUNMAGGEDON_ROOT before running editor tools or fixtures."));}}
     static Transform Part(Transform root,string name){return root.GetComponentsInChildren<Transform>(true).Single(t=>t.name==name);}
     static Transform Pivot(string name,Transform parent,Vector3 local){var go=new GameObject(name);go.transform.SetParent(parent,false);go.transform.localPosition=local;return go.transform;}
     static Transform Wrap(string name,Transform parent,Transform part,Vector3 local){var pivot=Pivot(name,parent,local);part.SetParent(pivot,true);return pivot;}

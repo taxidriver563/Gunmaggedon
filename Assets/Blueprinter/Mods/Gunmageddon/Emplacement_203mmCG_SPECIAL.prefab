@@ -180,8 +180,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5534784177295565065}
@@ -206,7 +206,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
@@ -2587,8 +2587,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1761350240, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 5534784177295565065}
   scanner: {fileID: 5533732009923916572}
   part: {fileID: 2902876514544575270}
@@ -2781,8 +2781,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5534784177295565065}
@@ -2807,7 +2807,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
@@ -2876,8 +2876,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 576076454, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 5534784177295565065}
   targetAcquisitionMode: 1
   fireControl: {fileID: 0}
@@ -5925,8 +5925,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1662383224, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 5534784177295565065}
   info: {fileID: 11400000, guid: 7fd7dfd3da414e94ea9710e7284eb684, type: 2}
   ammo: 1
@@ -6281,8 +6281,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5534784177295565065}
@@ -6307,7 +6307,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
@@ -6492,8 +6492,8 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: -1486494890, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 5534784177295565065}
   info: {fileID: 11400000, guid: fc8c08b49e874ed45a99bfabe5bbeb0e, type: 2}
   ammo: 0
@@ -6610,8 +6610,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5534784177295565065}
@@ -6636,7 +6636,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
@@ -9107,8 +9107,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 680085626, guid: 35c838180ffa3b627a4ee1e66ae78cec, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   SpawnSettings:
     SendPosition: 1
     SendRotation: 1
@@ -9130,14 +9130,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -677928877, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   SyncSettings:
     From: 2
     To: 3
     Timing: 0
     Interval: 0.1
-  MapUniqueName:
+  MapUniqueName: 
   MapHQ: {fileID: 0}
   MapAirbase: {fileID: 0}
   weaponStations: []
@@ -9170,8 +9170,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5534784177295565065}
@@ -9196,7 +9196,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []

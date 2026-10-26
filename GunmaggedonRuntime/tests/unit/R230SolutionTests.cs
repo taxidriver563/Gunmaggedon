@@ -17,6 +17,12 @@ public static class R230SolutionTests
         Check(R230Solution.EngagementTier("ballisticMissile1",false,false,25000,-500,0,66000)==-1,"Projected exit from envelope is secondary");
         Check(R230Solution.EngagementTier("ballisticMissile1",false,false,50000,-500,500,55000)==3,"Incoming terminal threat retains top priority");
         Check(R230Solution.Score(0,1,0,60000,100,false)>R230Solution.Score(-1,2000,1,1000,0,true),"Incoming aircraft overrides even a held high-value departing TBM");
+        var reaction=new R230Reaction();
+        Check(!reaction.Track(1,true,0)&&!reaction.Track(1,true,4.999)&&reaction.Track(1,true,5),"Five full seconds of eligible LOS before reaction");
+        Check(reaction.Track(1,true,8),"Same established target keeps reaction between shots");
+        Check(!reaction.Track(2,true,8)&&!reaction.Track(2,true,12.999)&&reaction.Track(2,true,13),"Target switch starts fresh five-second reaction");
+        Check(!reaction.Track(2,false,14)&&!reaction.Ready&&!reaction.Track(2,true,15)&&!reaction.Track(2,true,19.999)&&reaction.Track(2,true,20),"Lost LOS requires full reaction after reacquisition");
+        Check(!reaction.Track(0,true,22)&&!reaction.Ready,"Target destruction/loss clears reaction");
         var acquisition=new R230Acquisition();
         Check(!acquisition.Track(1,true,10)&&!acquisition.Track(1,true,10.749)&&acquisition.Track(1,true,10.75),"Full .75 second acquisition before first shot");
         Check(acquisition.Track(1,false,11)&&acquisition.Track(1,true,12),"Established target retains acquisition between shots");
@@ -51,6 +57,14 @@ public static class R230SolutionTests
             Check((shell-p-v*flight-acceleration*(.5*flight*(flight+.02))).Length<.02,"Acceleration-aware lead tracks ballistic descent");
         }
         {var p=new OpticalVector(10000,50000,0);var v=new OpticalVector(0,-1800,0);var acceleration=new OpticalVector(0,-9.81,0);OpticalVector oldAim;double oldTime;R230Solution.Intercept(p,v,15000,9.81,.02,out oldAim,out oldTime);var oldShell=oldAim*(15000*oldTime)-new OpticalVector(0,.5*9.81*oldTime*(oldTime+.02),0);Check((oldShell-p-v*oldTime-acceleration*(.5*oldTime*oldTime)).Length>30,"Regression: constant velocity misses a ballistic descent by tens of meters");}
+        var nuclearBank=new R230Capacitor(1,R230Capacitor.NuclearChargeSeconds,R230Capacitor.NuclearRechargeSeconds);
+        nuclearBank.Tick(1,true,0);Check(!nuclearBank.Ready(2.999)&&nuclearBank.Ready(3),"Nuclear commitment lasts full three seconds");
+        Check(nuclearBank.Shot(3)&&nuclearBank.Remaining==0&&nuclearBank.RechargeUntil==23,"Single nuclear shot starts twenty-second recharge");
+        nuclearBank.Tick(2,true,19.999);Check(!nuclearBank.Charging&&!nuclearBank.Ready(22),"No immediate second nuclear shot");
+        nuclearBank.Tick(2,true,20);Check(nuclearBank.Charging&&!nuclearBank.Ready(22.999),"Final three seconds may charge but cannot bypass recharge");
+        nuclearBank.Tick(2,true,23);Check(nuclearBank.Remaining==1&&nuclearBank.Ready(23),"Exact twenty-second boundary replenishes only one nuclear cell");
+        Check(nuclearBank.Shot(23)&&!nuclearBank.Shot(23),"Native duplicate nuclear debit rejected");
+        nuclearBank.Cancel();nuclearBank.Tick(3,true,43);Check(!nuclearBank.Ready(43)&&nuclearBank.Ready(46),"Acquisition after recharge still requires full charge");
         Console.WriteLine("R230: "+checks+" assertions passed; synthetic intercept/terminal-priority regressions, not mission hit rates.");
     }
 }

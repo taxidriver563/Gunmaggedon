@@ -128,7 +128,7 @@ public static class F120IncendiaryIntegration
             var bytes = (byte[])packer.GetMethods().Single(m => m.Name == "Pack" && m.IsGenericMethodDefinition && m.GetParameters().Length == 1).MakeGenericMethod(mt).Invoke(null, new[] { message });
             var decoded = packer.GetMethod("Unpack").MakeGenericMethod(mt).Invoke(null, new object[] { bytes, null });
             Check((int)mt.GetField("Seed", F).GetValue(decoded) == 1234 && ((Vector3)mt.GetField("Velocity", F).GetValue(decoded)).z == 950, "Native Mirage burst seed/velocity serializer round-trip");
-            Check((byte)network.GetField("ProtocolVersion", S).GetRawConstantValue() == 6, "Protocol separates incompatible clients"); network.GetMethod("Shutdown", S).Invoke(null, null);
+            Check((byte)network.GetField("ProtocolVersion", S).GetRawConstantValue() == 10, "Protocol separates incompatible clients"); network.GetMethod("Shutdown", S).Invoke(null, null);
             return new { passed = true, checks, nativeHits = calls, nativeFire = fire, nativePierce = pierce, details = "Actual swept physics and native UnitPart armor/HP/fire channel; RPC delivery replayed locally, no live mission ignition/transport certification." };
         }
         finally

@@ -1,3 +1,14 @@
+Current candidate: v0.0.42 / runtime 1.22.1 / asset pack 0.0.42.
+Patch notes: ../releases/v0.0.42.md. CURRENT-STATE.txt records validation limits.
+
+DP127-SETUP.txt / C127-COMBAT-INTEGRATION.txt: new surface/dual-purpose guns.
+WRECKAGE-PREFABS.txt: shared scorch presentation and owned wrecks.
+FLAK-GROUND-AP.txt: regular F-88/F-120 secondary ground engagement.
+R230-PLAYER-WARNING.txt / R230-PRESSURE-RINGS.txt / R230N-COMMITMENT.txt /
+R230N-LEGACY.txt: railgun warnings, balance and separate legacy variant.
+
+Earlier implementation records below are historical:
+
 RELEASE-PREPARATION-0.0.34.txt Candidate1.14.2 / pack0.0.34: tracer, validation, CI/source preparation and remaining mission checks.
 
 Gunmaggedon public development documentation

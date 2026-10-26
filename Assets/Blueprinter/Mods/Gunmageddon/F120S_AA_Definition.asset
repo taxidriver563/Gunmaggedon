@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: -2031789569, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
   m_Name: F120S_AA_Definition
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   typeIdentity:
     surface: 1
     air: 0
@@ -25,7 +25,7 @@ MonoBehaviour:
     antiRadar: 0
   jsonKey: Gunmaggedon_F120S_AA
   unitName: F-120S
-  bogeyName:
+  bogeyName: 
   description: Special-munitions F-120. Advanced optical/radar-supported predictions
     place incendiary canisters ahead of aircraft. Burning fragments reward predictable
     flight paths; agile aircraft can evade the cone.

@@ -1,0 +1,62 @@
+2026-10-25 superseded visual settings: see R230N-COMMITMENT.txt for runtime1.18.0 glassy rings, larger diameters and1.5sec life. Historical1.17.0behavior below.
+
+R-230N flight pressure rings
+2026-10-25 | runtime1.17.0 | asset pack0.0.37 unchanged | protocol7 unchanged
+
+Added a larger launch ring and pale white/blue translucent pressure rings every
+0.14 seconds of native projectile flight. Rings are oriented perpendicular to
+the travelled segment, stay at their emission locations, expand and fade fully
+after1.2 seconds. Launch diameter grows approximately67-560m; subsequent rings
+50-420m. No lights, HDR boost, colliders, damage or additional audio.
+The rings are visible from either side and use feathered mesh edges. They are
+visual pressure rings, not screen-space refraction/distortion.
+
+src/AA/R230PressureRings.cs owns one manual-emission mesh ParticleSystem for all
+rounds, with generated annulus/material, custom Datum.origin simulation space
+and dynamically growing particle capacity. URP Particles/Unlit is selected first
+with transparent blending, no depth writes; legacy fallback for other pipelines.
+Initial render caught blue legacy-shader output in URP; production shader was
+corrected and the final pale-white GPU render passed. No copied game assets or
+new bundle resources. No per-ring GameObjects or recurring camera subscriptions.
+
+R230NuclearRuntime Before/After trajectory hooks also present remote visual-only
+bullets, independently of authoritative nuclear Flights. Samples interpolate the
+native swept segment, including multiple intervals in a delayed update. Proxy
+bursts truncate the segment before ring emission. Remove drops only the cursor;
+already-emitted rings fade independently. Mission teardown/plugin shutdown clears
+all particles, cursor references and generated material/mesh. Standard R230 and
+existing nuclear damage, target selection, fuzes and ballistics are unchanged.
+No new network messages; native bullet replication drives client presentation.
+Clients require this runtime to display rings. Live transport is not certified.
+
+LOD exception: long-range projectile rings intentionally simulate independently
+of building model visibility and require no model LOD entries. Existing exported
+R230N three-level model remains enabled1060/610/288triangles; same for R230.
+No scene or prefab edits; original Unity scene remains clean and in edit mode.
+
+Validation
+- Production compile:62 sources, separate staging build1.17.0.
+- SDK10.0.402 (workspace existing SDK): R230SolutionTests38430 assertions;
+  R230AlertPolicyTests773 checks. Default PATH SDK unavailable, no SDK installed.
+- Fresh isolated Unity ring regression20 checks: native particle expansion,
+  interval/catch-up positions, remote hooks, stationary detached centers, origin
+  movement storage, lifetime, capacity180 rings/no drops, cleanup/restart, model
+  LOD audit, controlled actual GPU render1076 visible pixels.
+- Existing nuclear integration28 checks: canonical1.5kt template, swept proxy,
+  authority, retirement, stock shockwave yield and remote serializer.
+- Existing standard R230 integration88 checks: native firing, target gates,
+  strict priority, LOS, range, damage and LODs.
+- Existing warning integration30 checks: custom PCM, native audio state/settings,
+  HUD backing/count fit and serializer. A reused fixture run failed tracking;
+  rerunning FIRST in a fresh validation namespace passed all30. Do not silently
+  reuse old fixture/component identities across groups after this failure.
+- Scene clean, stopped; isolated test scenes closed. No public source/release push.
+
+Compiled, source-validated and installed runtime1.17.0; pack0.0.37 unchanged.
+Game closed during install. Binary staged/installed SHA256:
+C97F284D07640C65A65400C4CC1D9BD22B29E3288F8B920C6238D07345EC7A8E
+Rollback1.16.3: UnitySetupBackup/R230N/BeforePressureRings-1.17.0/.
+Evidence: GunmaggedonRuntime/build/pressure-rings/ (preview.png, source identity,
+validation-results.json, install.json). Existing gameplay suites are not FPS or
+mission tests. Live mission appearance across weather/cameras, multiplayer timing,
+and aggregate mission GPU cost remain unverified.

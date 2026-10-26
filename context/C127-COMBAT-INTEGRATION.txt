@@ -1,0 +1,124 @@
+C127 combat integration - 2026-10-25
+
+Installed locally: runtime1.22.0 / asset pack0.0.40 / capability protocol9.
+Compiled and source-validated runtime:1.22.0,70production C# sources.
+Exported and audited pack:0.0.40. No GitHub push or release publication.
+Previous installed1.21.0/.39 retained in UnitySetupBackup/C127/BeforeInstall-1.22.0/.
+
+Spawnable native Building definitions
+- C-127: exposed single, DP-127 concrete base, surface only.
+- C-127T: housed twin, same concrete base; surface priority, secondary timed AA.
+- C-127A: compact bunker, one exposed gun, yaw +/-10degrees, elevation-5..8.
+- C-127B: coastal bunker, one exposed gun, yaw +/-20, elevation-5..15.
+- C-127C: wide bunker, two independent exposed mounts at X-3/+3m;
+  each yaw+/-15, elevation-5..8. Entire bunker remains one native unit.
+The standalone exposed gun retains the staged45degree elevation ceiling;
+the housed twin retains85degrees. Native actor and critical-part damage.
+Concrete uses the DP-127's300/200 armor and6/5 tolerances; gun parts70/50,2/2.
+
+Provisional combat defaults
+Unguided native BulletSim127mm HE:850m/s, gravity1, drag0.00001,
+900pierce/4.5blast,200m minimum,12km surface range. Twin AA maximum6.5km.
+Ships, land vehicles and buildings count as surface targets. No missile role.
+Exposed variants reject aircraft in selection and all firing gates.
+Surface targets always outrank eligible aircraft on the twin.
+Surface motion comes from half-second optical samples with estimated velocity,
+initial range error and bounded observed-miss correction; no perfect rigidbody
+lead. New contacts reset ranging knowledge and require fresh observations.
+AA reuses primitive noisy area-barrage estimates and timed fragmentation,
+not guided/proximity shells. Native direct kinetic hits remain possible.
+Traverse12deg/s, elevation8deg/s. Twin alternates barrels with0.35sec spacing;
+each barrel has its own5.17sec reload and100round starting supply.
+Day/night, actual native LOS, smoke, faction and exact range checks apply.
+In darkness a known ship contact can request existing coastal searchlight
+support. Broad grid identity cannot supply an unseen ship's actual position.
+No parachute flares or new configuration added to C127.
+
+Mechanics and presentation
+Exposed reload uses the supplied GIF's staged5.17sec clip: closed-breech recoil,
+wedge opening, spent-case extraction/side clearance, fresh projectile+case,
+single ram stroke, secured breech and rammer withdrawal. The full cycle gates
+native ammunition. Exactly one pooled physical spent case after clearance.
+This is the C127 reference sequence, NOT the F88-specific two-second pause.
+Exposed recoil is driven once by its custom clock; housed barrels keep native
+independent recoil. Both twin pitch branches follow the controller. Cranks
+follow traverse/elevation, with distant cosmetic work skipped. Reload clocks,
+readiness and gameplay muzzle/recoil transforms continue at distant LODs.
+Muzzle flash/smoke reuse owned F88 emitters; native cannon audio is remapped
+at load and uses the existing343m/s travelling-audio system. Existing impact
+templates/pools remain shared, without changing their scale globally.
+Physical casing uses the user's modeled case; no stock casing mesh copied.
+
+Production assets: Assets/Blueprinter/Mods/Gunmageddon/C127/.
+Staged originals remain in Assets/GunmaggedonStaging/C127/.
+Original imported hierarchy and dirty source scene preserved. Copies saved to
+Assets/BlueprinterSetupBackups/C127/BeforeCombat/. The original scene was NOT
+saved over. New scene group C127 Combat Units has five prefabs at Z45,18m apart.
+
+Fitting / LOD
+All bunker openings use the authored concave MeshCollider, not a filled box.
+Gun roots above floor0.22m: compactZ0.7, coastalZ1.6, wideZ0.9.
+Firing checks both directions along five bore-clearance rays against the own
+bunker, explicitly enforcing hit.distance: this editor's Collider.Raycast can
+return hits beyond its supplied maximum for the imported scale100collider.
+288sampled full-reload/yaw/pitch poses had zero triangle-edge crossings into
+concrete after fitting. This is sampled edge evidence, not a volume proof.
+
+Enabled three-level LODGroups, screen fractions.055/.014/.0008:
+ C-127  2312/959/654 triangles
+ C-127T 1724/945/722
+ C-127A 2572/1067/666
+ C-127B 2572/1043/643
+ C-127C 4844/1942/1236
+All physical model renderers covered, including hidden loading visuals.
+Small cranks/ammunition/rammer parts omitted at distance. Bounds24/28m with
+referenceY1 set after SetLODs. Muzzle particles/tracers/audio have independent
+visibility/lifecycle, consistent with the project effects exception policy.
+
+Verification
+- SDK: C127PolicyTests180411, FlakBarrageTests4030, DP127PolicyTests8 assertions.
+- C127 native435checks: real LOS without HQ evidence, faction/night gates,
+  surface/AA selection, controller dispatch into native Fire, actual projectile
+  handoff, native vehicle impact damage(10damage calls), immutable flight role,
+  server-only timed-AA blast exactly once, per-barrel reload, LOD phase restore,
+  casing timing policy, transport registration and mission reference cleanup.
+- Related native/editor checks: DP12732, F8836, F88reload53, F88effects30,
+  all-unit LOD2851, runtime optimization23, F120incendiary24, R230player alert30.
+  Combined3514checks including C127. The initial HUD pixel check included
+  3D geometry behind the UI; isolating the fixture camera to the HUD layer
+  passed646red pixels and dark backing. No gameplay HUD changes made.
+- Export861checks:393assets,22LODGroups, five C127 units, native definition/
+  collider links, unchanged nine imported custom AudioClips and remap manifest.
+  MP3 asset labels are Unity AudioClip names, not raw MP3 TextAsset payloads.
+  No _donotship asset bodies, DLLs, source or backup/staging folders bundled.
+- Game closed during installation; rollback copies and installed hashes checked.
+Evidence: UnitySetupBackup/C127/Validation/ and
+GunmaggedonRuntime/build/c127-combat/{export-audit,source-identity,install}.json.
+
+Runtime SHA256
+5C25B88AB84CDDB888C3D2A694E5F4C7164548D3C9D103C1C48D1E4FE0A35DAE
+Pack SHA256
+0524C999C73BFA72DA7AACE794249B799441274A893ED54DC55248FC6D58FE22
+
+Not certified: live mission balance, extended autonomous engagements, audible
+in-game mix, actual multiplayer delivery/reconnect, or mission FPS gains.
+All peers need the new runtime and pack for C127 pose/shot/burst cues.
+The unrelated L25 preview-rig tracer discrepancy was not changed.
+
+Durable tools
+tools/SetupC127Combat.cs + prepare-c127-combat-helper.ps1: initial guarded asset
+setup, requires the existing staged rigs and imported bunker source. Refuses
+an existing C127 production folder. Do not rerun as a generic refresh.
+src/Artillery/C127{Policy,Runtime,Rounds,Network}.cs: runtime integration.
+tests/integration/C127Integration.cs and C127CombatGeometry.cs.
+tools/RunC127Validation.cs, RunC127RelatedValidation.cs, AuditC127Export.cs.
+tools/InstallC127.ps1: guarded one-time installation of this validated pair.
+
+2026-10-25 release follow-up: runtime 1.22.1 / pack 0.0.42 / protocol 10
+is installed. Remote shots now carry authoritative global muzzle pose, pose
+timestamps reject older updates, and native twin recoil resumes after idle.
+Disabled owners cannot replay reload visibility or stale casing handoffs;
+missing stations cannot authorize firing. C127Integration now passes 451
+checks including these regressions. No damage, reload timing or ballistics
+changes. All peers need protocol 10; real transport still needs a mission
+check. See RELEASE-BUG-SQUASH-0.0.42.txt for evidence, hashes and rollback.

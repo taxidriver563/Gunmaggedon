@@ -2502,8 +2502,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   m_Version: 3
   m_UsePipelineSettings: 1
   m_AdditionalLightsShadowResolutionTier: 2
@@ -5131,6 +5131,7 @@ Transform:
   m_Children:
   - {fileID: 8094893350804073451}
   - {fileID: 6445060844791835059}
+  - {fileID: 1523353532159880356}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7668640947974411053
@@ -5143,8 +5144,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 680085626, guid: 35c838180ffa3b627a4ee1e66ae78cec, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   SpawnSettings:
     SendPosition: 1
     SendRotation: 1
@@ -5166,14 +5167,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -677928877, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   SyncSettings:
     From: 2
     To: 3
     Timing: 0
     Interval: 0.1
-  MapUniqueName:
+  MapUniqueName: 
   MapHQ: {fileID: 0}
   MapAirbase: {fileID: 0}
   weaponStations: []
@@ -5189,7 +5190,8 @@ MonoBehaviour:
   radar: {fileID: 0}
   dopplerSounds: []
   spawnedEffects: []
-  wreckage: {fileID: 0}
+  wreckage: {fileID: 1777856120658969908, guid: f57d1f586fea2cd4cbc3688bc3c35cda,
+    type: 3}
   collapseTime: 0
   hideOnMap: 0
   repairPrefab: {fileID: 0}
@@ -5206,8 +5208,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5911528064863256203}
@@ -5232,7 +5234,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
@@ -7923,8 +7925,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1662383224, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 5911528064863256203}
   info: {fileID: 11400000, guid: 0f7d965de703d844ab1bf9356292363d, type: 2}
   ammo: 60
@@ -8172,8 +8174,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 576076454, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   attachedUnit: {fileID: 5911528064863256203}
   targetAcquisitionMode: 1
   fireControl: {fileID: 0}
@@ -13045,8 +13047,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5911528064863256203}
@@ -13071,7 +13073,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
@@ -13193,8 +13195,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5911528064863256203}
@@ -13219,7 +13221,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
@@ -13424,8 +13426,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 1708743906, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   id: 0
   criticalPart: 1
   parentUnit: {fileID: 5911528064863256203}
@@ -13450,7 +13452,7 @@ MonoBehaviour:
   damageMaterial:
     threshold: 0
     renderers: []
-    indices:
+    indices: 
   damageEffects: []
   disintegrationEffects: []
   disintegrateObjects: []
@@ -13475,3 +13477,77 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.099999994, y: 0.16999999, z: 0.19999999}
   m_Center: {x: 0, y: -0.014999997, z: -0.08}
+--- !u!1001 &7274074218090109807
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4785599501098546330}
+    m_Modifications:
+    - target: {fileID: 3112657190133315976, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_Name
+      value: R230PlayerAlertAudio
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6c350354b81e920499d853794e2dfb31, type: 3}
+--- !u!4 &1523353532159880356 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8202948285979129803, guid: 6c350354b81e920499d853794e2dfb31,
+    type: 3}
+  m_PrefabInstance: {fileID: 7274074218090109807}
+  m_PrefabAsset: {fileID: 0}

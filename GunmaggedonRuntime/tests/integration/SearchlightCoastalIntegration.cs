@@ -103,7 +103,7 @@ public static class SearchlightCoastalIntegration
         var ranging=assembly.GetType("GunmageddonAudio.CoastalRanging");var ct=assembly.GetType("GunmageddonAudio.SearchlightController");
         var harmony=new Harmony("gunmaggedon.coastal.light.fixture");
         Action<MethodInfo,string> prefix=(m,n)=>harmony.Patch(m,new HarmonyMethod(typeof(SearchlightCoastalIntegration).GetMethod(n)));
-        var scene=EditorSceneManager.NewPreviewScene();var stage=new GameObject("Coastal support fixture");stage.SetActive(false);SceneManager.MoveGameObjectToScene(stage,scene);
+        var scene=EditorSceneManager.NewPreviewScene();var stage=new GameObject("Coastal support fixture");stage.SetActive(false);SceneManager.MoveGameObjectToScene(stage,scene);stage.transform.position=new Vector3(30000,0,0);
         var datum=typeof(Datum).GetField("<origin>k__BackingField",S);var datumPosition=typeof(Datum).GetField("<originPosition>k__BackingField",S);
         object old=datum.GetValue(null),oldPosition=datumPosition.GetValue(null);var random=UnityEngine.Random.state;
         GameObject blocker=null;Component trail=null;checks=reports=0;dark=local=true;
@@ -138,7 +138,7 @@ public static class SearchlightCoastalIntegration
             Check(((Light)Get(first,"spot")).range==13000,"Native spot light shares the 13km range");
             var battery=make("Battery").AddComponent<Building>();Teams[battery]=friendly;
             var gun=battery.gameObject.AddComponent<Gun>();gun.attachedUnit=battery;gun.info=AssetDatabase.LoadAssetAtPath<WeaponInfo>("Assets/Blueprinter/Mods/Gunmageddon/203mmEmplacement.asset");
-            var muzzle=make("Muzzle").transform;muzzle.position=Vector3.up*10;typeof(Gun).GetField("muzzles",F).SetValue(gun,new[]{muzzle});
+            var muzzle=make("Muzzle").transform;muzzle.position=stage.transform.position+Vector3.up*10;typeof(Gun).GetField("muzzles",F).SetValue(gun,new[]{muzzle});
             var ship=make("Ship").AddComponent<Ship>();Teams[ship]=hostile;
             Vector3 position=((Transform)Get(first,"origin")).position+Vector3.forward*3000-Vector3.up*8f;ship.transform.position=position;
             KnownPositions[ship]=position.ToGlobalPosition();gun.SetTarget(ship);

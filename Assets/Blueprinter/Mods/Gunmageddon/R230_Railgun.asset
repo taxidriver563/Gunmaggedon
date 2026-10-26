@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 1706624141, guid: 06dd3d5416bf43ea368cc39ff96e6d5a, type: 3}
   m_Name: R230_Railgun
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   weaponPrefab: {fileID: 0}
   effectiveness:
     antiSurface: 0

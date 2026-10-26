@@ -1,64 +1,79 @@
 {
-  "ArtilleryBallisticsTests": [
-    "Artillery/ArtilleryBallistics.cs"
-  ],
-  "R230SolutionTests": [
-    "AA/OpticalRangingSolution.cs",
-    "AA/R230Solution.cs",
-    "AA/R230Capacitor.cs"
-  ],
-  "FlareBallisticsTests": [
-    "Illumination/FlareBallistics.cs"
-  ],
-  "RangingSolutionTests": [
-    "Ranging/RangingSolution.cs"
-  ],
-  "SpecialShellPolicyTests": [
-    "SpecialShells/SpecialShellPolicy.cs"
-  ],
-  "QueryOptimizationTests": [
-    "SpecialShells/QueryGeometry.cs",
-    "SpecialShells/ClusterDamageQuery.cs"
-  ],
-  "ArmorPiercingPolicyTests": [
-    "Ammunition/ArmorPiercingPolicy.cs"
-  ],
-  "OpticalRangingTests": [
-    "AA/OpticalRangingSolution.cs"
-  ],
-  "SearchlightSolutionTests": [
-    "Searchlight/SearchlightSolution.cs"
-  ],
-  "SearchlightClaimsTests": [
-    "Searchlight/SearchlightClaims.cs"
-  ],
-  "L25TrackingTests": [
-    "AA/OpticalRangingSolution.cs",
-    "AA/L25TrackingSolution.cs"
-  ],
-  "F88ReloadTests": [
-    "AA/F88ReloadCycle.cs"
-  ],
-  "FlakBarrageTests": [
-    "AA/OpticalRangingSolution.cs",
-    "AA/FlakBarrageSolution.cs"
-  ],
-  "FlakFragmentationTests": [
-    "AA/FlakFragmentationPolicy.cs"
-  ],
-  "F120FireControlTests": [
-    "AA/OpticalRangingSolution.cs",
-    "AA/FlakBarrageSolution.cs",
-    "AA/FlakFragmentationPolicy.cs"
-  ],
-  "RuntimeOptimizationTests": [
-    "Optimization/RuntimePool.cs",
-    "Optimization/SharedWorldQueries.cs",
-    "Optimization/TrailService.cs",
-    "Optimization/TravellingAudio.cs"
-  ],
-  "IncendiaryCanisterPolicyTests": [
-    "AA/OpticalRangingSolution.cs",
-    "AA/IncendiaryCanisterPolicy.cs"
-  ]
+    "ArtilleryBallisticsTests":  [
+                                     "Artillery/ArtilleryBallistics.cs"
+                                 ],
+    "R230SolutionTests":  [
+                              "AA/OpticalRangingSolution.cs",
+                              "AA/R230Solution.cs",
+                              "AA/R230Capacitor.cs"
+                          ],
+    "FlareBallisticsTests":  [
+                                 "Illumination/FlareBallistics.cs"
+                             ],
+    "RangingSolutionTests":  [
+                                 "Ranging/RangingSolution.cs"
+                             ],
+    "SpecialShellPolicyTests":  [
+                                    "SpecialShells/SpecialShellPolicy.cs"
+                                ],
+    "QueryOptimizationTests":  [
+                                   "SpecialShells/QueryGeometry.cs",
+                                   "SpecialShells/ClusterDamageQuery.cs"
+                               ],
+    "ArmorPiercingPolicyTests":  [
+                                     "Ammunition/ArmorPiercingPolicy.cs"
+                                 ],
+    "OpticalRangingTests":  [
+                                "AA/OpticalRangingSolution.cs"
+                            ],
+    "SearchlightSolutionTests":  [
+                                     "Searchlight/SearchlightSolution.cs"
+                                 ],
+    "SearchlightClaimsTests":  [
+                                   "Searchlight/SearchlightClaims.cs"
+                               ],
+    "L25TrackingTests":  [
+                             "AA/OpticalRangingSolution.cs",
+                             "AA/L25TrackingSolution.cs"
+                         ],
+    "F88ReloadTests":  [
+                           "AA/F88ReloadCycle.cs"
+                       ],
+    "FlakBarrageTests":  [
+                             "AA/OpticalRangingSolution.cs",
+                             "AA/FlakBarrageSolution.cs"
+                         ],
+    "FlakFragmentationTests":  [
+                                   "AA/FlakFragmentationPolicy.cs"
+                               ],
+    "F120FireControlTests":  [
+                                 "AA/OpticalRangingSolution.cs",
+                                 "AA/FlakBarrageSolution.cs",
+                                 "AA/FlakFragmentationPolicy.cs"
+                             ],
+    "RuntimeOptimizationTests":  [
+                                     "Optimization/RuntimePool.cs",
+                                     "Optimization/SharedWorldQueries.cs",
+                                     "Optimization/TrailService.cs",
+                                     "Optimization/TravellingAudio.cs"
+                                 ],
+    "IncendiaryCanisterPolicyTests":  [
+                                          "AA/OpticalRangingSolution.cs",
+                                          "AA/IncendiaryCanisterPolicy.cs"
+                                      ],
+    "R230AlertPolicyTests":  [
+                                 "AA/R230Capacitor.cs",
+                                 "AA/R230AlertPolicy.cs"
+                             ],
+    "FlakGroundPolicyTests":  [
+                                  "AA/OpticalRangingSolution.cs",
+                                  "AA/FlakGroundPolicy.cs"
+                              ],
+    "DP127PolicyTests":  [
+                             "AA/DP127Policy.cs"
+                         ],
+    "C127PolicyTests":  [
+                            "Artillery/C127Policy.cs",
+                            "AA/OpticalRangingSolution.cs"
+                        ]
 }
